@@ -51,7 +51,6 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   @override
   void dispose() {
-    _pageViewController.
     _pageViewController.dispose();
     super.dispose();
   }
@@ -64,24 +63,28 @@ class _HomeWidgetState extends State<HomeWidget> {
         actions: _actions,
       ),
       body: PageView(
-
         controller: _pageViewController,
-        children: const [
-          ChallansList(),
-          BuyersList(),
-          Center(
+        children: [
+          const ChallansList(),
+          BuyersList(
+            onBuyerSelected: (buyer) {
+              print(buyer);
+            },
+          ),
+          const Center(
             child: Text("Assets"),
           ),
-          Center(
+          const Center(
             child: Text("Models"),
           ),
-          Center(
+          const Center(
             child: Text("History"),
           ),
         ],
         onPageChanged: (index) {
           setState(() {
             _activePage = index;
+            _updateActions(index);
           });
         },
       ),
@@ -91,12 +94,6 @@ class _HomeWidgetState extends State<HomeWidget> {
           _pageViewController.animateToPage(index,
               duration: const Duration(milliseconds: 200),
               curve: Curves.bounceIn);
-          if (index == 1) {
-            setState(() {
-              _actions
-                  .add(IconButton(onPressed: () {}, icon: const Icon(Icons.search)));
-            });
-          }
         },
         items: dropDownItems,
       ),
@@ -106,5 +103,18 @@ class _HomeWidgetState extends State<HomeWidget> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  void _updateActions(int index) {
+    if ([0].contains(index)) {
+      _actions = [
+        IconButton(
+          icon: const Icon(Icons.search),
+          onPressed: () {},
+        ),
+      ];
+    } else {
+      _actions = [];
+    }
   }
 }
