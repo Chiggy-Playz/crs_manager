@@ -19,11 +19,10 @@ void main() async {
   var host = await box.get("host");
   var key = await box.get("key");
 
-  DatabaseModel? database;
+  DatabaseModel database = DatabaseModel();
 
   if (host != null && key != null) {
-    database = DatabaseModel();
-    database.connect(
+    await database.connect(
       host,
       key,
     );
@@ -39,7 +38,7 @@ void main() async {
 
 // ignore: must_be_immutable
 class MyApp extends StatelessWidget {
-  DatabaseModel? database;
+  DatabaseModel database;
 
   MyApp({required this.database, super.key});
 
@@ -57,7 +56,7 @@ class MyApp extends StatelessWidget {
             "/login": (context) => const Login(),
             "/home": (context) => const HomeWidget(),
           },
-          initialRoute: database == null ? "/login" : "/home",
+          initialRoute: database.connected ? "/home" : "/login",
         ),
       ),
     );

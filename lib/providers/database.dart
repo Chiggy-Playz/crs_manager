@@ -9,23 +9,26 @@ class DatabaseModel extends ChangeNotifier {
   List<Buyer> buyers = [];
 
   late SupabaseClient _client;
+  bool connected = false;
 
   Future<void> _loadCache() async {
-    buyers = (await _client.from("buyers").select<List<Map<String, dynamic>>>()).map((e) => Buyer.fromMap(e)).toList()..sort((a, b) => a.name.compareTo(b.name),);
+    buyers = (await _client.from("buyers").select<List<Map<String, dynamic>>>().order("name", ascending: true))
+        .map((e) => Buyer.fromMap(e))
+        .toList();
     notifyListeners();
   }
 
   Future<void> connect(String host, String key) async {
     try {
-    // Try to connect
-    await Supabase.initialize(
-      url: host,
-      anonKey: key,
-    );
+      // Try to connect
+      await Supabase.initialize(
+        url: host,
+        anonKey: key,
+      );
 
-    // Check if the connection is valid by fetching a single row from the models table
-    // The models table will always have 1 row
-    
+      // Check if the connection is valid by fetching a single row from the models table
+      // The models table will always have 1 row
+
       await Supabase.instance.client.from("models").select().limit(1);
     } catch (err) {
       Supabase.instance.dispose();
@@ -33,6 +36,7 @@ class DatabaseModel extends ChangeNotifier {
     }
 
     _client = Supabase.instance.client;
+    connected = true;
     _loadCache();
   }
 
