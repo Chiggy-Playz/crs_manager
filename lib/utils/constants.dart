@@ -7,13 +7,12 @@ var theme = FlexThemeData.light(
   subThemesData: const FlexSubThemesData(
     blendOnLevel: 10,
     blendOnColors: false,
-    inputDecoratorUnfocusedHasBorder: false,
     fabUseShape: true,
     fabSchemeColor: SchemeColor.primary,
   ),
   useMaterial3ErrorColors: true,
   visualDensity: FlexColorScheme.comfortablePlatformDensity,
-  useMaterial3: true,
+  useMaterial3: false,
   swapLegacyOnMaterial3: true,
 );
 
@@ -23,13 +22,12 @@ var darkTheme = FlexThemeData.dark(
   blendLevel: 15,
   subThemesData: const FlexSubThemesData(
     blendOnLevel: 20,
-    inputDecoratorUnfocusedHasBorder: false,
     fabUseShape: true,
     appBarBackgroundSchemeColor: SchemeColor.background,
     fabSchemeColor: SchemeColor.primary,
   ),
   useMaterial3ErrorColors: true,
   visualDensity: FlexColorScheme.comfortablePlatformDensity,
-  useMaterial3: true,
+  useMaterial3: false,
   swapLegacyOnMaterial3: true,
 );
