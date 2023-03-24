@@ -29,10 +29,9 @@ class DatabaseModel extends ChangeNotifier {
         anonKey: key,
       );
 
-      // Check if the connection is valid by fetching a single row from the models table
-      // The models table will always have 1 row
+      // Check if the connection is valid by fetching a single row from the challans table
 
-      await Supabase.instance.client.from("models").select().limit(1);
+      await Supabase.instance.client.from("challans").select().limit(1);
     } catch (err) {
       Supabase.instance.dispose();
       throw DatabaseConnectionError();
