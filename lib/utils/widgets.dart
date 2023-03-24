@@ -10,3 +10,8 @@ class TransparentAppBar extends AppBar {
           actions: actions,
         );
 }
+
+PageRouteBuilder opaquePage(Widget page) => PageRouteBuilder(
+   opaque: false,
+   pageBuilder: (BuildContext context, _, __) => page,
+);
