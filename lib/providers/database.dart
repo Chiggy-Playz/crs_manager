@@ -12,7 +12,10 @@ class DatabaseModel extends ChangeNotifier {
   bool connected = false;
 
   Future<void> _loadCache() async {
-    buyers = (await _client.from("buyers").select<List<Map<String, dynamic>>>().order("name", ascending: true))
+    buyers = (await _client
+            .from("buyers")
+            .select<List<Map<String, dynamic>>>()
+            .order("name", ascending: true))
         .map((e) => Buyer.fromMap(e))
         .toList();
     notifyListeners();
@@ -42,5 +45,64 @@ class DatabaseModel extends ChangeNotifier {
 
   Future<List<Buyer>> getBuyers() async {
     return buyers;
+  }
+
+  Future<Buyer> createBuyer(
+      {required String name,
+      required String address,
+      required String gst,
+      required String state}) async {
+    final response = await _client.from("buyers").insert({
+      "name": name,
+      "address": address,
+      "gst": gst,
+      "state": state
+    }).select();
+    if (response == null) {
+      throw DatabaseError();
+    }
+    final buyer = Buyer.fromMap(response[0]);
+    buyers.add(buyer);
+    notifyListeners();
+    return buyer;
+  }
+
+  Future<void> updateBuyer({
+    required Buyer buyer,
+    String? name,
+    String? address,
+    String? gst,
+    String? state,
+  }) async {
+    if (name == null && address == null && gst == null && state == null) {
+      return;
+    }
+
+    await _client.from("buyers").update({
+      "name": name ?? buyer.name,
+      "address": address ?? buyer.address,
+      "gst": gst ?? buyer.gst,
+      "state": state ?? buyer.state
+    }).eq("id", buyer.id);
+
+    buyers = buyers.map((e) {
+      if (e.id == buyer.id) {
+        return Buyer(
+            id: e.id,
+            name: name ?? e.name,
+            address: address ?? e.address,
+            gst: gst ?? e.gst,
+            state: state ?? e.state);
+      }
+      return e;
+    }).toList();
+
+    notifyListeners();
+  }
+
+  Future<void> deleteBuyer(Buyer buyer) async {
+    await _client.from("buyers").delete().eq("id", buyer.id);
+    buyers.remove(buyer);
+    notifyListeners();
   }
 }

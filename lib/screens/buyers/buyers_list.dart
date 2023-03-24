@@ -35,7 +35,10 @@ class _BuyersListState extends State<BuyersList> {
                   buyer.name.toLowerCase().contains(filter.toLowerCase()) ||
                   buyer.address.toLowerCase().contains(filter.toLowerCase()),
             )
-            .toList();
+            .toList()
+          ..sort((a, b) {
+            return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          });
 
         return Padding(
           padding: const EdgeInsets.all(8.0),

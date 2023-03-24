@@ -12,7 +12,7 @@ var theme = FlexThemeData.light(
   ),
   useMaterial3ErrorColors: true,
   visualDensity: FlexColorScheme.comfortablePlatformDensity,
-  useMaterial3: false,
+  useMaterial3: true,
   swapLegacyOnMaterial3: true,
 );
 
@@ -28,6 +28,6 @@ var darkTheme = FlexThemeData.dark(
   ),
   useMaterial3ErrorColors: true,
   visualDensity: FlexColorScheme.comfortablePlatformDensity,
-  useMaterial3: false,
+  useMaterial3: true,
   swapLegacyOnMaterial3: true,
 );

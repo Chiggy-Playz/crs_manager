@@ -1,3 +1,4 @@
+import 'package:crs_manager/screens/buyers/buyer_page.dart';
 import 'package:crs_manager/screens/buyers/buyers_list.dart';
 import 'package:crs_manager/screens/challans/challans_list.dart';
 import 'package:crs_manager/utils/widgets.dart';
@@ -67,9 +68,12 @@ class _HomeWidgetState extends State<HomeWidget> {
         children: [
           const ChallansList(),
           BuyersList(
-            onBuyerSelected: (buyer) {
-              print(buyer);
-            },
+            onBuyerSelected: (buyer) =>
+                Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => BuyerPage(
+                buyer: buyer,
+              ),
+            )),
           ),
           const Center(
             child: Text("Assets"),
@@ -98,11 +102,24 @@ class _HomeWidgetState extends State<HomeWidget> {
         items: dropDownItems,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {},
+        onPressed: _fabAction,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  void _fabAction() {
+    switch (_activePage) {
+      case 0: // Challan
+        break;
+      case 1: // Buyer
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => const BuyerPage(),
+        ));
+        break;
+      default:
+    }
   }
 
   void _updateActions(int index) {
