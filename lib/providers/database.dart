@@ -1,4 +1,5 @@
 import 'package:crs_manager/models/buyer.dart';
+import 'package:crs_manager/models/challan.dart';
 import 'package:crs_manager/utils/exceptions.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,19 +8,10 @@ typedef ListOfDicts = List<Map<String, dynamic>>;
 
 class DatabaseModel extends ChangeNotifier {
   List<Buyer> buyers = [];
+  List<Challan> challans = [];
 
   late SupabaseClient _client;
   bool connected = false;
-
-  Future<void> _loadCache() async {
-    buyers = (await _client
-            .from("buyers")
-            .select<List<Map<String, dynamic>>>()
-            .order("name", ascending: true))
-        .map((e) => Buyer.fromMap(e))
-        .toList();
-    notifyListeners();
-  }
 
   Future<void> connect(String host, String key) async {
     try {
@@ -40,6 +32,24 @@ class DatabaseModel extends ChangeNotifier {
     _client = Supabase.instance.client;
     connected = true;
     _loadCache();
+  }
+
+  Future<void> _loadCache() async {
+    buyers = (await _client
+            .from("buyers")
+            .select<List<Map<String, dynamic>>>()
+            .order("name", ascending: true))
+        .map((e) => Buyer.fromMap(e))
+        .toList();
+
+    challans = (await _client
+            .from("challans")
+            .select<List<Map<String, dynamic>>>()
+            .order("created_at"))
+        .map((e) => Challan.fromMap(e))
+        .toList();
+
+    notifyListeners();
   }
 
   Future<List<Buyer>> getBuyers() async {
@@ -103,5 +113,9 @@ class DatabaseModel extends ChangeNotifier {
     await _client.from("buyers").delete().eq("id", buyer.id);
     buyers.remove(buyer);
     notifyListeners();
+  }
+
+  Future<List<Challan>> getChallans() async {
+    return challans;
   }
 }
