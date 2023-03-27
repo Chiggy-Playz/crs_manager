@@ -31,10 +31,10 @@ class DatabaseModel extends ChangeNotifier {
 
     _client = Supabase.instance.client;
     connected = true;
-    _loadCache();
+    loadCache();
   }
 
-  Future<void> _loadCache() async {
+  Future<void> loadCache() async {
     buyers = (await _client
             .from("buyers")
             .select<List<Map<String, dynamic>>>()

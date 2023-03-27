@@ -18,7 +18,8 @@ class Buyer {
         address: json["address"],
         gst: json["gst"],
         state: json["state"],
-        id: json["id"],
+        // id can be missing when the map is from challan model
+        id: json["id"] ?? -1,
     );
 
     Map<String, dynamic> toMap() => {

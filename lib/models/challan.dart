@@ -35,7 +35,9 @@ class Challan {
         id: json["id"],
         number: json["number"],
         session: json["session"],
-        createdAt: DateTime.parse(json["created_at"]),
+        createdAt: DateTime.parse(
+          json["created_at"],
+        ).toLocal(),
         buyer: Buyer.fromMap(json["buyer"]),
         products:
             List<Product>.from(json["products"].map((x) => Product.fromMap(x))),
@@ -79,7 +81,7 @@ class Product {
   factory Product.fromMap(Map<String, dynamic> json) => Product(
         description: json["description"],
         quantity: json["quantity"],
-        serial: json["serial"],
+        serial: json["serial"] ?? "",
       );
 
   Map<String, dynamic> toMap() => {
