@@ -16,6 +16,7 @@ class ProductPage extends StatefulWidget {
 class _ProductPageState extends State<ProductPage> {
   String _description = "";
   int _quantity = 0;
+  String _quantityUnit = "";
   String _serial = "";
   String _additionalDescription = "";
 
@@ -26,6 +27,7 @@ class _ProductPageState extends State<ProductPage> {
     if (widget.product != null) {
       _description = widget.product!.description;
       _quantity = widget.product!.quantity;
+      _quantityUnit = widget.product!.quantityUnit;
       _serial = widget.product!.serial;
       _additionalDescription = widget.product!.additionalDescription;
     }
@@ -34,6 +36,7 @@ class _ProductPageState extends State<ProductPage> {
 
   // Detect back button press, and if changes made, ask for confirmation
   Future<bool> _onWillPop() async {
+    // Any required fields should not be empty, and should go in the list below
     if (changesMade() && [_description].any((element) => element.isNotEmpty)) {
       return await showDialog(
             context: context,
@@ -89,27 +92,59 @@ class _ProductPageState extends State<ProductPage> {
                   },
                   onSaved: (value) => _description = value!),
               SizedBox(height: 2.h),
-              TextFormField(
-                  initialValue: _quantity != 0 ? _quantity.toString() : "",
-                  decoration: const InputDecoration(
-                    labelText: "Quantity",
+              Row(
+                children: [
+                  SizedBox(
+                    width: 55.w,
+                    child: TextFormField(
+                      initialValue: _quantity != 0 ? _quantity.toString() : "",
+                      decoration: const InputDecoration(
+                        labelText: "Quantity",
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return "Please enter a quantity";
+                        }
+                        if (int.tryParse(value) == null) {
+                          return "Please enter a valid quantity";
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        setState(() {
+                          _quantity = int.tryParse(value) ?? _quantity;
+                        });
+                      },
+                      onSaved: (value) => _quantity = int.parse(value!),
+                    ),
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return "Please enter a quantity";
-                    }
-                    if (int.tryParse(value) == null) {
-                      return "Please enter a valid quantity";
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    setState(() {
-                      _quantity = int.tryParse(value) ?? _quantity;
-                    });
-                  },
-                  onSaved: (value) => _quantity = int.parse(value!)),
+                  SizedBox(
+                    width: 5.w,
+                  ),
+                  SizedBox(
+                    width: 30.w,
+                    child: TextFormField(
+                      initialValue: _quantityUnit,
+                      decoration: const InputDecoration(
+                        labelText: "Unit",
+                      ),
+                      validator: (value) {
+                        if (value == null) {
+                          return "You shouldn't be seeing this";
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        setState(() {
+                          _quantityUnit = value;
+                        });
+                      },
+                      onSaved: (value) => _quantityUnit = value!,
+                    ),
+                  )
+                ],
+              ),
               SizedBox(height: 2.h),
               TextFormField(
                   initialValue: _serial,
@@ -177,6 +212,10 @@ class _ProductPageState extends State<ProductPage> {
       return true;
     }
 
+    if (_quantityUnit != widget.product!.quantityUnit) {
+      return true;
+    }
+
     if (_serial != widget.product!.serial) {
       return true;
     }
@@ -198,6 +237,7 @@ class _ProductPageState extends State<ProductPage> {
     Navigator.of(context).pop(Product(
       description: _description,
       quantity: _quantity,
+      quantityUnit: _quantityUnit,
       serial: _serial,
       additionalDescription: _additionalDescription,
     ));

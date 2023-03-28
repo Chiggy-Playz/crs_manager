@@ -477,7 +477,7 @@ class _ChallanPageState extends State<ChallanPage> {
 
   Card productCard(int index) {
     String subtitle =
-        "${_products[index].additionalDescription}\n${_products[index].quantity}"
+        "${_products[index].additionalDescription}\n${_products[index].quantity} ${_products[index].quantityUnit}"
             .trim();
     return Card(
       elevation: 12,

@@ -291,7 +291,8 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
       row.cells[0].value = '${index + 1}';
       row.cells[1].value = product.description;
       row.cells[2].value = product.serial;
-      row.cells[3].value = product.quantity.toString();
+      row.cells[3].value =
+          "${product.quantity} ${product.quantityUnit}"; // product.quantity.toString();
       row.cells[3].stringFormat.alignment = PdfTextAlignment.center;
 
       row.style.font = PdfStandardFont(PdfFontFamily.helvetica, 12);

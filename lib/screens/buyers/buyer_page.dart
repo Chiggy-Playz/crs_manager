@@ -46,6 +46,7 @@ class _BuyerPageState extends State<BuyerPage> {
 
   // Detect back button press, and if changes made, ask for confirmation
   Future<bool> _onWillPop() async {
+    // Any required fields should not be empty, and should go in the list below
     if (changesMade() &&
         [_name, _address, _gst, _state].any((element) => element.isNotEmpty)) {
       return await showDialog(

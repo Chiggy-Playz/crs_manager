@@ -71,18 +71,22 @@ class Product {
   Product({
     required this.description,
     required this.quantity,
+    required this.quantityUnit,
     required this.serial,
     required this.additionalDescription,
   });
 
   String description;
   int quantity;
+  String quantityUnit;
   String serial;
   String additionalDescription;
 
   factory Product.fromMap(Map<String, dynamic> json) => Product(
         description: json["description"],
         quantity: json["quantity"],
+        // These fields may be missing and are completely optional
+        quantityUnit: json["quantity_unit"] ?? "",
         serial: json["serial"] ?? "",
         additionalDescription: json["additional_description"] ?? "",
       );
@@ -90,6 +94,7 @@ class Product {
   Map<String, dynamic> toMap() => {
         "description": description,
         "quantity": quantity,
+        "quantityUnit": quantityUnit,
         "serial": serial,
         "additionalDescription": additionalDescription,
       };
