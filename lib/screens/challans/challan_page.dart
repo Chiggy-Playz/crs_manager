@@ -69,7 +69,7 @@ class _ChallanPageState extends State<ChallanPage> {
         title: Text(widget.challan == null ? "New Challan" : "Edit Challan"),
         actions: [
           PopupMenuButton<int>(
-            icon: const Icon(Icons.visibility),
+            icon: const Icon(Icons.article),
             itemBuilder: (context) => List.generate(
               3,
               (index) => PopupMenuItem(

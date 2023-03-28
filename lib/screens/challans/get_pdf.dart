@@ -341,7 +341,7 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
     var numberFormatter = NumberFormat('#,##,000');
     if (challan.productsValue > 0) {
       page.graphics.drawString(
-          "The value of the above mentioned items does not exceed \u{20B9}${numberFormatter.format(challan.productsValue)}/-",
+          "To whomsoever this may concern, the value of the above mentioned items does not exceed \u{20B9}${numberFormatter.format(challan.productsValue)}/-",
           normalFontUnicode,
           bounds: const Rect.fromLTWH(50, 620, 300, 100));
     }

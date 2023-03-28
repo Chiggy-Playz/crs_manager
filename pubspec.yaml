@@ -65,8 +65,8 @@ flutter:
   assets:
     - assets/images/broken_magnifying_glass.svg
     - assets/images/cancelled.png
-    - assets/images/sign1.jpg
-    - assets/
+    # - assets/images/sign1.jpg
+    # - assets/
     - assets/helvetica.ttf
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
