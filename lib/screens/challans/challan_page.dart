@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:crs_manager/providers/database.dart';
 import 'package:crs_manager/screens/buyers/choose_buyer.dart';
 import 'package:crs_manager/screens/challans/get_pdf.dart';
@@ -6,12 +8,16 @@ import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
+import 'package:holding_gesture/holding_gesture.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/buyer.dart';
 import '../../models/challan.dart';
+import '../../utils/exceptions.dart';
 import '../loading.dart';
 
 final formatter = DateFormat("dd-MMMM-y");
@@ -27,6 +33,8 @@ class ChallanPage extends StatefulWidget {
 
 class _ChallanPageState extends State<ChallanPage> {
   final _formKey = GlobalKey<FormState>();
+
+  Map<String, dynamic>? nextChallanInfo;
 
   Buyer? _buyer;
   List<Product> _products = [];
@@ -60,11 +68,31 @@ class _ChallanPageState extends State<ChallanPage> {
       appBar: TransparentAppBar(
         title: Text(widget.challan == null ? "New Challan" : "Edit Challan"),
         actions: [
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.visibility),
+            itemBuilder: (context) => List.generate(
+              3,
+              (index) => PopupMenuItem(
+                value: index + 1,
+                child: Text("${index + 1} Page"),
+              ),
+            ),
+            onSelected: (value) => viewPdf(value),
+          ),
           if (widget.challan is Challan)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: _cancelled ? null : onCancelPressed,
-              color: Theme.of(context).colorScheme.error,
+            InkWell(
+              onLongPress: _cancelled ? () {} : onCancelPressed,
+              onTap: _cancelled
+                  ? null
+                  : () =>
+                      context.showSnackBar(message: "Hold to cancel challan"),
+              child: cup.Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(
+                  Icons.delete,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
             ),
         ],
       ),
@@ -75,18 +103,19 @@ class _ChallanPageState extends State<ChallanPage> {
                   future: value.getNextChallanInfo(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      return actualPage(snapshot.data!);
+                      nextChallanInfo = snapshot.data as Map<String, dynamic>;
+                      return actualPage();
                     }
                     return const Center(child: CircularProgressIndicator());
                   },
                 )
-              : actualPage(null);
+              : actualPage();
         },
       ),
     );
   }
 
-  Widget actualPage(Map<String, dynamic>? nextChallanInfo) {
+  Widget actualPage() {
     var bodyTextTheme = Theme.of(context).textTheme.titleLarge;
 
     return WillPopScope(
@@ -266,60 +295,84 @@ class _ChallanPageState extends State<ChallanPage> {
                   title: const Text("Digitally Signed"),
                   secondary: const Icon(cup.CupertinoIcons.signature),
                 ),
-                SizedBox(height: 5.h),
-                ElevatedButton.icon(
-                  onPressed:
-                      _cancelled ? null : () => saveChanges(nextChallanInfo),
-                  icon: const Icon(Icons.save),
-                  label: Text(
-                    widget.challan == null
-                        ? "Create Challan"
-                        : "Update Challan",
+                SizedBox(height: 2.h),
+                SizedBox(
+                  height: 8.h,
+                  width: 46.w,
+                  child: ElevatedButton.icon(
+                    onPressed: _cancelled ? null : () => saveChanges(),
+                    icon: const Icon(Icons.save),
+                    label: Text(
+                      widget.challan == null ? "Create" : "Update",
+                      style: const TextStyle(fontSize: 30),
+                    ),
                   ),
                 ),
-                // PopupMenuButton(
-                //   child: const Text("View PDF"),
-                //   itemBuilder: (context) => const [
-                //     PopupMenuItem(
-                //       child: Text("1"),
-                //       value: 1,
-                //     )
-                //   ],
-                //   onSelected: (value) async {
-                //     print("in");
-                //     assert(_products.isNotEmpty);
-                //     late Challan challan;
-                //     try {
-                //       challan = Challan(
-                //         id: widget.challan?.id ?? -1,
-                //         number: nextChallanInfo?['number'] ??
-                //             widget.challan!.number,
-                //         session: nextChallanInfo?['session'] ??
-                //             widget.challan!.session,
-                //         buyer: _buyer!,
-                //         products: _products,
-                //         productsValue: _productsValue,
-                //         deliveredBy: _deliveredBy,
-                //         vehicleNumber: _vehicleNumber,
-                //         notes: _notes,
-                //         received: _received,
-                //         digitallySigned: _digitallySigned,
-                //         cancelled: _cancelled,
-                //         createdAt: widget.challan?.createdAt ?? DateTime.now(),
-                //       );
-                //     } catch (e) {
-                //       print(e);
-                //       return;
-                //     }
-                //     print(await makePdf(challan));
-                //   },
-                // )
+                SizedBox(height: 25.h)
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  void viewPdf(int pages) async {
+    Challan challan;
+    try {
+      challan = Challan(
+        id: widget.challan?.id ?? -1,
+        number: nextChallanInfo?['number'] ?? widget.challan!.number,
+        session: nextChallanInfo?['session'] ?? widget.challan!.session,
+        buyer: _buyer!,
+        products: _products,
+        productsValue: _productsValue,
+        deliveredBy: _deliveredBy,
+        vehicleNumber: _vehicleNumber,
+        notes: _notes,
+        received: _received,
+        digitallySigned: _digitallySigned,
+        cancelled: _cancelled,
+        createdAt: widget.challan?.createdAt ?? DateTime.now(),
+      );
+    } catch (e) {
+      context.showErrorSnackBar(
+          message: "Incomplete challan. Please fill all the fields");
+      return;
+    }
+
+    String path;
+
+    try {
+      path = await makePdf(challan, pages);
+    } on PermissionDenied {
+      context.showErrorSnackBar(message: "Permission denied");
+      return;
+    } catch (e) {
+      context.showErrorSnackBar(
+          message: "Error occured while trying to create pdf");
+      return;
+    }
+    await Future.delayed(const Duration(milliseconds: 50));
+    if (!await File(path).exists()) {
+      if (!mounted) return;
+      // Should never happen, but here we are :husk:
+      context.showErrorSnackBar(message: "File not found");
+      return;
+    }
+
+    if (Platform.isAndroid) {
+      await OpenFile.open(path);
+    } else {
+      // Else we're on windows, and we just rely on browsers being able to open pdfs
+      Uri url = Uri.file(path, windows: true);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        if (!mounted) return;
+        context.showErrorSnackBar(message: "Couldn't open file");
+      }
+    }
   }
 
   void onCancelPressed() async {
@@ -340,8 +393,32 @@ class _ChallanPageState extends State<ChallanPage> {
         ],
       ),
     );
+
+    if (result == null || result == false) return;
     if (!mounted) return;
-    if (result == true) {
+
+    // Confirm again, just to be REALLY sure
+    var secondResult = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Cancel Challan?"),
+        content:
+            const Text("Are you REALLY sure you want to cancel this challan?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+    if (secondResult == true) {
       await Provider.of<DatabaseModel>(context, listen: false)
           .updateChallan(challan: widget.challan!, cancelled: true);
       if (!mounted) return;
@@ -349,7 +426,7 @@ class _ChallanPageState extends State<ChallanPage> {
     }
   }
 
-  void saveChanges(Map<String, dynamic>? nextChallanInfo) async {
+  void saveChanges() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -369,7 +446,7 @@ class _ChallanPageState extends State<ChallanPage> {
       action = "created";
       await Provider.of<DatabaseModel>(context, listen: false).createChallan(
           number: nextChallanInfo!["number"],
-          session: nextChallanInfo["session"],
+          session: nextChallanInfo!["session"],
           buyer: _buyer!,
           products: _products,
           productsValue: _productsValue,

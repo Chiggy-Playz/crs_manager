@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 import '../../models/challan.dart';
-import '../loading.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key, this.product});

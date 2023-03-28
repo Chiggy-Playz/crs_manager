@@ -36,14 +36,16 @@ dependencies:
   flutter_svg: ^2.0.4
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  holding_gesture: ^1.1.0
   intl: ^0.18.0
+  open_file: ^3.2.1
   path_provider: ^2.0.13
   permission_handler: ^10.2.0
   provider: ^6.0.5
   responsive_sizer: ^3.1.1
-  share_plus: ^6.3.1
   supabase_flutter: ^1.5.0
   syncfusion_flutter_pdf: ^21.1.35
+  url_launcher: ^6.1.10
 
 dev_dependencies:
   flutter_lints: ^2.0.0
@@ -62,6 +64,9 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/broken_magnifying_glass.svg
+    - assets/images/cancelled.png
+    - assets/images/sign1.jpg
+    - assets/
     - assets/helvetica.ttf
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
