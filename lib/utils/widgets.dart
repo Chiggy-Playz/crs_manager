@@ -12,6 +12,24 @@ class TransparentAppBar extends AppBar {
 }
 
 PageRouteBuilder opaquePage(Widget page) => PageRouteBuilder(
-   opaque: false,
-   pageBuilder: (BuildContext context, _, __) => page,
-);
+      opaque: false,
+      pageBuilder: (BuildContext context, _, __) => page,
+    );
+
+class SpacedRow extends StatelessWidget {
+  const SpacedRow({super.key, required this.widget1, required this.widget2});
+
+  final Widget widget1;
+  final Widget widget2;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        widget1,
+        const Spacer(),
+        widget2,
+      ],
+    );
+  }
+}

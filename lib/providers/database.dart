@@ -4,8 +4,6 @@ import 'package:crs_manager/utils/exceptions.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-typedef ListOfDicts = List<Map<String, dynamic>>;
-
 class DatabaseModel extends ChangeNotifier {
   List<Buyer> buyers = [];
   List<Challan> challans = [];
@@ -115,7 +113,126 @@ class DatabaseModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<Map<String, dynamic>> getNextChallanInfo() async {
+    var now = DateTime.now();
+    var endOfFiscalYear = DateTime(now.year, 3, 31, 23, 59, 59);
+    var session = now.isAfter(endOfFiscalYear)
+        ? "${now.year}-${now.year + 1}"
+        : "${now.year - 1}-${now.year}";
+    var number = (await _client
+                .from("challans")
+                .select("number")
+                .eq("session", session)
+                .order("number", ascending: false)
+                .limit(1))
+            .first["number"] ??
+        0;
+    number += 1;
+
+    return {"number": number, "session": session};
+  }
+
   Future<List<Challan>> getChallans() async {
     return challans;
+  }
+
+  Future<Challan> createChallan(
+      {required int number,
+      required String session,
+      required Buyer buyer,
+      required List<Product> products,
+      required int productsValue,
+      required String deliveredBy,
+      required String vehicleNumber,
+      required String notes,
+      required bool received,
+      required bool digitallySigned}) async {
+    final response = await _client.from("challans").insert({
+      "session": session,
+      "number": number,
+      "buyer": buyer.toMap(),
+      "products": products.map((e) => e.toMap()).toList(),
+      "products_value": productsValue,
+      "delivered_by": deliveredBy,
+      "vehicle_number": vehicleNumber,
+      "notes": notes,
+      "received": received,
+      "digitally_signed": digitallySigned
+    }).select();
+
+    if (response == null) {
+      throw DatabaseError();
+    }
+    final challan = Challan.fromMap(response[0]);
+    challans.insert(0, challan);
+    notifyListeners();
+    return challan;
+  }
+
+  Future<void> updateChallan({
+    required Challan challan,
+    Buyer? buyer,
+    List<Product>? products,
+    int? productsValue,
+    String? deliveredBy,
+    String? vehicleNumber,
+    String? notes,
+    bool? received,
+    bool? digitallySigned,
+    bool? cancelled,
+  }) async {
+    if (buyer == null &&
+        products == null &&
+        productsValue == null &&
+        deliveredBy == null &&
+        vehicleNumber == null &&
+        notes == null &&
+        received == null &&
+        digitallySigned == null &&
+        cancelled == null) {
+      return;
+    }
+
+    await _client
+        .from("challans")
+        .update({
+          "buyer": (buyer ?? challan.buyer).toMap(),
+          "products": (products ?? challan.products)
+              .map(
+                (e) => e.toMap(),
+              )
+              .toList(),
+          "products_value": productsValue ?? challan.productsValue,
+          "delivered_by": deliveredBy ?? challan.deliveredBy,
+          "vehicle_number": vehicleNumber ?? challan.vehicleNumber,
+          "notes": notes ?? challan.notes,
+          "received": received ?? challan.received,
+          "digitally_signed": digitallySigned ?? challan.digitallySigned,
+          "cancelled": cancelled ?? challan.cancelled,
+        })
+        .eq("session", challan.session)
+        .eq("number", challan.number)
+        .eq("id", challan.id);
+
+    challans = challans.map((e) {
+      if (e.id == challan.id) {
+        return Challan(
+            id: e.id,
+            session: e.session,
+            number: e.number,
+            createdAt: e.createdAt,
+            buyer: buyer ?? e.buyer,
+            products: products ?? e.products,
+            productsValue: productsValue ?? e.productsValue,
+            deliveredBy: deliveredBy ?? e.deliveredBy,
+            vehicleNumber: vehicleNumber ?? e.vehicleNumber,
+            notes: notes ?? e.notes,
+            received: received ?? e.received,
+            digitallySigned: digitallySigned ?? e.digitallySigned,
+            cancelled: cancelled ?? e.cancelled);
+      }
+      return e;
+    }).toList();
+    notifyListeners();
   }
 }

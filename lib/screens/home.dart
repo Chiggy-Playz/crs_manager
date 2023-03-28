@@ -1,5 +1,6 @@
 import 'package:crs_manager/screens/buyers/buyer_page.dart';
 import 'package:crs_manager/screens/buyers/buyers_list.dart';
+import 'package:crs_manager/screens/challans/challan_page.dart';
 import 'package:crs_manager/screens/challans/challans_list.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
@@ -112,6 +113,9 @@ class _HomeWidgetState extends State<HomeWidget> {
   void _fabAction() {
     switch (_activePage) {
       case 0: // Challan
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => const ChallanPage(),
+        ));
         break;
       case 1: // Buyer
         Navigator.of(context).push(MaterialPageRoute(

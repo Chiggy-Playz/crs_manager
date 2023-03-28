@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:crs_manager/models/challan.dart';
 import 'package:crs_manager/providers/database.dart';
 
+import 'challan_page.dart';
+
 final DateFormat cardFormatter = DateFormat('HH:mm:ss  dd-MM-yyyy');
 
 class ChallansList extends StatefulWidget {
@@ -65,16 +67,18 @@ class _ChallansListState extends State<ChallansList> {
   }
 
   Card challanCard(Challan challan) {
-    Widget trailing = Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(challan.products
-            .fold(
-                0, (previousValue, element) => previousValue + element.quantity)
-            .toString()),
-        Text(challan.productsValue.toString()),
-      ],
-    );
+    Widget productCount = Text(challan.products
+        .fold(0, (previousValue, element) => previousValue + element.quantity)
+        .toString());
+    Widget trailing = challan.productsValue == 0
+        ? productCount
+        : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              productCount,
+              Text(challan.productsValue.toString()),
+            ],
+          );
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
       elevation: 12,
@@ -105,6 +109,11 @@ class _ChallansListState extends State<ChallansList> {
                 ],
               )
             : trailing,
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ChallanPage(
+            challan: challan,
+          ),
+        )),
       ),
     );
   }

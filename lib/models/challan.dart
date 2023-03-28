@@ -72,21 +72,25 @@ class Product {
     required this.description,
     required this.quantity,
     required this.serial,
+    required this.additionalDescription,
   });
 
   String description;
   int quantity;
   String serial;
+  String additionalDescription;
 
   factory Product.fromMap(Map<String, dynamic> json) => Product(
         description: json["description"],
         quantity: json["quantity"],
         serial: json["serial"] ?? "",
+        additionalDescription: json["additional_description"] ?? "",
       );
 
   Map<String, dynamic> toMap() => {
         "description": description,
         "quantity": quantity,
         "serial": serial,
+        "additionalDescription": additionalDescription,
       };
 }
