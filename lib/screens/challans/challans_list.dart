@@ -88,7 +88,7 @@ class _ChallansListState extends State<ChallansList> {
         leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text(challan.number.toString()),
           Text(
-            challan.session.toString().replaceAll("20", ""),
+            challan.session.toString().split("-").map((e) => e.substring(2)).join("-"),
           ),
         ]),
         trailing: challan.received
