@@ -1,8 +1,9 @@
-import 'package:crs_manager/models/buyer.dart';
-import 'package:crs_manager/models/challan.dart';
-import 'package:crs_manager/utils/exceptions.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../models/buyer.dart';
+import '../models/challan.dart';
+import '../utils/exceptions.dart';
 
 class DatabaseModel extends ChangeNotifier {
   List<Buyer> buyers = [];

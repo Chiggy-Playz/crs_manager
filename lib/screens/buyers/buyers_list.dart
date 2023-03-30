@@ -1,10 +1,10 @@
-import 'package:crs_manager/providers/database.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../models/buyer.dart';
+import '../../providers/database.dart';
 
 typedef VoidBCallback = void Function(Buyer buyer);
 final Widget brokenMagnifyingGlassSvg = SvgPicture.asset(

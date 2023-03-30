@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-import 'package:crs_manager/models/challan.dart';
-import 'package:crs_manager/providers/database.dart';
-
+import '../../models/challan.dart';
+import '../../providers/database.dart';
 import 'challan_page.dart';
 
 final DateFormat cardFormatter = DateFormat('HH:mm:ss  dd-MM-yyyy');

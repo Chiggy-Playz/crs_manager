@@ -1,12 +1,12 @@
-import 'package:crs_manager/providers/database.dart';
-import 'package:crs_manager/screens/home.dart';
-import 'package:crs_manager/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import '../utils/extensions.dart';
 import '../utils/widgets.dart';
+import '../providers/database.dart';
+import 'home.dart';
 
 class Login extends StatefulWidget {
 

@@ -1,12 +1,13 @@
-import 'package:crs_manager/providers/database.dart';
-import 'package:crs_manager/screens/home.dart';
-import 'package:crs_manager/screens/login.dart';
-import 'package:crs_manager/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:provider/provider.dart';
+
+import 'providers/database.dart';
+import 'screens/home.dart';
+import 'screens/login.dart';
+import 'utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

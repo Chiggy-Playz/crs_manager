@@ -1,12 +1,12 @@
-import 'package:crs_manager/models/buyer.dart';
-import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import '../../models/buyer.dart';
 import '../../providers/database.dart';
-import '../loading.dart';
 import '../../utils/extensions.dart';
+import '../../utils/widgets.dart';
+import '../loading.dart';
 
 class BuyerPage extends StatefulWidget {
   const BuyerPage({super.key, this.buyer});

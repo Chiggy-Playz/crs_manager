@@ -1,8 +1,8 @@
-import "package:crs_manager/screens/buyers/buyers_list.dart";
-import "package:crs_manager/utils/widgets.dart";
 import "package:flutter/material.dart";
 
+import "../../utils/widgets.dart";
 import "../../models/buyer.dart";
+import "buyers_list.dart";
 
 class ChooseBuyer extends StatelessWidget {
   const ChooseBuyer({super.key, required this.onBuyerSelected});

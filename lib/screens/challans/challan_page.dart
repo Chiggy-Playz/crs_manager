@@ -1,11 +1,4 @@
 import 'dart:io';
-
-import 'package:crs_manager/providers/database.dart';
-import 'package:crs_manager/screens/buyers/choose_buyer.dart';
-import 'package:crs_manager/screens/challans/get_pdf.dart';
-import 'package:crs_manager/screens/challans/product_page.dart';
-import 'package:crs_manager/utils/extensions.dart';
-import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -15,9 +8,16 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/buyer.dart';
+import '../../providers/database.dart';
 import '../../models/challan.dart';
 import '../../utils/exceptions.dart';
+import '../../utils/extensions.dart';
+import '../../utils/widgets.dart';
+import '../buyers/choose_buyer.dart';
 import '../loading.dart';
+
+import 'get_pdf.dart';
+import 'product_page.dart';
 
 final formatter = DateFormat("dd-MMMM-y");
 
