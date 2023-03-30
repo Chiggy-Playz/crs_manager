@@ -8,7 +8,7 @@
 PRODUCT_NAME = crs_manager
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.crsManager
+PRODUCT_BUNDLE_IDENTIFIER = com.chiggy.crs_manager;
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2023 com.example. All rights reserved.
