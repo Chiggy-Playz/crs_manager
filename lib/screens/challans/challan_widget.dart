@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -172,8 +173,12 @@ class ChallanWidgetState extends State<ChallanWidget> {
                         ? null
                         : () {
                             Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) =>
-                                  ChooseBuyer(onBuyerSelected: onBuyerSelected),
+                              builder: (context) => ChangeNotifierProvider(
+                                create: (context) => BuyerSelectionProvider(
+                                    onBuyerSelected: onBuyerSelected),
+                                builder: (context, child) =>
+                                    const ChooseBuyer(),
+                              ),
                             ));
                           },
                     minLeadingWidth: 0,

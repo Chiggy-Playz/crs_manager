@@ -1,4 +1,6 @@
+import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/challans/search_page.dart';
+import 'package:provider/provider.dart';
 
 import 'buyers/buyer_page.dart';
 import 'buyers/buyers_list.dart';
@@ -77,13 +79,17 @@ class _HomePageState extends State<HomePage> {
         controller: _pageViewController,
         children: [
           const ChallansList(),
-          BuyersList(
-            onBuyerSelected: (buyer) =>
-                Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => BuyerPage(
-                buyer: buyer,
+          ChangeNotifierProvider(
+            create: (_) => BuyerSelectionProvider(
+              onBuyerSelected: (buyer) => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => BuyerPage(
+                    buyer: buyer,
+                  ),
+                ),
               ),
-            )),
+            ),
+            child: const BuyersList(),
           ),
           const Center(
             child: Text("Assets"),

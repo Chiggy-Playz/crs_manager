@@ -7,17 +7,15 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import '../../models/buyer.dart';
 import '../../providers/database.dart';
 
-typedef VoidBCallback = void Function(Buyer buyer);
 final Widget brokenMagnifyingGlassSvg = SvgPicture.asset(
   "assets/images/broken_magnifying_glass.svg",
   semanticsLabel: "Broken Magnifying Glass",
 );
 
 class BuyersList extends StatefulWidget {
-  final VoidBCallback onBuyerSelected;
-  final bool multiple;
-  const BuyersList(
-      {super.key, required this.onBuyerSelected, this.multiple = false});
+  const BuyersList({
+    super.key,
+  });
 
   @override
   State<BuyersList> createState() => _BuyersListState();
@@ -99,7 +97,6 @@ class _BuyersListState extends State<BuyersList> {
                             Buyer buyer = sortAscending
                                 ? buyers[index]
                                 : buyers[buyers.length - index - 1];
-                            print(widget.multiple);
                             return Card(
                               margin: const EdgeInsets.symmetric(
                                   vertical: 6.0, horizontal: 6.0),
@@ -107,10 +104,9 @@ class _BuyersListState extends State<BuyersList> {
                               child: ListTile(
                                 title: Text(buyer.name),
                                 subtitle: Text(buyer.address.split("\n")[0]),
-                                onTap: () => widget.onBuyerSelected(buyer),
-                                onLongPress: widget.multiple
+                                onTap: () => selector.onBuyerSelected(buyer),
+                                onLongPress: selector.multiple
                                     ? () {
-                                        print("Long press!!!!!!");
                                         buyerLongPressed(buyer);
                                       }
                                     : null,

@@ -2,9 +2,15 @@ import 'package:flutter/foundation.dart';
 
 import '../models/buyer.dart';
 
-class BuyerSelectionProvider extends ChangeNotifier {
 
+typedef VoidBCallback = void Function(Buyer buyer);
+
+class BuyerSelectionProvider extends ChangeNotifier {
   List<Buyer> selectedBuyers = [];
+  final VoidBCallback onBuyerSelected;
+  final bool multiple;
+
+  BuyerSelectionProvider({required this.onBuyerSelected, this.multiple = false});
 
   void addBuyer(Buyer buyer) {
     selectedBuyers.add(buyer);

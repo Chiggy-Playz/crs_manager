@@ -166,14 +166,14 @@ class _ConditionPageState extends State<ConditionPage> {
       List<Buyer>? buyers = await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => ChangeNotifierProvider(
-            create: (_) => BuyerSelectionProvider(),
-            child: ChooseBuyer(
+            create: (_) => BuyerSelectionProvider(
               multiple: true,
               onBuyerSelected: (b) {
                 buyer = b;
                 Navigator.of(context).pop();
               },
             ),
+            child: const ChooseBuyer(),
           ),
         ),
       );
@@ -185,6 +185,7 @@ class _ConditionPageState extends State<ConditionPage> {
         if (_value is! List<Buyer>) {
           _value = <Buyer>[];
         }
+        
         if (buyers != null) {
           for (Buyer buyer in buyers) {
             if (!_value.contains(buyer)) {
