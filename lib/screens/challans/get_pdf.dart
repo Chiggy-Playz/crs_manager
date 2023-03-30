@@ -289,7 +289,7 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
       int index = challan.products.indexOf(product);
       PdfGridRow row = grid.rows.add();
       row.cells[0].value = '${index + 1}';
-      row.cells[1].value = product.description;
+      row.cells[1].value = "${product.description}\n${product.additionalDescription}".trim();
       row.cells[2].value = product.serial;
       row.cells[3].value =
           "${product.quantity} ${product.quantityUnit}"; // product.quantity.toString();

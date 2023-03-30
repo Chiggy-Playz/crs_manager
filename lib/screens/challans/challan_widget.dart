@@ -8,12 +8,14 @@ import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
-import 'package:holding_gesture/holding_gesture.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 
 import '../../models/buyer.dart';
 import '../../models/challan.dart';
@@ -22,16 +24,16 @@ import '../loading.dart';
 
 final formatter = DateFormat("dd-MMMM-y");
 
-class ChallanPage extends StatefulWidget {
-  const ChallanPage({super.key, this.challan});
+class ChallanWidget extends StatefulWidget {
+  const ChallanWidget({super.key, this.challan});
 
   final Challan? challan;
 
   @override
-  State<ChallanPage> createState() => _ChallanPageState();
+  State<ChallanWidget> createState() => ChallanWidgetState();
 }
 
-class _ChallanPageState extends State<ChallanPage> {
+class ChallanWidgetState extends State<ChallanWidget> {
   final _formKey = GlobalKey<FormState>();
 
   Map<String, dynamic>? nextChallanInfo;
@@ -64,64 +66,64 @@ class _ChallanPageState extends State<ChallanPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TransparentAppBar(
-        title: Text(widget.challan == null ? "New Challan" : "Edit Challan"),
-        actions: [
-          PopupMenuButton<int>(
-            icon: const Icon(Icons.article),
-            itemBuilder: (context) => List.generate(
-              3,
-              (index) => PopupMenuItem(
-                value: index + 1,
-                child: Text("${index + 1} Page"),
-              ),
-            ),
-            onSelected: (value) => viewPdf(value),
-          ),
-          if (widget.challan is Challan)
-            InkWell(
-              onLongPress: _cancelled ? () {} : onCancelPressed,
-              onTap: _cancelled
-                  ? null
-                  : () =>
-                      context.showSnackBar(message: "Hold to cancel challan"),
-              child: cup.Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.delete,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: Consumer<DatabaseModel>(
-        builder: (context, value, child) {
-          return widget.challan == null
-              ? FutureBuilder(
-                  future: value.getNextChallanInfo(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      nextChallanInfo = snapshot.data as Map<String, dynamic>;
-                      return actualPage();
-                    }
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                )
-              : actualPage();
-        },
-      ),
+    return Consumer<DatabaseModel>(
+      builder: (context, value, child) {
+        return widget.challan == null
+            ? FutureBuilder(
+                future: value.getNextChallanInfo(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    nextChallanInfo = snapshot.data as Map<String, dynamic>;
+                    return actualPage();
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
+              )
+            : actualPage();
+      },
     );
+  }
+
+  Future<bool> _onWillPop() async {
+    if (changesMade() &&
+        (widget.challan == null && _buyer != null ||
+            _products.isNotEmpty ||
+            _productsValue != 0 ||
+            _deliveredBy.isNotEmpty ||
+            _vehicleNumber.isNotEmpty ||
+            _notes.isNotEmpty ||
+            _received ||
+            _digitallySigned)) {
+      return await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("Discard changes?"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: const Text("No"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: const Text("Yes"),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+    }
+    return true;
   }
 
   Widget actualPage() {
     var bodyTextTheme = Theme.of(context).textTheme.titleLarge;
 
     return WillPopScope(
-      onWillPop: () async {
-        return true;
-      },
+      onWillPop: _onWillPop,
       child: Padding(
         padding: EdgeInsets.fromLTRB(2.w, 2.h, 2.w, 0),
         child: SingleChildScrollView(
@@ -129,6 +131,13 @@ class _ChallanPageState extends State<ChallanPage> {
             key: _formKey,
             child: Column(
               children: [
+                if (_cancelled)
+                  Card(
+                    child: ListTile(
+                      tileColor: Theme.of(context).colorScheme.errorContainer,
+                      title: const Center(child: Text("Cancelled")),
+                    ),
+                  ),
                 SpacedRow(
                   widget1: Text("Challan Number", style: bodyTextTheme),
                   widget2: Text(
@@ -221,6 +230,11 @@ class _ChallanPageState extends State<ChallanPage> {
                     return null;
                   },
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    setState(() {
+                      _productsValue = int.tryParse(value) ?? _productsValue;
+                    });
+                  },
                   onSaved: (newValue) => _productsValue = int.parse(newValue!),
                 ),
                 SizedBox(height: 2.h),
@@ -317,6 +331,45 @@ class _ChallanPageState extends State<ChallanPage> {
     );
   }
 
+  bool changesMade() {
+    if (widget.challan == null) {
+      return true;
+    }
+
+    if (!mapEquals(_buyer!.toMap(), widget.challan!.buyer.toMap())) {
+      return true;
+    }
+    if (!const DeepCollectionEquality().equals(
+      _products.map((e) => e.toMap()),
+      widget.challan!.products.map((e) => e.toMap()),
+    )) {
+      return true;
+    }
+
+    if (_productsValue != widget.challan!.productsValue) {
+      return true;
+    }
+    if (_deliveredBy != widget.challan!.deliveredBy) {
+      return true;
+    }
+    if (_vehicleNumber != widget.challan!.vehicleNumber) {
+      return true;
+    }
+    if (_notes != widget.challan!.notes) {
+      return true;
+    }
+    if (_received != widget.challan!.received) {
+      return true;
+    }
+    if (_digitallySigned != widget.challan!.digitallySigned) {
+      return true;
+    }
+    if (_cancelled != widget.challan!.cancelled) {
+      return true;
+    }
+    return false;
+  }
+
   void viewPdf(int pages) async {
     Challan challan;
     try {
@@ -372,57 +425,6 @@ class _ChallanPageState extends State<ChallanPage> {
         if (!mounted) return;
         context.showErrorSnackBar(message: "Couldn't open file");
       }
-    }
-  }
-
-  void onCancelPressed() async {
-    var result = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Cancel Challan?"),
-        content: const Text("Are you sure you want to cancel this challan?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
-    );
-
-    if (result == null || result == false) return;
-    if (!mounted) return;
-
-    // Confirm again, just to be REALLY sure
-    var secondResult = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Cancel Challan?"),
-        content:
-            const Text("Are you REALLY sure you want to cancel this challan?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("No"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Yes"),
-          ),
-        ],
-      ),
-    );
-
-    if (!mounted) return;
-    if (secondResult == true) {
-      await Provider.of<DatabaseModel>(context, listen: false)
-          .updateChallan(challan: widget.challan!, cancelled: true);
-      if (!mounted) return;
-      Navigator.of(context).pop();
     }
   }
 

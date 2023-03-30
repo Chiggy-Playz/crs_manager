@@ -1,3 +1,4 @@
+import 'package:crs_manager/screens/challans/challan_pageview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -5,8 +6,6 @@ import 'package:intl/intl.dart';
 
 import 'package:crs_manager/models/challan.dart';
 import 'package:crs_manager/providers/database.dart';
-
-import 'challan_page.dart';
 
 final DateFormat cardFormatter = DateFormat('HH:mm:ss  dd-MM-yyyy');
 
@@ -60,13 +59,13 @@ class _ChallansListState extends State<ChallansList> {
       controller: scrollController,
       itemCount: challans.length,
       itemBuilder: (context, index) {
-        Challan challan = challans[index];
-        return challanCard(challan);
+        return challanCard(challans, index);
       },
     );
   }
 
-  Card challanCard(Challan challan) {
+  Card challanCard(List<Challan> challans, int index) {
+    Challan challan = challans[index];
     Widget productCount = Text(challan.products
         .fold(0, (previousValue, element) => previousValue + element.quantity)
         .toString());
@@ -110,8 +109,9 @@ class _ChallansListState extends State<ChallansList> {
               )
             : trailing,
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => ChallanPage(
-            challan: challan,
+          builder: (context) => ChallanPageView(
+            challans: challans,
+            initialIndex: index,
           ),
         )),
       ),
