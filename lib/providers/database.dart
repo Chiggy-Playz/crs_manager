@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/buyer.dart';
 import '../models/challan.dart';
+import '../models/condition.dart';
 import '../utils/exceptions.dart';
 
 class DatabaseModel extends ChangeNotifier {
@@ -234,5 +235,30 @@ class DatabaseModel extends ChangeNotifier {
       return e;
     }).toList();
     notifyListeners();
+  }
+
+  List<Challan> filterChallan({required List<Condition> conditions}) {
+    var filteredChallans = List<Challan>.from(challans);
+
+    for (var condition in conditions) {
+      switch (condition.type) {
+        case ConditionType.buyers:
+          // Condition value will be list of buyer
+          filteredChallans = filteredChallans.where((challan) {
+            for (Buyer b in condition.value) {
+              if (challan.buyer.name == b.name) {
+                return true;
+              }
+            }
+            return false;
+          }).toList();
+          break;
+        default:
+          break;
+      }
+      
+    }
+
+    return filteredChallans;
   }
 }

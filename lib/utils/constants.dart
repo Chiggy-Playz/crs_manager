@@ -1,4 +1,6 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 var theme = FlexThemeData.light(
   scheme: FlexScheme.blue,
@@ -30,4 +32,9 @@ var darkTheme = FlexThemeData.dark(
   visualDensity: FlexColorScheme.comfortablePlatformDensity,
   useMaterial3: true,
   swapLegacyOnMaterial3: true,
+);
+
+final Widget brokenMagnifyingGlassSvg = SvgPicture.asset(
+  "assets/images/broken_magnifying_glass.svg",
+  semanticsLabel: "Broken Magnifying Glass",
 );

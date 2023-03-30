@@ -211,6 +211,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
                           ),
                           SizedBox(height: 2.h),
                           FloatingActionButton.extended(
+                            heroTag: "${widget.challan?.id}-addProduct",
                             onPressed: _cancelled ? null : onAddProduct,
                             label: const Text("Add Product"),
                             icon: const Icon(Icons.add),

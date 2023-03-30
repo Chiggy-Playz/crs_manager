@@ -155,7 +155,10 @@ class _ConditionPageState extends State<ConditionPage> {
       ConditionType.fields,
     ].contains(_selectedCondition)) {
       return FloatingActionButton(
-          onPressed: _fabPress, child: const Icon(Icons.add));
+        heroTag: "fab",
+        onPressed: _fabPress,
+        child: const Icon(Icons.add),
+      );
     }
     return null;
   }
@@ -185,7 +188,7 @@ class _ConditionPageState extends State<ConditionPage> {
         if (_value is! List<Buyer>) {
           _value = <Buyer>[];
         }
-        
+
         if (buyers != null) {
           for (Buyer buyer in buyers) {
             if (!_value.contains(buyer)) {

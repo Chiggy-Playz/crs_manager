@@ -2,6 +2,7 @@ import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/challans/search_page.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/database.dart';
 import 'buyers/buyer_page.dart';
 import 'buyers/buyers_list.dart';
 import 'challans/challans_list.dart';
@@ -78,7 +79,11 @@ class _HomePageState extends State<HomePage> {
       body: PageView(
         controller: _pageViewController,
         children: [
-          const ChallansList(),
+          Consumer<DatabaseModel>(
+            builder: (context, value, child) => ChallansList(
+              challans: value.challans,
+            ),
+          ),
           ChangeNotifierProvider(
             create: (_) => BuyerSelectionProvider(
               onBuyerSelected: (buyer) => Navigator.of(context).push(

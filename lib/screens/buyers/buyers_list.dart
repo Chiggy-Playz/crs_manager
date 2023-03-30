@@ -1,16 +1,13 @@
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 import '../../models/buyer.dart';
 import '../../providers/database.dart';
+import '../../utils/constants.dart';
 
-final Widget brokenMagnifyingGlassSvg = SvgPicture.asset(
-  "assets/images/broken_magnifying_glass.svg",
-  semanticsLabel: "Broken Magnifying Glass",
-);
+
 
 class BuyersList extends StatefulWidget {
   const BuyersList({
