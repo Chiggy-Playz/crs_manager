@@ -33,3 +33,5 @@ class SpacedRow extends StatelessWidget {
     );
   }
 }
+
+TextStyle font(size) => TextStyle(fontSize: (size as int).toDouble());

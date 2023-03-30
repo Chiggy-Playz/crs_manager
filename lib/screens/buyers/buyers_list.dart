@@ -1,3 +1,4 @@
+import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,9 @@ final Widget brokenMagnifyingGlassSvg = SvgPicture.asset(
 
 class BuyersList extends StatefulWidget {
   final VoidBCallback onBuyerSelected;
-  const BuyersList({super.key, required this.onBuyerSelected});
+  final bool multiple;
+  const BuyersList(
+      {super.key, required this.onBuyerSelected, this.multiple = false});
 
   @override
   State<BuyersList> createState() => _BuyersListState();
@@ -40,87 +43,109 @@ class _BuyersListState extends State<BuyersList> {
             return a.name.toLowerCase().compareTo(b.name.toLowerCase());
           });
 
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              SizedBox(
-                height: 10.h,
-                child: Row(
-                  children: [
-                    Expanded(
-                        child: TextField(
-                      controller: filterController,
-                      decoration: InputDecoration(
-                        hintText: "Filter by name or address",
-                        suffixIcon: filter.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  setState(() {
-                                    filter = "";
-                                    filterController.clear();
-                                  });
-                                },
-                              )
-                            : null,
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          filter = value;
-                        });
-                      },
-                    )),
-                    SizedBox(width: 5.w),
-                    ActionChip(
-                      label: Text(sortAscending ? "Ascending" : "Descending"),
-                      avatar: Icon(sortAscending
-                          ? Icons.arrow_downward
-                          : Icons.arrow_upward),
-                      onPressed: () {
-                        setState(() {
-                          sortAscending = !sortAscending;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              buyers.isNotEmpty
-                  ? Expanded(
-                      child: ListView.builder(
-                        itemCount: buyers.length,
-                        itemBuilder: (context, index) {
-                          Buyer buyer = sortAscending
-                              ? buyers[index]
-                              : buyers[buyers.length - index - 1];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 6.0, horizontal: 6.0),
-                            elevation: 4,
-                            child: ListTile(
-                              title: Text(buyer.name),
-                              subtitle: Text(buyer.address.split("\n")[0]),
-                              onTap: () => widget.onBuyerSelected(buyer),
-                            ),
-                          );
+        return Consumer<BuyerSelectionProvider>(
+            builder: (context, selector, child) {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 10.h,
+                  child: Row(
+                    children: [
+                      Expanded(
+                          child: TextField(
+                        controller: filterController,
+                        decoration: InputDecoration(
+                          hintText: "Filter by name or address",
+                          suffixIcon: filter.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    setState(() {
+                                      filter = "";
+                                      filterController.clear();
+                                    });
+                                  },
+                                )
+                              : null,
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            filter = value;
+                          });
+                        },
+                      )),
+                      SizedBox(width: 5.w),
+                      ActionChip(
+                        label: Text(sortAscending ? "Ascending" : "Descending"),
+                        avatar: Icon(sortAscending
+                            ? Icons.arrow_downward
+                            : Icons.arrow_upward),
+                        onPressed: () {
+                          setState(() {
+                            sortAscending = !sortAscending;
+                          });
                         },
                       ),
-                    )
-                  : Expanded(
-                      child: Center(
-                          child: Column(
-                        children: [
-                          brokenMagnifyingGlassSvg,
-                          SizedBox(height: 2.h),
-                          const Text("No buyers found :("),
-                        ],
-                      )),
-                    )
-            ],
-          ),
-        );
+                    ],
+                  ),
+                ),
+                buyers.isNotEmpty
+                    ? Expanded(
+                        child: ListView.builder(
+                          itemCount: buyers.length,
+                          itemBuilder: (context, index) {
+                            Buyer buyer = sortAscending
+                                ? buyers[index]
+                                : buyers[buyers.length - index - 1];
+                            print(widget.multiple);
+                            return Card(
+                              margin: const EdgeInsets.symmetric(
+                                  vertical: 6.0, horizontal: 6.0),
+                              elevation: 4,
+                              child: ListTile(
+                                title: Text(buyer.name),
+                                subtitle: Text(buyer.address.split("\n")[0]),
+                                onTap: () => widget.onBuyerSelected(buyer),
+                                onLongPress: widget.multiple
+                                    ? () {
+                                        print("Long press!!!!!!");
+                                        buyerLongPressed(buyer);
+                                      }
+                                    : null,
+                                selected:
+                                    selector.selectedBuyers.contains(buyer),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Expanded(
+                        child: Center(
+                            child: Column(
+                          children: [
+                            brokenMagnifyingGlassSvg,
+                            SizedBox(height: 2.h),
+                            const Text("No buyers found :("),
+                          ],
+                        )),
+                      )
+              ],
+            ),
+          );
+        });
       },
     );
+  }
+
+  void buyerLongPressed(Buyer buyer) {
+    var selector = Provider.of<BuyerSelectionProvider>(context, listen: false);
+
+    if (selector.selectedBuyers.contains(buyer)) {
+      selector.removeBuyer(buyer);
+    } else {
+      selector.addBuyer(buyer);
+    }
   }
 }
