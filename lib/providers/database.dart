@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:collection/collection.dart';
 
 import '../models/buyer.dart';
 import '../models/challan.dart';
@@ -125,8 +126,8 @@ class DatabaseModel extends ChangeNotifier {
                 .select("number")
                 .eq("session", session)
                 .order("number", ascending: false)
-                .limit(1))
-            .first["number"] ??
+                .limit(1) as List)
+            .firstOrNull?["number"] ??
         0;
     number += 1;
 
@@ -256,7 +257,6 @@ class DatabaseModel extends ChangeNotifier {
         default:
           break;
       }
-      
     }
 
     return filteredChallans;
