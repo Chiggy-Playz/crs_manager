@@ -1,6 +1,7 @@
+import 'package:crs_manager/screens/challans/search_page.dart';
+
 import 'buyers/buyer_page.dart';
 import 'buyers/buyers_list.dart';
-import 'challans/challan_widget.dart';
 import 'challans/challans_list.dart';
 import '../utils/widgets.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +53,12 @@ class _HomePageState extends State<HomePage> {
 
   int _activePage = 0;
   List<Widget> _actions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _updateActions(_activePage);
+  }
 
   @override
   void dispose() {
@@ -134,7 +141,10 @@ class _HomePageState extends State<HomePage> {
       _actions = [
         IconButton(
           icon: const Icon(Icons.search),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const SearchPage()));
+          },
         ),
       ];
     } else {

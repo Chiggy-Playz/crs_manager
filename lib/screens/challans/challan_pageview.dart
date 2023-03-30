@@ -45,7 +45,6 @@ class _ChallanPageViewState extends State<ChallanPageView> {
   void controllerListener() {
     // page moving
     // check changes and show dialog box
-    print("${controller.page!}   ${controller.page!.round()}");
     bool changesMade =
         _keys[controller.page!.round()].currentState!.changesMade();
     // If changes made and dialogbox not already opened
