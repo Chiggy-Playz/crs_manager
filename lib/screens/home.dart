@@ -1,8 +1,8 @@
-import 'package:crs_manager/screens/buyers/buyer_page.dart';
-import 'package:crs_manager/screens/buyers/buyers_list.dart';
-import 'package:crs_manager/screens/challans/challan_widget.dart';
-import 'package:crs_manager/screens/challans/challans_list.dart';
-import 'package:crs_manager/utils/widgets.dart';
+import 'buyers/buyer_page.dart';
+import 'buyers/buyers_list.dart';
+import 'challans/challan_widget.dart';
+import 'challans/challans_list.dart';
+import '../utils/widgets.dart';
 import 'package:flutter/material.dart';
 
 import 'challans/new_challan.dart';
@@ -40,14 +40,14 @@ const List<BottomNavigationBarItem> dropDownItems = [
   ),
 ];
 
-class HomeWidget extends StatefulWidget {
-  const HomeWidget({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<HomeWidget> createState() => _HomeWidgetState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomeWidgetState extends State<HomeWidget> {
+class _HomePageState extends State<HomePage> {
   final _pageViewController = PageController();
 
   int _activePage = 0;

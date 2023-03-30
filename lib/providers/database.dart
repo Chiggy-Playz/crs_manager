@@ -30,7 +30,6 @@ class DatabaseModel extends ChangeNotifier {
 
     _client = Supabase.instance.client;
     connected = true;
-    loadCache();
   }
 
   Future<void> loadCache() async {

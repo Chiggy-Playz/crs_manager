@@ -1,4 +1,4 @@
-import 'package:crs_manager/screens/challans/challan_widget.dart';
+import 'challan_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/widgets.dart';

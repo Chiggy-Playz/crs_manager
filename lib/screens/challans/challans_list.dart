@@ -1,11 +1,11 @@
-import 'package:crs_manager/screens/challans/challan_pageview.dart';
+import 'challan_pageview.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-import 'package:crs_manager/models/challan.dart';
-import 'package:crs_manager/providers/database.dart';
+import '../../models/challan.dart';
+import '../../providers/database.dart';
 
 final DateFormat cardFormatter = DateFormat('HH:mm:ss  dd-MM-yyyy');
 

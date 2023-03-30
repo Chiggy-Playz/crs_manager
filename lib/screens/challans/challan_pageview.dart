@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:crs_manager/screens/challans/challan_widget.dart';
-import 'package:crs_manager/utils/extensions.dart';
+import 'challan_widget.dart';
+import '../../utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:open_file/open_file.dart';

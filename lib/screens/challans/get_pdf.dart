@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter/animation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/services.dart' show rootBundle;
-
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../../models/challan.dart';

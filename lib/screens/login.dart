@@ -3,13 +3,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import '../providers/database.dart';
 import '../utils/extensions.dart';
 import '../utils/widgets.dart';
-import '../providers/database.dart';
 import 'home.dart';
 
 class Login extends StatefulWidget {
-
   const Login({super.key});
 
   @override
@@ -131,7 +130,7 @@ class _LoginState extends State<Login> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => const HomeWidget(),
+        builder: (context) => const HomePage(),
       ),
     );
   }
