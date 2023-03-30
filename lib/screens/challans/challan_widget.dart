@@ -241,7 +241,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
                 TextFormField(
                   enabled: !_cancelled,
                   decoration: const InputDecoration(labelText: "Delivered By"),
-                  initialValue: widget.challan?.deliveredBy ?? "None",
+                  initialValue: widget.challan?.deliveredBy ?? "",
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Field cannot be empty";
