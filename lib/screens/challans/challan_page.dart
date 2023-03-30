@@ -8,7 +8,6 @@ import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
-import 'package:holding_gesture/holding_gesture.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
