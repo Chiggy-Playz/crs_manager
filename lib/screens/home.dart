@@ -1,10 +1,11 @@
+import 'package:crs_manager/screens/buyers/buyer_page.dart';
+import 'package:crs_manager/screens/buyers/buyers_list.dart';
+import 'package:crs_manager/screens/challans/challan_widget.dart';
+import 'package:crs_manager/screens/challans/challans_list.dart';
+import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
 
-import '../utils/widgets.dart';
-import 'buyers/buyer_page.dart';
-import 'buyers/buyers_list.dart';
-import 'challans/challan_page.dart';
-import 'challans/challans_list.dart';
+import 'challans/new_challan.dart';
 
 const List<BottomNavigationBarItem> dropDownItems = [
   BottomNavigationBarItem(
@@ -104,6 +105,7 @@ class _HomeWidgetState extends State<HomeWidget> {
         items: dropDownItems,
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: _fabAction,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
@@ -115,7 +117,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     switch (_activePage) {
       case 0: // Challan
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => const ChallanPage(),
+          builder: (context) => const NewChallanPage(),
         ));
         break;
       case 1: // Buyer
