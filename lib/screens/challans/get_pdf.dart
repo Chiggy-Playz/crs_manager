@@ -297,10 +297,11 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
       PdfGridRow row = grid.rows.add();
       row.cells[0].value = '${index + 1}';
       row.cells[1].value =
-          "${product.description}\n${product.additionalDescription}".trim();
-      row.cells[2].value = product.serial;
+          "${product.description.toUpperCase()}\n${product.additionalDescription.toUpperCase()}"
+              .trim();
+      row.cells[2].value = product.serial.toUpperCase();
       row.cells[3].value =
-          "${product.quantity} ${product.quantityUnit}"; // product.quantity.toString();
+          "${product.quantity} ${product.quantityUnit.toUpperCase()}";
       row.cells[3].stringFormat.alignment = PdfTextAlignment.center;
 
       row.style.font = PdfStandardFont(PdfFontFamily.helvetica, 12);
@@ -324,18 +325,19 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
     // Horizontal Lines just below products
     page.graphics.drawLine(pen, const Offset(10, 720), const Offset(575, 720));
     page.graphics.drawString(
-        'Vehicle Number : ${challan.vehicleNumber}', normalFont,
+        'Vehicle Number : ${challan.vehicleNumber.toUpperCase()}', normalFont,
         bounds: const Rect.fromLTWH(50, 705, 200, 100));
     page.graphics.drawString('Delivered By :', normalFont,
         bounds: const Rect.fromLTWH(250, 705, 200, 100));
-    page.graphics.drawString(challan.deliveredBy, underlinedBoldFont,
+    page.graphics.drawString(
+        challan.deliveredBy.toUpperCase(), underlinedBoldFont,
         bounds: const Rect.fromLTWH(330, 705, 200, 100));
     page.graphics.drawLine(pen, const Offset(10, 703), const Offset(575, 703));
 
     page.graphics.drawString('Total', normalFont,
         bounds: const Rect.fromLTWH(450, 705, 200, 100));
 
-    page.graphics.drawString(totalProducts.toString(), normalFont,
+    page.graphics.drawString(totalProducts.toString().toUpperCase(), normalFont,
         bounds: const Rect.fromLTWH(540, 705, 200, 100));
 
     page.graphics.drawString('''
