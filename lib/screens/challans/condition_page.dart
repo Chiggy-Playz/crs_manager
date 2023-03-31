@@ -113,7 +113,7 @@ class _ConditionPageState extends State<ConditionPage> {
         }
         break;
       case ConditionType.product:
-        if (_value is! String) {
+        if (_value is! String || _value.isEmpty) {
           errorMessage = "Please type in a value";
         }
         break;
@@ -294,7 +294,16 @@ class _ConditionPageState extends State<ConditionPage> {
   }
 
   Widget _productWidget() {
-    return const Placeholder();
+    return TextFormField(
+      onChanged: (value) {
+        _value = value;
+      },
+      initialValue: _value as String?,
+      decoration: const InputDecoration(
+        labelText: "Product",
+        hintText: "Enter description, serial, or additional description",
+      ),
+    );
   }
 
   Widget _fieldsWidget() {

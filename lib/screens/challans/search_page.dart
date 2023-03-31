@@ -116,6 +116,7 @@ class _SearchPageState extends State<SearchPage> {
         break;
       case ConditionType.product:
         title = "If product's description or serial number contains: ";
+        value = condition.value as String;
         break;
       case ConditionType.date:
         var range = condition.value as DateTimeRange;

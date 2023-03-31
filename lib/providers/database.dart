@@ -247,7 +247,7 @@ class DatabaseModel extends ChangeNotifier {
           // Condition value will be list of buyer
           filteredChallans = filteredChallans.where((challan) {
             for (Buyer b in condition.value) {
-              if (challan.buyer.name == b.name) {
+              if (challan.buyer.name.toLowerCase() == b.name.toLowerCase()) {
                 return true;
               }
             }
@@ -259,6 +259,28 @@ class DatabaseModel extends ChangeNotifier {
           filteredChallans = filteredChallans.where((challan) {
             return condition.value.start.isBefore(challan.createdAt) &&
                 condition.value.end.isAfter(challan.createdAt);
+          }).toList();
+          break;
+        case ConditionType.product:
+          // Condition value will be string
+          // If string is in any product's description, serial, or additional description
+          // then challan will be included
+
+          filteredChallans = filteredChallans.where((challan) {
+            for (Product p in challan.products) {
+              if (p.description
+                      .toLowerCase()
+                      .contains(condition.value.toLowerCase()) ||
+                  p.serial
+                      .toLowerCase()
+                      .contains(condition.value.toLowerCase()) ||
+                  p.additionalDescription
+                      .toLowerCase()
+                      .contains(condition.value.toLowerCase())) {
+                return true;
+              }
+            }
+            return false;
           }).toList();
           break;
         default:
