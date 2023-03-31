@@ -1,6 +1,5 @@
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/buyers/choose_buyer.dart';
-import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +7,7 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 
 import '../../models/buyer.dart';
 import '../../models/condition.dart';
+import '../../utils/constants.dart';
 
 List<DropdownMenuItem<ConditionType>> conditionOptions = const [
   DropdownMenuItem(
@@ -108,7 +108,7 @@ class _ConditionPageState extends State<ConditionPage> {
         }
         break;
       case ConditionType.date:
-        if (_value is! List<DateTime>) {
+        if (_value is! DateTimeRange) {
           errorMessage = "Please select a date range";
         }
         break;
@@ -152,55 +152,79 @@ class _ConditionPageState extends State<ConditionPage> {
   FloatingActionButton? _fab() {
     if ([
       ConditionType.buyers,
+      ConditionType.date,
       ConditionType.fields,
     ].contains(_selectedCondition)) {
       return FloatingActionButton(
         heroTag: "fab",
         onPressed: _fabPress,
-        child: const Icon(Icons.add),
+        child: Icon(
+          _selectedCondition == ConditionType.date
+              ? Icons.calendar_month
+              : Icons.add,
+        ),
       );
     }
     return null;
   }
 
   void _fabPress() async {
-    if (_selectedCondition == ConditionType.buyers) {
-      Buyer? buyer;
-      List<Buyer>? buyers = await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => ChangeNotifierProvider(
-            create: (_) => BuyerSelectionProvider(
-              multiple: true,
-              onBuyerSelected: (b) {
-                buyer = b;
-                Navigator.of(context).pop();
-              },
+    switch (_selectedCondition) {
+      case ConditionType.buyers:
+        Buyer? buyer;
+        List<Buyer>? buyers = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ChangeNotifierProvider(
+              create: (_) => BuyerSelectionProvider(
+                multiple: true,
+                onBuyerSelected: (b) {
+                  buyer = b;
+                  Navigator.of(context).pop();
+                },
+              ),
+              child: const ChooseBuyer(),
             ),
-            child: const ChooseBuyer(),
           ),
-        ),
-      );
-      if (buyers == null && buyer == null) {
-        return;
-      }
-
-      setState(() {
-        if (_value is! List<Buyer>) {
-          _value = <Buyer>[];
+        );
+        if (buyers == null && buyer == null) {
+          return;
         }
 
-        if (buyers != null) {
-          for (Buyer buyer in buyers) {
+        setState(() {
+          if (_value is! List<Buyer>) {
+            _value = <Buyer>[];
+          }
+
+          if (buyers != null) {
+            for (Buyer buyer in buyers) {
+              if (!_value.contains(buyer)) {
+                _value.add(buyer);
+              }
+            }
+          } else {
             if (!_value.contains(buyer)) {
               _value.add(buyer);
             }
           }
-        } else {
-          if (!_value.contains(buyer)) {
-            _value.add(buyer);
-          }
+        });
+        break;
+
+      case ConditionType.date:
+        DateTimeRange? range = await showDateRangePicker(
+          context: context,
+          firstDate: DateTime(2020, 01, 01, 00, 00, 00),
+          lastDate: DateTime.now(),
+        );
+
+        if (range == null) {
+          return;
         }
-      });
+
+        setState(() {
+          _value = range;
+        });
+
+        break;
     }
   }
 
@@ -258,7 +282,15 @@ class _ConditionPageState extends State<ConditionPage> {
   }
 
   Widget _dateWidget() {
-    return const Placeholder();
+    if (_value == null) {
+      return const ListTile(
+        title: Text("Use the edit button to select a date range"),
+      );
+    }
+    var range = _value as DateTimeRange;
+    return ListTile(
+        title: Text(
+            "Challans between ${formatterDate.format(range.start)} and ${formatterDate.format(range.end)}"));
   }
 
   Widget _productWidget() {

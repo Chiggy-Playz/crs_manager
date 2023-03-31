@@ -118,7 +118,10 @@ class _SearchPageState extends State<SearchPage> {
         title = "If product's description or serial number contains: ";
         break;
       case ConditionType.date:
+        var range = condition.value as DateTimeRange;
         title = "If the challan was created between: ";
+        value =
+            "${formatterDate.format(range.start)} and ${formatterDate.format(range.end)}";
         break;
       case ConditionType.raw:
         title = "If challan contains the keyword: ";

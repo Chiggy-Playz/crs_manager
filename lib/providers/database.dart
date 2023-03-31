@@ -254,6 +254,13 @@ class DatabaseModel extends ChangeNotifier {
             return false;
           }).toList();
           break;
+        case ConditionType.date:
+          // Condition value will be DateTimeRange
+          filteredChallans = filteredChallans.where((challan) {
+            return condition.value.start.isBefore(challan.createdAt) &&
+                condition.value.end.isAfter(challan.createdAt);
+          }).toList();
+          break;
         default:
           break;
       }

@@ -1,6 +1,7 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 
 var theme = FlexThemeData.light(
   scheme: FlexScheme.blue,
@@ -40,3 +41,5 @@ final Widget brokenMagnifyingGlassSvg = SvgPicture.asset(
   "assets/images/broken_magnifying_glass.svg",
   semanticsLabel: "Broken Magnifying Glass",
 );
+
+final formatterDate = DateFormat("dd-MM-yyyy");
