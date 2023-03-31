@@ -1,0 +1,46 @@
+name: Create apps workflow
+on:
+    # Trigger on tag push
+    push:
+      tags:
+        - "*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Get tag annotation
+      id: tag-data
+      uses: ericcornelissen/git-tag-annotation-action@v2
+    
+    - name: Setup Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: "17.x"
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v1
+      with:
+        flutter-version: "3.3.0"
+
+    - name: Pub Get Packages
+      run: flutter pub get
+
+    - name: Build APK
+      run: flutter build apk --release
+
+    - name: Build Exe
+      run: flutter build windows
+
+    - name: Zip Exe
+      uses: papeloto/action-zip@v1
+      with: 
+        files: build/windows/runner/Release
+        dest: build/windows/windows.zip
+
+    - name: Create Github Release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "build/app/outputs/apk/release/*.apk, build/windows/windows.zip"
+        token: ${{ secrets.RELEASES_TOKEN }}
+        name: ${{ steps.tag-data.outputs.git-tag-annotation }}
