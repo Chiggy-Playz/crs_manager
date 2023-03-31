@@ -37,6 +37,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   intl: ^0.18.0
+  number_to_words: ^1.0.0
   open_file: ^3.2.1
   path_provider: ^2.0.13
   permission_handler: ^10.2.0

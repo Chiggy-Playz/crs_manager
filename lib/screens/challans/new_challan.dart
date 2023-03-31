@@ -27,6 +27,13 @@ class _NewChallanPageState extends State<NewChallanPage> {
                   value: index + 1,
                   child: Text("${index + 1} Page"),
                 ),
+              )..addAll(
+                [
+                  const PopupMenuItem<int>(
+                    value: 0,
+                    child: Text("Unticked"),
+                  )
+                ],
               ),
               onSelected: (value) => _key.currentState!.viewPdf(value),
             ),

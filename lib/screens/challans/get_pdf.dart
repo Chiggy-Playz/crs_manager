@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:number_to_words/number_to_words.dart';
 
 import '../../models/challan.dart';
 import '../../utils/exceptions.dart';
@@ -85,7 +87,10 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
 
   DateFormat formatter = DateFormat('dd-MMMM-yyyy');
   String formattedTime = formatter.format(challan.createdAt);
-
+  final unticked = pages == 0;
+  if (pages == 0) {
+    pages = 1;
+  }
   for (int i = 0; i < pages; i++) {
     var page = pdf.pages.add();
     // Draw the outer most box
@@ -175,79 +180,81 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
     page.graphics
         .drawRectangle(pen: pen, bounds: const Rect.fromLTWH(555, 228, 14, 15));
 
-    // Page 1
-    if (i == 0) {
-      // Tick mark
-      page.graphics.drawLine(
-          pen, const Offset(555, 190 + 8), const Offset(555 + 6, 190 + 15));
-      page.graphics.drawLine(pen, const Offset(555 + 6, 190 + 15),
-          const Offset(555 + 14, 190 + 1));
+    if (!unticked) {
+      // Page 1
+      if (i == 0) {
+        // Tick mark
+        page.graphics.drawLine(
+            pen, const Offset(555, 190 + 8), const Offset(555 + 6, 190 + 15));
+        page.graphics.drawLine(pen, const Offset(555 + 6, 190 + 15),
+            const Offset(555 + 14, 190 + 1));
 
-      // Cross mark on box 2
+        // Cross mark on box 2
 
-      page.graphics.drawLine(
-          pen, const Offset(555, 209), const Offset(555 + 14, 209 + 15));
-      page.graphics.drawLine(
-          pen, const Offset(555, 209 + 15), const Offset(555 + 14, 209));
+        page.graphics.drawLine(
+            pen, const Offset(555, 209), const Offset(555 + 14, 209 + 15));
+        page.graphics.drawLine(
+            pen, const Offset(555, 209 + 15), const Offset(555 + 14, 209));
 
-      // Cross mark on box 3
+        // Cross mark on box 3
 
-      page.graphics.drawLine(
-          pen, const Offset(555, 228), const Offset(555 + 14, 228 + 15));
-      page.graphics.drawLine(
-          pen, const Offset(555, 228 + 15), const Offset(555 + 14, 228));
-    } else if (i == 1) {
-      // Cross mark on box 1
-      page.graphics.drawLine(
-        pen,
-        const Offset(555, 190),
-        const Offset(555 + 14, 190 + 15),
-      );
-      page.graphics.drawLine(
-        pen,
-        const Offset(555, 190 + 15),
-        const Offset(555 + 14, 190),
-      );
-      // Tick mark on box 2
-      page.graphics.drawLine(
-          pen, const Offset(555, 209 + 8), const Offset(555 + 6, 209 + 15));
-      page.graphics.drawLine(pen, const Offset(555 + 6, 209 + 15),
-          const Offset(555 + 14, 209 + 1));
+        page.graphics.drawLine(
+            pen, const Offset(555, 228), const Offset(555 + 14, 228 + 15));
+        page.graphics.drawLine(
+            pen, const Offset(555, 228 + 15), const Offset(555 + 14, 228));
+      } else if (i == 1) {
+        // Cross mark on box 1
+        page.graphics.drawLine(
+          pen,
+          const Offset(555, 190),
+          const Offset(555 + 14, 190 + 15),
+        );
+        page.graphics.drawLine(
+          pen,
+          const Offset(555, 190 + 15),
+          const Offset(555 + 14, 190),
+        );
+        // Tick mark on box 2
+        page.graphics.drawLine(
+            pen, const Offset(555, 209 + 8), const Offset(555 + 6, 209 + 15));
+        page.graphics.drawLine(pen, const Offset(555 + 6, 209 + 15),
+            const Offset(555 + 14, 209 + 1));
 
-      // Cross mark on box 3
+        // Cross mark on box 3
 
-      page.graphics.drawLine(
-          pen, const Offset(555, 228), const Offset(555 + 14, 228 + 15));
-      page.graphics.drawLine(
-          pen, const Offset(555, 228 + 15), const Offset(555 + 14, 228));
-    } else {
-      // Cross mark on box 1
-      page.graphics.drawLine(
-        pen,
-        const Offset(555, 190),
-        const Offset(555 + 14, 190 + 15),
-      );
-      page.graphics.drawLine(
-        pen,
-        const Offset(555, 190 + 15),
-        const Offset(555 + 14, 190),
-      );
-      // Cross mark on box 2
-      page.graphics.drawLine(
-        pen,
-        const Offset(555, 209),
-        const Offset(555 + 14, 209 + 15),
-      );
-      page.graphics.drawLine(
-        pen,
-        const Offset(555, 209 + 15),
-        const Offset(555 + 14, 209),
-      );
-      // Tick mark on box 3
-      page.graphics.drawLine(
-          pen, const Offset(555, 228 + 8), const Offset(555 + 6, 228 + 15));
-      page.graphics.drawLine(pen, const Offset(555 + 6, 228 + 15),
-          const Offset(555 + 14, 228 + 1));
+        page.graphics.drawLine(
+            pen, const Offset(555, 228), const Offset(555 + 14, 228 + 15));
+        page.graphics.drawLine(
+            pen, const Offset(555, 228 + 15), const Offset(555 + 14, 228));
+      } else {
+        // Cross mark on box 1
+        page.graphics.drawLine(
+          pen,
+          const Offset(555, 190),
+          const Offset(555 + 14, 190 + 15),
+        );
+        page.graphics.drawLine(
+          pen,
+          const Offset(555, 190 + 15),
+          const Offset(555 + 14, 190),
+        );
+        // Cross mark on box 2
+        page.graphics.drawLine(
+          pen,
+          const Offset(555, 209),
+          const Offset(555 + 14, 209 + 15),
+        );
+        page.graphics.drawLine(
+          pen,
+          const Offset(555, 209 + 15),
+          const Offset(555 + 14, 209),
+        );
+        // Tick mark on box 3
+        page.graphics.drawLine(
+            pen, const Offset(555, 228 + 8), const Offset(555 + 6, 228 + 15));
+        page.graphics.drawLine(pen, const Offset(555 + 6, 228 + 15),
+            const Offset(555 + 14, 228 + 1));
+      }
     }
 
     page.graphics.drawLine(pen, const Offset(10, 250), const Offset(575, 250));
@@ -289,7 +296,8 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
       int index = challan.products.indexOf(product);
       PdfGridRow row = grid.rows.add();
       row.cells[0].value = '${index + 1}';
-      row.cells[1].value = "${product.description}\n${product.additionalDescription}".trim();
+      row.cells[1].value =
+          "${product.description}\n${product.additionalDescription}".trim();
       row.cells[2].value = product.serial;
       row.cells[3].value =
           "${product.quantity} ${product.quantityUnit}"; // product.quantity.toString();
@@ -341,9 +349,9 @@ Future<PdfDocument> preparePdf(Challan challan, int pages) async {
     var numberFormatter = NumberFormat('#,##,000');
     if (challan.productsValue > 0) {
       page.graphics.drawString(
-          "To whomsoever this may concern, the value of the above mentioned items does not exceed \u{20B9}${numberFormatter.format(challan.productsValue)}/-",
+          "TO WHOMESOEVER IT MAY CONCERN\nThe value of the above materials does not exceed \u{20B9}${numberFormatter.format(challan.productsValue)}/- (Rs. ${NumberToWord().convert("en-in", challan.productsValue).split(" ").map((e) => e.capitalize).join(" ")}only) inclusive of taxes.",
           normalFontUnicode,
-          bounds: const Rect.fromLTWH(50, 620, 300, 100));
+          bounds: const Rect.fromLTWH(50, 600, 375, 100));
     }
     page.graphics.drawString('Received By : ', normalFont,
         bounds: const Rect.fromLTWH(50, 660, 100, 100));
