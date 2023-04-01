@@ -163,10 +163,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   elevation: 12,
                   child: ListTile(
                     leading: const Icon(Icons.person),
-                    title: const Text(
-                      "Buyer",
-                    ),
-                    subtitle: Text(_buyer == null
+                    title: Text(_buyer == null
                         ? "Click to choose a buyer"
                         : _buyer!.name),
                     onTap: _cancelled
