@@ -55,12 +55,10 @@ class _HomePageState extends State<HomePage> {
   final _pageViewController = PageController();
 
   int _activePage = 0;
-  List<Widget> _actions = [];
 
   @override
   void initState() {
     super.initState();
-    _updateActions(_activePage);
   }
 
   @override
@@ -72,9 +70,21 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TransparentAppBar(
-        title: const Text("CRS Manager"),
-        actions: _actions,
+      appBar: TappableAppBar(
+        onTap: () {
+          // Search
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SearchPage(),
+            ),
+          );
+        },
+        appBar: TransparentAppBar(
+          title: const Expanded(
+            child: Text("CRS Manager"),
+          ),
+          actions: getActions(),
+        ),
       ),
       body: PageView(
         controller: _pageViewController,
@@ -109,7 +119,6 @@ class _HomePageState extends State<HomePage> {
         onPageChanged: (index) {
           setState(() {
             _activePage = index;
-            _updateActions(index);
           });
         },
       ),
@@ -147,19 +156,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _updateActions(int index) {
-    if ([0].contains(index)) {
-      _actions = [
+  List<Widget> getActions() {
+    if ([0].contains(_activePage)) {
+      return [
         IconButton(
           icon: const Icon(Icons.search),
           onPressed: () {
             Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const SearchPage()));
+              MaterialPageRoute(
+                builder: (context) => const SearchPage(),
+              ),
+            );
           },
         ),
       ];
     } else {
-      _actions = [];
+      return [];
     }
   }
 }

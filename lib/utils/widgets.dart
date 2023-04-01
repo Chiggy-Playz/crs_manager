@@ -35,3 +35,19 @@ class SpacedRow extends StatelessWidget {
 }
 
 TextStyle font(size) => TextStyle(fontSize: (size as int).toDouble());
+
+class TappableAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final VoidCallback onTap;
+  final AppBar appBar;
+
+  const TappableAppBar({super.key, required this.onTap, required this.appBar});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(onTap: onTap, child: appBar);
+  }
+
+  // TODO: implement preferredSize
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
