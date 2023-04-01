@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS "challans"(
     "cancelled" BOOLEAN NOT NULL DEFAULT '0',
     "products" JSON NOT NULL,
     "products_value" INTEGER NOT NULL,
+    -- Null means bill hasnt been created yet
+    "bill_number" BIGINT,
     "notes" TEXT NOT NULL DEFAULT '',
     "delivered_by" TEXT NOT NULL,
     "vehicle_number" TEXT NOT NULL,

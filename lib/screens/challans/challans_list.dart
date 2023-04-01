@@ -76,6 +76,7 @@ class _ChallansListState extends State<ChallansList> {
               Text(challan.productsValue.toString()),
             ],
           );
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
       elevation: 12,
@@ -88,24 +89,37 @@ class _ChallansListState extends State<ChallansList> {
         leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text(challan.number.toString()),
           Text(
-            challan.session.toString().split("-").map((e) => e.substring(2)).join("-"),
+            challan.session
+                .toString()
+                .split("-")
+                .map((e) => e.substring(2))
+                .join("-"),
           ),
         ]),
-        trailing: challan.received
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  trailing,
-                  const SizedBox(
-                    width: 4,
-                  ),
-                  Icon(
-                    Icons.check,
-                    color: Theme.of(context).colorScheme.primary,
-                  )
-                ],
-              )
-            : trailing,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            trailing,
+            if (challan.received) ...[
+              const SizedBox(
+                width: 4,
+              ),
+              Icon(
+                Icons.check,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ],
+            if (challan.billNumber != null) ...[
+              const SizedBox(
+                width: 4,
+              ),
+              Icon(
+                Icons.receipt_long,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ],
+          ],
+        ),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => ChallanPageView(
             challans: challans,

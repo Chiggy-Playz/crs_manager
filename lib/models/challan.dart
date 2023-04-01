@@ -9,6 +9,7 @@ class Challan {
     required this.buyer,
     required this.products,
     required this.productsValue,
+    required this.billNumber,
     required this.deliveredBy,
     required this.vehicleNumber,
     required this.notes,
@@ -24,13 +25,14 @@ class Challan {
   Buyer buyer;
   List<Product> products;
   int productsValue;
+  int? billNumber;
   String deliveredBy;
   String vehicleNumber;
   String notes;
   bool received;
   bool cancelled;
   bool digitallySigned;
-
+  
   factory Challan.fromMap(Map<String, dynamic> json) => Challan(
         id: json["id"],
         number: json["number"],
@@ -42,6 +44,7 @@ class Challan {
         products:
             List<Product>.from(json["products"].map((x) => Product.fromMap(x))),
         productsValue: json["products_value"],
+        billNumber: json["bill_number"],
         deliveredBy: json["delivered_by"],
         vehicleNumber: json["vehicle_number"],
         notes: json["notes"],
@@ -58,6 +61,7 @@ class Challan {
         "buyer": buyer.toMap(),
         "products": List<dynamic>.from(products.map((x) => x.toMap())),
         "products_value": productsValue,
+        "bill_number": billNumber,
         "delivered_by": deliveredBy,
         "vehicle_number": vehicleNumber,
         "notes": notes,

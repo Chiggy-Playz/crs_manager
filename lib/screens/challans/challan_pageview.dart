@@ -80,7 +80,7 @@ class _ChallanPageViewState extends State<ChallanPageView> {
         title: const Text("Edit Challan"),
         actions: [
           PopupMenuButton<int>(
-            icon: const Icon(Icons.article),
+            icon: const Icon(Icons.picture_as_pdf),
             itemBuilder: (context) => List.generate(
               3,
               (index) => PopupMenuItem(

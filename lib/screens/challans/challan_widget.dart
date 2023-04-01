@@ -42,6 +42,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
   Buyer? _buyer;
   List<Product> _products = [];
   int _productsValue = 0;
+  int? _billNumber;
   String _deliveredBy = "";
   String _vehicleNumber = "";
   String _notes = "";
@@ -55,6 +56,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
       _buyer = widget.challan!.buyer;
       _products = List.from(widget.challan!.products);
       _productsValue = widget.challan!.productsValue;
+      _billNumber = widget.challan!.billNumber;
       _deliveredBy = widget.challan!.deliveredBy;
       _vehicleNumber = widget.challan!.vehicleNumber;
       _notes = widget.challan!.notes;
@@ -292,6 +294,33 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   onSaved: (newValue) => _notes = newValue!,
                 ),
                 SizedBox(height: 2.h),
+                TextFormField(
+                  enabled: !_cancelled,
+                  decoration: const InputDecoration(labelText: "Bill Number"),
+                  initialValue: widget.challan?.billNumber?.toString() ?? "",
+                  validator: (value) {
+                    if (value == null) {
+                      return "Field cannot be empty";
+                    }
+                    if (value.isEmpty) {
+                      return null;
+                    }
+
+                    if (int.tryParse(value) == null) {
+                      return "Invalid value";
+                    }
+                    return null;
+                  },
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    setState(() {
+                      _billNumber = int.tryParse(value) ?? _billNumber;
+                    });
+                  },
+                  onSaved: (newValue) => _billNumber =
+                      newValue!.isEmpty ? null : int.parse(newValue),
+                ),
+                SizedBox(height: 2.h),
                 SwitchListTile(
                   value: _received,
                   onChanged: _cancelled
@@ -353,6 +382,11 @@ class ChallanWidgetState extends State<ChallanWidget> {
     if (_productsValue != widget.challan!.productsValue) {
       return true;
     }
+
+    if (_billNumber != widget.challan!.billNumber) {
+      return true;
+    }
+
     if (_deliveredBy != widget.challan!.deliveredBy) {
       return true;
     }
@@ -384,6 +418,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
         buyer: _buyer!,
         products: _products,
         productsValue: _productsValue,
+        billNumber: _billNumber,
         deliveredBy: _deliveredBy,
         vehicleNumber: _vehicleNumber,
         notes: _notes,
@@ -468,6 +503,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
         buyer: _buyer!,
         products: _products,
         productsValue: _productsValue,
+        billNumber: _billNumber,
         deliveredBy: _deliveredBy,
         vehicleNumber: _vehicleNumber,
         notes: _notes,

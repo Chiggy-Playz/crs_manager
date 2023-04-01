@@ -20,7 +20,7 @@ class _NewChallanPageState extends State<NewChallanPage> {
           title: const Text("New Challan"),
           actions: [
             PopupMenuButton<int>(
-              icon: const Icon(Icons.article),
+              icon: const Icon(Icons.picture_as_pdf),
               itemBuilder: (context) => List.generate(
                 3,
                 (index) => PopupMenuItem(
@@ -28,13 +28,13 @@ class _NewChallanPageState extends State<NewChallanPage> {
                   child: Text("${index + 1} Page"),
                 ),
               )..addAll(
-                [
-                  const PopupMenuItem<int>(
-                    value: 0,
-                    child: Text("Unticked"),
-                  )
-                ],
-              ),
+                  [
+                    const PopupMenuItem<int>(
+                      value: 0,
+                      child: Text("Unticked"),
+                    )
+                  ],
+                ),
               onSelected: (value) => _key.currentState!.viewPdf(value),
             ),
           ],

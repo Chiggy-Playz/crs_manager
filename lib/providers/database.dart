@@ -176,6 +176,7 @@ class DatabaseModel extends ChangeNotifier {
     Buyer? buyer,
     List<Product>? products,
     int? productsValue,
+    int? billNumber,
     String? deliveredBy,
     String? vehicleNumber,
     String? notes,
@@ -205,6 +206,7 @@ class DatabaseModel extends ChangeNotifier {
               )
               .toList(),
           "products_value": productsValue ?? challan.productsValue,
+          "bill_number": billNumber,
           "delivered_by": deliveredBy ?? challan.deliveredBy,
           "vehicle_number": vehicleNumber ?? challan.vehicleNumber,
           "notes": notes ?? challan.notes,
@@ -226,6 +228,7 @@ class DatabaseModel extends ChangeNotifier {
             buyer: buyer ?? e.buyer,
             products: products ?? e.products,
             productsValue: productsValue ?? e.productsValue,
+            billNumber: billNumber,
             deliveredBy: deliveredBy ?? e.deliveredBy,
             vehicleNumber: vehicleNumber ?? e.vehicleNumber,
             notes: notes ?? e.notes,
