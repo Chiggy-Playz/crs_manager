@@ -248,9 +248,11 @@ class _ConditionPageState extends State<ConditionPage> {
 
   Widget _buyersWidget() {
     // Since buyers, the value will be of type List<Buyer>
-    _value ??= <Buyer>[];
+    if (_value == null || _value is! List<Buyer>) {
+      _value = <Buyer>[];
+    }
     var buyers = _value as List<Buyer>;
-    if (_value == null || buyers.isEmpty) {
+    if (buyers.isEmpty) {
       return const ListTile(
         title: Text("Use the + button to select buyers"),
       );
@@ -282,7 +284,7 @@ class _ConditionPageState extends State<ConditionPage> {
   }
 
   Widget _dateWidget() {
-    if (_value == null) {
+    if (_value == null || _value is! DateTimeRange) {
       return const ListTile(
         title: Text("Use the edit button to select a date range"),
       );
@@ -298,7 +300,7 @@ class _ConditionPageState extends State<ConditionPage> {
       onChanged: (value) {
         _value = value;
       },
-      initialValue: _value as String?,
+      initialValue: _value is String? ? _value : "",
       decoration: const InputDecoration(
         labelText: "Product",
         hintText: "Enter description, serial, or additional description",
