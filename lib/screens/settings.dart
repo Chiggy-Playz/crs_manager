@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -17,7 +18,29 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TransparentAppBar(title: const Text("Settings")),
+      appBar: TransparentAppBar(
+        title: const Text("Settings"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () async {
+              await launchUrl(
+                  Uri.parse(
+                      "https://github.com/Chiggy-Playz/crs_manager/commits/master"),
+                  mode: LaunchMode.externalApplication);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: () async {
+              await launchUrl(
+                  Uri.parse(
+                      "https://github.com/Chiggy-Playz/crs_manager/releases"),
+                  mode: LaunchMode.externalApplication);
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
