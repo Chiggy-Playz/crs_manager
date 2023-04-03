@@ -163,11 +163,15 @@ class ChallanWidgetState extends State<ChallanWidget> {
                 SizedBox(height: 2.h),
                 Card(
                   elevation: 12,
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   child: ListTile(
                     leading: const Icon(Icons.person),
                     title: Text(_buyer == null
                         ? "Click to choose a buyer"
                         : _buyer!.name),
+                    subtitle: Text(_buyer == null
+                        ? "Click to choose a buyer"
+                        : _buyer!.address),
                     onTap: _cancelled
                         ? null
                         : () {
