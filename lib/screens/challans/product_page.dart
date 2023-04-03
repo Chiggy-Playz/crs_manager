@@ -235,11 +235,11 @@ class _ProductPageState extends State<ProductPage> {
     _formKey.currentState!.save();
 
     Navigator.of(context).pop(Product(
-      description: _description,
+      description: _description.toUpperCase(),
       quantity: _quantity,
-      quantityUnit: _quantityUnit,
-      serial: _serial,
-      additionalDescription: _additionalDescription,
+      quantityUnit: _quantityUnit.toUpperCase(),
+      serial: _serial.toUpperCase(),
+      additionalDescription: _additionalDescription.toUpperCase(),
     ));
   }
 }

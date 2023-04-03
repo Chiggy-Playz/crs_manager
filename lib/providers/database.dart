@@ -62,10 +62,10 @@ class DatabaseModel extends ChangeNotifier {
       required String gst,
       required String state}) async {
     final response = await _client.from("buyers").insert({
-      "name": name,
-      "address": address,
-      "gst": gst,
-      "state": state
+      "name": name.toUpperCase(),
+      "address": address.toUpperCase(),
+      "gst": gst.toUpperCase(),
+      "state": state.toUpperCase(),
     }).select();
     if (response == null) {
       throw DatabaseError();
@@ -88,20 +88,20 @@ class DatabaseModel extends ChangeNotifier {
     }
 
     await _client.from("buyers").update({
-      "name": name ?? buyer.name,
-      "address": address ?? buyer.address,
-      "gst": gst ?? buyer.gst,
-      "state": state ?? buyer.state
+      "name": name?.toUpperCase() ?? buyer.name,
+      "address": address?.toUpperCase() ?? buyer.address,
+      "gst": gst?.toUpperCase() ?? buyer.gst,
+      "state": state?.toUpperCase() ?? buyer.state
     }).eq("id", buyer.id);
 
     buyers = buyers.map((e) {
       if (e.id == buyer.id) {
         return Buyer(
             id: e.id,
-            name: name ?? e.name,
-            address: address ?? e.address,
-            gst: gst ?? e.gst,
-            state: state ?? e.state);
+            name: name?.toUpperCase() ?? e.name,
+            address: address?.toUpperCase() ?? e.address,
+            gst: gst?.toUpperCase() ?? e.gst,
+            state: state?.toUpperCase() ?? e.state);
       }
       return e;
     }).toList();
@@ -155,8 +155,8 @@ class DatabaseModel extends ChangeNotifier {
       "buyer": buyer.toMap(),
       "products": products.map((e) => e.toMap()).toList(),
       "products_value": productsValue,
-      "delivered_by": deliveredBy,
-      "vehicle_number": vehicleNumber,
+      "delivered_by": deliveredBy.toUpperCase(),
+      "vehicle_number": vehicleNumber.toUpperCase(),
       "notes": notes,
       "received": received,
       "digitally_signed": digitallySigned
@@ -207,8 +207,9 @@ class DatabaseModel extends ChangeNotifier {
               .toList(),
           "products_value": productsValue ?? challan.productsValue,
           "bill_number": billNumber,
-          "delivered_by": deliveredBy ?? challan.deliveredBy,
-          "vehicle_number": vehicleNumber ?? challan.vehicleNumber,
+          "delivered_by": deliveredBy?.toUpperCase() ?? challan.deliveredBy,
+          "vehicle_number":
+              vehicleNumber?.toUpperCase() ?? challan.vehicleNumber,
           "notes": notes ?? challan.notes,
           "received": received ?? challan.received,
           "digitally_signed": digitallySigned ?? challan.digitallySigned,
@@ -229,8 +230,8 @@ class DatabaseModel extends ChangeNotifier {
             products: products ?? e.products,
             productsValue: productsValue ?? e.productsValue,
             billNumber: billNumber,
-            deliveredBy: deliveredBy ?? e.deliveredBy,
-            vehicleNumber: vehicleNumber ?? e.vehicleNumber,
+            deliveredBy: deliveredBy?.toUpperCase() ?? e.deliveredBy,
+            vehicleNumber: vehicleNumber?.toUpperCase() ?? e.vehicleNumber,
             notes: notes ?? e.notes,
             received: received ?? e.received,
             digitallySigned: digitallySigned ?? e.digitallySigned,
