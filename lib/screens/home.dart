@@ -80,9 +80,7 @@ class _HomePageState extends State<HomePage> {
           );
         },
         appBar: TransparentAppBar(
-          title: const Expanded(
-            child: Text("CRS Manager"),
-          ),
+          title: const Text("CRS Manager"),
           actions: getActions(),
         ),
       ),
