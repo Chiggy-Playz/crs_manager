@@ -248,26 +248,31 @@ class _BuyerPageState extends State<BuyerPage> {
     Navigator.of(context).push(opaquePage(const LoadingPage()));
 
     String action = "";
-    // Create buyer
-    if (widget.buyer == null) {
-      action = "created";
-      await Provider.of<DatabaseModel>(context, listen: false).createBuyer(
-        name: _name,
-        address: _address,
-        gst: _gst,
-        state: _state,
-      );
-    } else {
-      action = "updated";
-      await Provider.of<DatabaseModel>(context, listen: false).updateBuyer(
-        buyer: widget.buyer!,
-        name: _name,
-        address: _address,
-        gst: _gst,
-        state: _state,
-      );
+    try {
+      // Create buyer
+      if (widget.buyer == null) {
+        action = "created";
+        await Provider.of<DatabaseModel>(context, listen: false).createBuyer(
+          name: _name,
+          address: _address,
+          gst: _gst,
+          state: _state,
+        );
+      } else {
+        action = "updated";
+        await Provider.of<DatabaseModel>(context, listen: false).updateBuyer(
+          buyer: widget.buyer!,
+          name: _name,
+          address: _address,
+          gst: _gst,
+          state: _state,
+        );
+      }
+    } catch (e) {
+      Navigator.of(context).pop();
+      context.showErrorSnackBar(message: "An error occurred");
+      return;
     }
-
     if (!mounted) return;
     Navigator.of(context).pop();
     context.showSnackBar(message: "Buyer $action");
