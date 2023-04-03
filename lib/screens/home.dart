@@ -1,5 +1,6 @@
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/challans/search_page.dart';
+import 'package:crs_manager/screens/settings.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/database.dart';
@@ -155,21 +156,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Widget> getActions() {
+    var actions = [
+      IconButton(
+        icon: const Icon(Icons.settings),
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SettingsPage(),
+            ),
+          );
+        },
+      ),
+    ];
     if ([0].contains(_activePage)) {
-      return [
-        IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const SearchPage(),
-              ),
-            );
-          },
-        ),
-      ];
+      return actions
+        ..addAll([
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SearchPage(),
+                ),
+              );
+            },
+          ),
+        ]);
     } else {
-      return [];
+      return actions;
     }
   }
 }

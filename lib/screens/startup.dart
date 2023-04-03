@@ -54,7 +54,7 @@ class _StartupPageState extends State<StartupPage> {
     var db = Provider.of<DatabaseModel>(context, listen: false);
 
     // Check if supabase connection info is stored
-    var box = await Hive.openBox("settings");
+    var box = Hive.box("settings");
     var host = await box.get("host");
     var key = await box.get("key");
     try {
@@ -63,7 +63,6 @@ class _StartupPageState extends State<StartupPage> {
           host,
           key,
         );
-        await box.close();
       } else {
         throw DatabaseConnectionError();
       }
