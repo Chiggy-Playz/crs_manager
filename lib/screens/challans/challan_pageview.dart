@@ -4,7 +4,7 @@ import 'challan_widget.dart';
 import '../../utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' as cup;
-import 'package:open_file/open_file.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 

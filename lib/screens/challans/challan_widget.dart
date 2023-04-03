@@ -3,7 +3,7 @@ import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
