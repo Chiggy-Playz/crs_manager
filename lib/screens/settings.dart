@@ -1,4 +1,5 @@
 import 'package:crs_manager/providers/settings.dart';
+import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
@@ -128,12 +129,14 @@ class _SettingsPageState extends State<SettingsPage> {
 
     String latestVersionCode = version.split("+")[1];
 
+    if (!mounted) return;
+
     // Compare version and prompt for update
     if (latestVersionCode == packageInfo.buildNumber) {
+      context.showSnackBar(message: "No updates available");
       return;
     }
 
-    if (!mounted) return;
 
     var response = await showDialog(
       context: context,
