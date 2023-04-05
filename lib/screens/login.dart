@@ -7,6 +7,7 @@ import '../providers/database.dart';
 import '../utils/extensions.dart';
 import '../utils/widgets.dart';
 import 'home.dart';
+import 'loading.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -87,6 +88,7 @@ class _LoginState extends State<Login> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () async {
+                        Navigator.of(context).push(opaquePage(const LoadingPage()));
                         await _saveConnectionInfo();
                       },
                       child: const Text("Save"),
@@ -107,17 +109,26 @@ class _LoginState extends State<Login> {
       return;
     }
     _formKey.currentState!.save();
-
+    var db = Provider.of<DatabaseModel>(context, listen: false);
     // Get database model and connect
     try {
-      Provider.of<DatabaseModel>(context, listen: false).connect(_host, _key);
+      await db.connect(_host, _key);
     } catch (e) {
       // Connection is invalid, show error
       context.showErrorSnackBar(
         message: "An error occurred. Make sure the connection info is correct.",
       );
+      Navigator.of(context).pop();
       return;
     }
+    if (!mounted) return;
+
+    context.showSnackBar(
+      message: "Connection successful, loading data",
+    );
+
+    await Future.delayed(const Duration(milliseconds: 100));
+    await db.loadCache();
     // Connection is valid, save connection info
 
     var box = await Hive.openBox("settings");
@@ -126,7 +137,8 @@ class _LoginState extends State<Login> {
     await box.close();
 
     if (!mounted) return;
-
+    // Pop loading screen
+    Navigator.of(context).pop();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
