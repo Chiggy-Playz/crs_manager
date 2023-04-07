@@ -1,6 +1,5 @@
 import 'package:crs_manager/screens/challans/challan_pageview.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_treeview/flutter_treeview.dart';
 
 import '../../models/buyer.dart';
 import '../../models/challan.dart';
@@ -16,8 +15,6 @@ class TreeViewWidget extends StatefulWidget {
 }
 
 class _TreeViewWidgetState extends State<TreeViewWidget> {
-  late TreeViewController controller;
-
   Map<Buyer, List<Challan>> challansSortedByBuyer = {};
   List<Buyer> buyersSortedByName = [];
   // Challans merged, but sorted by buyer
