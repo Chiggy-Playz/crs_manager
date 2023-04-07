@@ -40,7 +40,11 @@ class _ChallansListState extends State<ChallansList> {
           var challan = widget.challans.elementAt(offsetY ~/ 90);
           String month =
               DateFormat("MMMM").format(challan.createdAt).substring(0, 3);
-          String year = challan.session.replaceAll("20", "");
+          String year = challan.session
+              .toString()
+              .split("-")
+              .map((e) => e.substring(2))
+              .join("-");
           return Text("$month $year",
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onPrimary,

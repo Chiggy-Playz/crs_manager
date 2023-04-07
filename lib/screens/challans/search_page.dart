@@ -1,10 +1,10 @@
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/screens/challans/tree_view.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
-import '../../models/buyer.dart';
 import '../../models/challan.dart';
 import '../../models/condition.dart';
 import '../../utils/constants.dart';
@@ -19,14 +19,31 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  // ignore: prefer_final_fields
   List<Condition> _conditions = [];
   List<Challan> _challans = [];
   bool _searched = false;
+  bool _treeView = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TransparentAppBar(title: const Text("Search")),
+      appBar: TransparentAppBar(
+        title: const Text("Search"),
+        actions: [
+          IconButton(
+            icon: !_treeView
+                ? const Icon(Icons.park_outlined)
+                : Icon(Icons.park,
+                    color: Theme.of(context).colorScheme.primary),
+            onPressed: () {
+              setState(() {
+                _treeView = !_treeView;
+              });
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: EdgeInsets.fromLTRB(2.w, 0, 2.w, 0),
         child: SingleChildScrollView(
@@ -71,18 +88,19 @@ class _SearchPageState extends State<SearchPage> {
                 ? _conditions.isEmpty
                     ? Text("Add some conditions!", style: font(25))
                     : _searched
-                        ? Expanded(
-                            child: Center(
-                                child: Column(
-                              children: [
-                                brokenMagnifyingGlassSvg,
-                                SizedBox(height: 2.h),
-                                const Text("No challans found :("),
-                              ],
-                            )),
-                          )
+                        ? Center(
+                            child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              brokenMagnifyingGlassSvg,
+                              SizedBox(height: 2.h),
+                              const Text("No challans found :("),
+                            ],
+                          ))
                         : Text("Search for challans", style: font(25))
-                : ChallansList(challans: _challans)
+                : _treeView
+                    ? treeView()
+                    : ChallansList(challans: _challans)
           ]),
         ),
       ),
@@ -99,6 +117,12 @@ class _SearchPageState extends State<SearchPage> {
               },
             )
           : null,
+    );
+  }
+
+  Widget treeView() {
+    return TreeViewWidget(
+      challans: _challans,
     );
   }
 
