@@ -1,9 +1,9 @@
 import 'package:crs_manager/screens/challans/challan_pageview.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/buyer.dart';
-import '../../models/challan.dart';
-import '../../utils/constants.dart';
+import '../../../models/buyer.dart';
+import '../../../models/challan.dart';
+import '../../../utils/constants.dart';
 
 class TreeViewWidget extends StatefulWidget {
   const TreeViewWidget({super.key, required this.challans});

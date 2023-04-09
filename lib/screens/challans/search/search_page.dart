@@ -1,14 +1,15 @@
 import 'package:crs_manager/providers/database.dart';
-import 'package:crs_manager/screens/challans/tree_view.dart';
+import 'package:crs_manager/screens/challans/search/table_view.dart';
+import 'package:crs_manager/screens/challans/search/tree_view.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
-import '../../models/challan.dart';
-import '../../models/condition.dart';
-import '../../utils/constants.dart';
-import 'challans_list.dart';
+import '../../../models/challan.dart';
+import '../../../models/condition.dart';
+import '../../../utils/constants.dart';
+import '../challans_list.dart';
 import 'condition_page.dart';
 
 class SearchPage extends StatefulWidget {
@@ -42,6 +43,17 @@ class _SearchPageState extends State<SearchPage> {
               });
             },
           ),
+          if (_challans.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.grid_on),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TableViewPage(challans: _challans),
+                  ),
+                );
+              },
+            ),
         ],
       ),
       body: Padding(

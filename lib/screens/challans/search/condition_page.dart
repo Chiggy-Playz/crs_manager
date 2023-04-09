@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
-import '../../models/buyer.dart';
-import '../../models/condition.dart';
-import '../../utils/constants.dart';
+import '../../../models/buyer.dart';
+import '../../../models/condition.dart';
+import '../../../utils/constants.dart';
 
 List<DropdownMenuItem<ConditionType>> conditionOptions = const [
   DropdownMenuItem(
@@ -221,7 +221,14 @@ class _ConditionPageState extends State<ConditionPage> {
         }
 
         setState(() {
-          _value = range;
+          _value = DateTimeRange(
+            start: range.start,
+            end: range.end.copyWith(
+              hour: 23,
+              minute: 59,
+              second: 59,
+            ),
+          );
         });
 
         break;

@@ -1,0 +1,192 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
+
+import '../../../models/buyer.dart';
+import '../../../models/challan.dart';
+import '../../../utils/constants.dart';
+
+final columns = [
+  "Date",
+  "Challan No.",
+  "Description",
+  "Qty",
+  "Serial",
+  "Bill No.",
+  "Additional Description",
+  "Notes",
+];
+
+
+class TableViewPage extends StatefulWidget {
+  const TableViewPage({super.key, required this.challans});
+
+  final List<Challan> challans;
+
+  @override
+  State<TableViewPage> createState() => _TableViewPageState();
+}
+
+class _TableViewPageState extends State<TableViewPage> {
+  Map<Buyer, List<Challan>> challansSortedByBuyer = {};
+  List<Buyer> buyersSortedByName = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (Platform.isAndroid) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+      ]);
+    }
+
+    var challans = List<Challan>.from(widget.challans);
+    challans.sort(
+      (a, b) => a.buyer.name.compareTo(b.buyer.name),
+    );
+
+    for (Challan challan in challans) {
+      challansSortedByBuyer
+          .putIfAbsent(challan.buyer, () => <Challan>[])
+          .add(challan);
+    }
+  }
+
+  @override
+  dispose() {
+    if (Platform.isAndroid) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Table View'),
+      ),
+      body: Scrollbar(
+        thickness: 10,
+        interactive: true,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              height: 100 * 100.w,
+              width: 1.2 * 100.w,
+              child: Table(
+                columnWidths: const {
+                  0: FlexColumnWidth(0.7), // Date
+                  1: FlexColumnWidth(0.7), // Challan No.
+                  2: FlexColumnWidth(1.5), // Description
+                  3: FlexColumnWidth(0.5), // Qty
+                  4: FlexColumnWidth(1), // Serial
+                  5: FlexColumnWidth(0.3), // Bill No.
+                  6: FlexColumnWidth(1), // Additional Description
+                  7: FlexColumnWidth(1), // Notes
+                },
+                border: TableBorder.all(
+                  color: Theme.of(context).colorScheme.onBackground,
+                  width: 1,
+                  style: BorderStyle.solid,
+                ),
+                children: _getRows(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<TableRow> _getRows() {
+    var rows = <TableRow>[];
+
+    // Header Row
+
+    rows.add(
+      TableRow(
+        children: columns
+            .map((column) => Center(
+                    child: Text(
+                  column,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                )))
+            .toList(),
+      ),
+    );
+
+    challansSortedByBuyer.forEach((buyer, buyerChallans) {
+      // Add row for buyer
+      rows.add(
+        TableRow(
+          decoration:
+              BoxDecoration(color: Theme.of(context).colorScheme.tertiary),
+          children: [
+            const Text(""),
+            const Text(""),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Center(
+                child: Text(
+                  buyer.name,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onTertiary),
+                ),
+              ),
+            ),
+            const Text(""),
+            const Text(""),
+            const Text(""),
+            const Text(""),
+            const Text(""),
+          ],
+        ),
+      );
+
+      // Add rows for challans products
+
+      for (Challan challan in buyerChallans) {
+        for (Product product in challan.products) {
+          rows.add(
+            TableRow(
+              children: [
+                Center(child: Text(formatterDate.format(challan.createdAt))),
+                Center(
+                  child: Text(
+                    "${challan.number} / ${challan.session.split("-").map((e) => e.replaceFirst("20", "")).join("-")}",
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Text(product.description),
+                ),
+                Center(
+                  child: Text("${product.quantity} ${product.quantityUnit}"),
+                ),
+                Center(child: Text(product.serial)),
+                Center(child: Text(challan.billNumber?.toString() ?? "")),
+                Center(child: Text(product.additionalDescription)),
+                Center(child: Text(challan.notes)),
+              ],
+            ),
+          );
+        }
+      }
+    });
+
+    return rows;
+  }
+}

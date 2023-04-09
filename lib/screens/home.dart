@@ -1,5 +1,5 @@
 import 'package:crs_manager/providers/buyer_select.dart';
-import 'package:crs_manager/screens/challans/search_page.dart';
+import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
 import 'package:provider/provider.dart';
 
