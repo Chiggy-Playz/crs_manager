@@ -2,7 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:open_file_plus/open_file_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 
 import '../../../models/buyer.dart';
 import '../../../models/challan.dart';
@@ -18,7 +21,6 @@ final columns = [
   "Additional Description",
   "Notes",
 ];
-
 
 class TableViewPage extends StatefulWidget {
   const TableViewPage({super.key, required this.challans});
@@ -74,6 +76,12 @@ class _TableViewPageState extends State<TableViewPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Table View'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.upload),
+            onPressed: _exportCsv,
+          )
+        ],
       ),
       body: Scrollbar(
         thickness: 10,
@@ -188,5 +196,56 @@ class _TableViewPageState extends State<TableViewPage> {
     });
 
     return rows;
+  }
+
+  void _exportCsv() async {
+    final Workbook workbook = Workbook();
+    final Worksheet sheet = workbook.worksheets[0];
+
+    // Write header row
+    for (int i = 0; i < columns.length; i++) {
+      sheet.getRangeByIndex(1, i + 1).setText(columns[i]);
+    }
+
+    // Write data rows
+    int row = 2;
+    challansSortedByBuyer.forEach((buyer, buyerChallans) {
+      sheet.getRangeByIndex(row, 1, row, 8).merge();
+      sheet.getRangeByIndex(row, 1).setText(buyer.name);
+      sheet.getRangeByIndex(row, 1).cellStyle.backColor = '#e0e0e0';
+
+      row++;
+
+      for (Challan challan in buyerChallans) {
+        for (Product product in challan.products) {
+          sheet
+              .getRangeByIndex(row, 1)
+              .setText(formatterDate.format(challan.createdAt));
+          sheet.getRangeByIndex(row, 2).setText(
+              "${challan.number} / ${challan.session.split("-").map((e) => e.replaceFirst("20", "")).join("-")}");
+          sheet.getRangeByIndex(row, 3).setText(product.description);
+          sheet
+              .getRangeByIndex(row, 4)
+              .setText("${product.quantity} ${product.quantityUnit}");
+          sheet.getRangeByIndex(row, 5).setText(product.serial);
+          sheet
+              .getRangeByIndex(row, 6)
+              .setText(challan.billNumber?.toString() ?? "");
+          sheet.getRangeByIndex(row, 7).setText(product.additionalDescription);
+          sheet.getRangeByIndex(row, 8).setText(challan.notes);
+
+          row++;
+        }
+      }
+    });
+
+    final List<int> bytes = workbook.saveAsStream();
+    var directory = await getApplicationDocumentsDirectory();
+    File("${directory.path}/search.xlsx")
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(bytes);
+    workbook.dispose();
+
+    OpenFile.open("${directory.path}/search.xlsx");
   }
 }

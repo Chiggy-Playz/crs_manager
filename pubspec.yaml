@@ -47,6 +47,7 @@ dependencies:
   responsive_sizer: ^3.1.1
   supabase_flutter: ^1.5.0
   syncfusion_flutter_pdf: ^21.1.35
+  syncfusion_flutter_xlsio: ^21.1.38
   url_launcher: ^6.1.10
 
 dev_dependencies:
