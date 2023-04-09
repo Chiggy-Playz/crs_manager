@@ -1,3 +1,4 @@
+import 'package:crs_manager/utils/exceptions.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -268,6 +269,10 @@ class _BuyerPageState extends State<BuyerPage> {
           state: _state,
         );
       }
+    } on BuyerInUseError {
+      Navigator.of(context).pop();
+      context.showErrorSnackBar(message: "Buyer is in use");
+      return;
     } catch (e) {
       Navigator.of(context).pop();
       context.showErrorSnackBar(message: "An error occurred");
@@ -307,9 +312,19 @@ class _BuyerPageState extends State<BuyerPage> {
     if (!mounted) return;
     Navigator.of(context).push(opaquePage(const LoadingPage()));
 
-    // Delete buyer from database
-    await Provider.of<DatabaseModel>(context, listen: false)
-        .deleteBuyer(widget.buyer!);
+    try {
+      // Delete buyer from database
+      await Provider.of<DatabaseModel>(context, listen: false)
+          .deleteBuyer(widget.buyer!);
+    } on BuyerInUseError {
+      Navigator.of(context).pop();
+      context.showErrorSnackBar(message: "Buyer is in use");
+      return;
+    } catch (e) {
+      Navigator.of(context).pop();
+      context.showErrorSnackBar(message: "An error occurred");
+      return;
+    }
 
     if (!mounted) return;
 

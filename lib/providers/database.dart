@@ -110,6 +110,15 @@ class DatabaseModel extends ChangeNotifier {
   }
 
   Future<void> deleteBuyer(Buyer buyer) async {
+    // Check if the buyer is used in any challan
+    final challans = this
+        .challans
+        .where((challan) => challan.buyer.name == buyer.name)
+        .toList();
+    if (challans.isNotEmpty) {
+      throw BuyerInUseError();
+    }
+
     await _client.from("buyers").delete().eq("id", buyer.id);
     buyers.remove(buyer);
     notifyListeners();
