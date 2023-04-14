@@ -25,3 +25,9 @@ CREATE TABLE IF NOT EXISTS "challans"(
     "digitally_signed" BOOLEAN NOT NULL DEFAULT '0',
     PRIMARY KEY (number, session)
 );
+
+CREATE TABLE IF NOT EXISTS "secrets"(
+    "name" TEXT NOT NULL,
+    "value" JSON NOT NULL,
+    PRIMARY KEY (name)
+);

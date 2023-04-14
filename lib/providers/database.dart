@@ -10,6 +10,7 @@ import '../utils/exceptions.dart';
 class DatabaseModel extends ChangeNotifier {
   List<Buyer> buyers = [];
   List<Challan> challans = [];
+  Map<String, Map<String, dynamic>> secrets = {};
 
   late SupabaseClient _client;
   bool connected = false;
@@ -48,6 +49,11 @@ class DatabaseModel extends ChangeNotifier {
             .order("created_at"))
         .map((e) => Challan.fromMap(e))
         .toList();
+
+    secrets =
+        (await _client.from("secrets").select<List<Map<String, dynamic>>>())
+            .asMap()
+            .map((index, row) => MapEntry(row["name"], row["value"]));
 
     notifyListeners();
   }
