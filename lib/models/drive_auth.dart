@@ -16,24 +16,23 @@ class Token {
   }
 }
 
-class File {
+class DriveFile {
   String id;
   String name;
   String mimeType;
   String? parentId;
 
-  File({
+  DriveFile({
     required this.id,
     required this.name,
     required this.mimeType,
     required this.parentId,
   });
 
-  factory File.fromMap(Map<String, dynamic> json) => File(
+  factory DriveFile.fromMap(Map<String, dynamic> json) => DriveFile(
         id: json["id"],
         name: json["name"],
         mimeType: json["mimeType"],
         parentId: json["parents"]?[0],
       );
-
 }

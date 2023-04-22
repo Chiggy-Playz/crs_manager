@@ -198,6 +198,7 @@ class DatabaseModel extends ChangeNotifier {
     bool? received,
     bool? digitallySigned,
     bool? cancelled,
+    String? photoId,
   }) async {
     if (buyer == null &&
         products == null &&
@@ -237,20 +238,22 @@ class DatabaseModel extends ChangeNotifier {
     challans = challans.map((e) {
       if (e.id == challan.id) {
         return Challan(
-            id: e.id,
-            session: e.session,
-            number: e.number,
-            createdAt: e.createdAt,
-            buyer: buyer ?? e.buyer,
-            products: products ?? e.products,
-            productsValue: productsValue ?? e.productsValue,
-            billNumber: billNumber,
-            deliveredBy: deliveredBy?.toUpperCase() ?? e.deliveredBy,
-            vehicleNumber: vehicleNumber?.toUpperCase() ?? e.vehicleNumber,
-            notes: notes ?? e.notes,
-            received: received ?? e.received,
-            digitallySigned: digitallySigned ?? e.digitallySigned,
-            cancelled: cancelled ?? e.cancelled);
+          id: e.id,
+          session: e.session,
+          number: e.number,
+          createdAt: e.createdAt,
+          buyer: buyer ?? e.buyer,
+          products: products ?? e.products,
+          productsValue: productsValue ?? e.productsValue,
+          billNumber: billNumber,
+          deliveredBy: deliveredBy?.toUpperCase() ?? e.deliveredBy,
+          vehicleNumber: vehicleNumber?.toUpperCase() ?? e.vehicleNumber,
+          notes: notes ?? e.notes,
+          received: received ?? e.received,
+          digitallySigned: digitallySigned ?? e.digitallySigned,
+          cancelled: cancelled ?? e.cancelled,
+          photoId: photoId ?? e.photoId,
+        );
       }
       return e;
     }).toList();

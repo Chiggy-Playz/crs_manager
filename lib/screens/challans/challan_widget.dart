@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:crs_manager/providers/buyer_select.dart';
+import 'package:crs_manager/screens/challans/photo_page.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -49,6 +50,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
   bool _received = false;
   bool _cancelled = false;
   bool _digitallySigned = false;
+  String _photoId = "";
 
   @override
   void initState() {
@@ -63,6 +65,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
       _received = widget.challan!.received;
       _cancelled = widget.challan!.cancelled;
       _digitallySigned = widget.challan!.digitallySigned;
+      _photoId = widget.challan!.photoId;
     }
     super.initState();
   }
@@ -346,7 +349,16 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   title: const Text("Digitally Signed"),
                   secondary: const Icon(cup.CupertinoIcons.signature),
                 ),
-                SizedBox(height: 2.h),
+                if (widget.challan != null) ...[
+                  SizedBox(height: 2.h),
+                  ListTile(
+                    leading: const Icon(Icons.photo),
+                    title: Text(_photoId.isEmpty ? "Add photo" : "View photo"),
+                    onTap: viewPhoto,
+                  ),
+                  SizedBox(height: 2.h),
+                ],
+
                 SizedBox(
                   height: 8.h,
                   width: 46.w,
@@ -429,6 +441,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
         received: _received,
         digitallySigned: _digitallySigned,
         cancelled: _cancelled,
+        photoId: widget.challan?.photoId ?? "",
         createdAt: widget.challan?.createdAt ?? DateTime.now(),
       );
     } catch (e) {
@@ -581,4 +594,11 @@ class ChallanWidgetState extends State<ChallanWidget> {
     }
   }
 
+  void viewPhoto() async {
+    var result = await Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => PhotoPage(
+        challan: widget.challan!,
+      ),
+    ));
+  }
 }

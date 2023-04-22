@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS "challans"(
     "vehicle_number" TEXT NOT NULL,
     "received" BOOLEAN NOT NULL DEFAULT '0',
     "digitally_signed" BOOLEAN NOT NULL DEFAULT '0',
+    "photo_id" TEXT NOT NULL DEFAULT '',
     PRIMARY KEY (number, session)
 );
 

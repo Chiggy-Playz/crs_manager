@@ -1,4 +1,5 @@
 import 'package:crs_manager/providers/buyer_select.dart';
+import 'package:crs_manager/providers/drive.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
 import 'package:provider/provider.dart';
@@ -70,71 +71,78 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TappableAppBar(
-        onTap: () {
-          // Search
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SearchPage(),
-            ),
-          );
-        },
-        appBar: TransparentAppBar(
-          title: const Text("CRS Manager"),
-          actions: getActions(),
-        ),
-      ),
-      body: PageView(
-        controller: _pageViewController,
-        children: [
-          Consumer<DatabaseModel>(
-            builder: (context, value, child) => ChallansList(
-              challans: value.challans,
-            ),
+    return Provider(
+      create: (context) async {
+        var driveHandler = Provider.of<DriveHandler>(context, listen: false);
+        await driveHandler.init();
+        return driveHandler.secrets["drive"]!;
+      },
+      child: Scaffold(
+        appBar: TappableAppBar(
+          onTap: () {
+            // Search
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SearchPage(),
+              ),
+            );
+          },
+          appBar: TransparentAppBar(
+            title: const Text("CRS Manager"),
+            actions: getActions(),
           ),
-          ChangeNotifierProvider(
-            create: (_) => BuyerSelectionProvider(
-              onBuyerSelected: (buyer) => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => BuyerPage(
-                    buyer: buyer,
+        ),
+        body: PageView(
+          controller: _pageViewController,
+          children: [
+            Consumer<DatabaseModel>(
+              builder: (context, value, child) => ChallansList(
+                challans: value.challans,
+              ),
+            ),
+            ChangeNotifierProvider(
+              create: (_) => BuyerSelectionProvider(
+                onBuyerSelected: (buyer) => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => BuyerPage(
+                      buyer: buyer,
+                    ),
                   ),
                 ),
               ),
+              child: const BuyersList(),
             ),
-            child: const BuyersList(),
-          ),
-          const Center(
-            child: Text("Assets"),
-          ),
-          const Center(
-            child: Text("Models"),
-          ),
-          const Center(
-            child: Text("History"),
-          ),
-        ],
-        onPageChanged: (index) {
-          setState(() {
-            _activePage = index;
-          });
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _activePage,
-        onTap: (index) {
-          _pageViewController.animateToPage(index,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.bounceIn);
-        },
-        items: dropDownItems,
-      ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: _fabAction,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+            const Center(
+              child: Text("Assets"),
+            ),
+            const Center(
+              child: Text("Models"),
+            ),
+            const Center(
+              child: Text("History"),
+            ),
+          ],
+          onPageChanged: (index) {
+            setState(() {
+              _activePage = index;
+            });
+          },
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _activePage,
+          onTap: (index) {
+            _pageViewController.animateToPage(index,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.bounceIn);
+          },
+          items: dropDownItems,
+        ),
+        floatingActionButton: FloatingActionButton(
+          heroTag: null,
+          onPressed: _fabAction,
+          tooltip: 'Increment',
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

@@ -16,6 +16,7 @@ class Challan {
     required this.received,
     required this.cancelled,
     required this.digitallySigned,
+    required this.photoId,
   });
 
   int id;
@@ -32,7 +33,8 @@ class Challan {
   bool received;
   bool cancelled;
   bool digitallySigned;
-  
+  String photoId;
+
   factory Challan.fromMap(Map<String, dynamic> json) => Challan(
         id: json["id"],
         number: json["number"],
@@ -51,6 +53,7 @@ class Challan {
         received: json["received"],
         cancelled: json["cancelled"],
         digitallySigned: json["digitally_signed"],
+        photoId: json["photo_id"],
       );
 
   Map<String, dynamic> toMap() => {
@@ -68,6 +71,7 @@ class Challan {
         "received": received,
         "cancelled": cancelled,
         "digitally_signed": digitallySigned,
+        "photo_id": photoId,
       };
 }
 
