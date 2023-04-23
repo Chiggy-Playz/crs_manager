@@ -15,6 +15,7 @@ import 'package:collection/collection.dart';
 import '../../models/buyer.dart';
 import '../../providers/database.dart';
 import '../../models/challan.dart';
+import '../../providers/drive.dart';
 import '../../utils/exceptions.dart';
 import '../../utils/extensions.dart';
 import '../../utils/widgets.dart';
@@ -526,6 +527,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
         notes: _notes,
         received: _received,
         digitallySigned: _digitallySigned,
+        photoId: _photoId,
       );
     }
     if (!mounted) return;
@@ -595,10 +597,26 @@ class ChallanWidgetState extends State<ChallanWidget> {
   }
 
   void viewPhoto() async {
+    var driveHandler = Provider.of<DriveHandler>(context, listen: false);
+    if (!driveHandler.inited) {
+      Navigator.of(context).push(opaquePage(const LoadingPage()));
+      await driveHandler.init();
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    }
+    if (!mounted) return;
     var result = await Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => PhotoPage(
         challan: widget.challan!,
       ),
     ));
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      _photoId = result;
+    });
   }
 }

@@ -1,11 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:crs_manager/providers/database.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-
 import '../models/drive_auth.dart';
 import '../utils/exceptions.dart';
 
@@ -23,6 +20,8 @@ class DriveHandler {
   );
   String parentFolderId = "";
   Map<String, dynamic> secrets;
+
+  bool get inited => parentFolderId.isNotEmpty;
 
   DriveHandler({required this.secrets});
 
@@ -71,7 +70,7 @@ class DriveHandler {
   Future<DriveFile?> fileExists(String name) async {
     String url = "https://www.googleapis.com/drive/v3/files";
     final queryParameters = {
-      "q": "name = '{$name}' and trashed=false",
+      "q": "name = '$name' and trashed=false",
       "fields": "files(id, name, mimeType, parents, kind)",
     };
 
@@ -132,16 +131,17 @@ class DriveHandler {
     return DriveFile.fromMap(result.data);
   }
 
-  Future<DriveFile> uploadFile(String fileId, Object data) async {
+  Future<DriveFile> uploadFile(String fileId, Uint8List data) async {
     String url =
         "https://www.googleapis.com/upload/drive/v3/files/$fileId?uploadType=media";
 
     var result = await dio.patch(
       url,
-      data: data,
+      data: Stream.fromIterable([data]),
       options: Options(
         headers: {
           "Authorization": "Bearer ${token.accessToken}",
+          "Content-Type": "image/jpeg",
         },
       ),
     );
@@ -161,9 +161,12 @@ class DriveHandler {
 
   Future<File> downloadFile(String fileId) async {
     String url = "https://www.googleapis.com/drive/v3/files/$fileId?alt=media";
-    var savePath = (await getTemporaryDirectory()).path + "/$fileId";
+    var savePath = "${(await getTemporaryDirectory()).path}/$fileId";
 
-    var result = await dio.download(url, savePath);
+    var result = await dio.download(url, savePath,
+        options: Options(headers: {
+          "Authorization": "Bearer ${token.accessToken}",
+        }));
 
     // Invalid access token
     if (result.statusCode == 401) {

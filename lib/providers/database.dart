@@ -230,6 +230,7 @@ class DatabaseModel extends ChangeNotifier {
           "received": received ?? challan.received,
           "digitally_signed": digitallySigned ?? challan.digitallySigned,
           "cancelled": cancelled ?? challan.cancelled,
+          "photo_id": photoId ?? challan.photoId,
         })
         .eq("session", challan.session)
         .eq("number", challan.number)
