@@ -8,6 +8,7 @@ class TransparentAppBar extends AppBar {
           elevation: 0,
           title: title,
           actions: actions,
+          scrolledUnderElevation: 0,
         );
 }
 
