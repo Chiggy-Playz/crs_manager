@@ -10,6 +10,7 @@ import '../utils/exceptions.dart';
 class DatabaseModel extends ChangeNotifier {
   List<Buyer> buyers = [];
   List<Challan> challans = [];
+  Map<String, Map<String, dynamic>> secrets = {};
 
   late SupabaseClient _client;
   bool connected = false;
@@ -48,6 +49,11 @@ class DatabaseModel extends ChangeNotifier {
             .order("created_at"))
         .map((e) => Challan.fromMap(e))
         .toList();
+
+    secrets =
+        (await _client.from("secrets").select<List<Map<String, dynamic>>>())
+            .asMap()
+            .map((index, row) => MapEntry(row["name"], row["value"]));
 
     notifyListeners();
   }
@@ -192,6 +198,7 @@ class DatabaseModel extends ChangeNotifier {
     bool? received,
     bool? digitallySigned,
     bool? cancelled,
+    String? photoId,
   }) async {
     if (buyer == null &&
         products == null &&
@@ -223,6 +230,7 @@ class DatabaseModel extends ChangeNotifier {
           "received": received ?? challan.received,
           "digitally_signed": digitallySigned ?? challan.digitallySigned,
           "cancelled": cancelled ?? challan.cancelled,
+          "photo_id": photoId ?? challan.photoId,
         })
         .eq("session", challan.session)
         .eq("number", challan.number)
@@ -231,20 +239,22 @@ class DatabaseModel extends ChangeNotifier {
     challans = challans.map((e) {
       if (e.id == challan.id) {
         return Challan(
-            id: e.id,
-            session: e.session,
-            number: e.number,
-            createdAt: e.createdAt,
-            buyer: buyer ?? e.buyer,
-            products: products ?? e.products,
-            productsValue: productsValue ?? e.productsValue,
-            billNumber: billNumber,
-            deliveredBy: deliveredBy?.toUpperCase() ?? e.deliveredBy,
-            vehicleNumber: vehicleNumber?.toUpperCase() ?? e.vehicleNumber,
-            notes: notes ?? e.notes,
-            received: received ?? e.received,
-            digitallySigned: digitallySigned ?? e.digitallySigned,
-            cancelled: cancelled ?? e.cancelled);
+          id: e.id,
+          session: e.session,
+          number: e.number,
+          createdAt: e.createdAt,
+          buyer: buyer ?? e.buyer,
+          products: products ?? e.products,
+          productsValue: productsValue ?? e.productsValue,
+          billNumber: billNumber,
+          deliveredBy: deliveredBy?.toUpperCase() ?? e.deliveredBy,
+          vehicleNumber: vehicleNumber?.toUpperCase() ?? e.vehicleNumber,
+          notes: notes ?? e.notes,
+          received: received ?? e.received,
+          digitallySigned: digitallySigned ?? e.digitallySigned,
+          cancelled: cancelled ?? e.cancelled,
+          photoId: photoId ?? e.photoId,
+        );
       }
       return e;
     }).toList();

@@ -1,3 +1,4 @@
+import 'package:crs_manager/providers/drive.dart';
 import 'package:crs_manager/providers/settings.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +38,13 @@ class MyApp extends StatelessWidget {
               ThemeMode.values[settingsBox.get("themeMode", defaultValue: 2)]);
           return settings;
         }),
+        Provider<DriveHandler>(
+          create: (context) {
+            var secrets =
+                Provider.of<DatabaseModel>(context, listen: false).secrets;
+            return DriveHandler(secrets: secrets["drive"]!);
+          },
+        )
       ],
       builder: (context, child) => ResponsiveSizer(
         builder: (p0, p1, p2) => Consumer<SettingsProvider>(
