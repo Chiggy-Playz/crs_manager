@@ -69,6 +69,7 @@ class _TreeViewWidgetState extends State<TreeViewWidget> {
             },
             body: ListView.builder(
               shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: buyerChallans.length,
               itemBuilder: (context, challanIndex) {
                 var challan = buyerChallans[challanIndex];
