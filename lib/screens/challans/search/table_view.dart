@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:crs_manager/providers/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 
@@ -33,6 +35,7 @@ class TableViewPage extends StatefulWidget {
 }
 
 class _TableViewPageState extends State<TableViewPage> {
+  List<Challan> challans = [];
   Map<Buyer, List<Challan>> challansSortedByBuyer = {};
   List<Buyer> buyersSortedByName = [];
 
@@ -40,35 +43,14 @@ class _TableViewPageState extends State<TableViewPage> {
   void initState() {
     super.initState();
 
-    if (Platform.isAndroid) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeRight,
-        DeviceOrientation.landscapeLeft,
-      ]);
-    }
-
-    var challans = List<Challan>.from(widget.challans);
-    challans.sort(
-      (a, b) => a.buyer.name.compareTo(b.buyer.name),
-    );
-
-    for (Challan challan in challans) {
-      challansSortedByBuyer
-          .putIfAbsent(challan.buyer, () => <Challan>[])
-          .add(challan);
-    }
+    _landscapeOrientation();
+    challans = widget.challans;
+    _prepareData();
   }
 
   @override
   dispose() {
-    if (Platform.isAndroid) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeRight,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-    }
+    _resetOrientation();
     super.dispose();
   }
 
@@ -165,7 +147,7 @@ class _TableViewPageState extends State<TableViewPage> {
         ),
       );
 
-      // Add rows for challans products
+      // Add  rows for challans products
 
       for (Challan challan in buyerChallans) {
         for (Product product in challan.products) {
@@ -191,14 +173,30 @@ class _TableViewPageState extends State<TableViewPage> {
                 Center(child: Text(challan.notes)),
               ].map((e) {
                 return GestureDetector(
-                  child: e,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ChallanPageView(initialIndex: 0, challans: [challan]),
-                    ),
-                  ),
-                );
+                    child: e,
+                    onTap: () async {
+                      _resetOrientation();
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => ChallanPageView(
+                              initialIndex: 0, challans: [challan]),
+                        ),
+                      );
+                      _landscapeOrientation();
+                      challans = challans.map((e) {
+                        if (e.id != challan.id) {
+                          return e;
+                        }
+
+                        return Provider.of<DatabaseModel>(context,
+                                listen: false)
+                            .challans
+                            .firstWhere((element) => element.id == challan.id);
+                      }).toList();
+                      setState(() {
+                        _prepareData();
+                      });
+                    });
               }).toList(),
             ),
           );
@@ -258,5 +256,37 @@ class _TableViewPageState extends State<TableViewPage> {
     workbook.dispose();
 
     OpenFile.open("${directory.path}/search.xlsx");
+  }
+
+  void _prepareData() {
+    challansSortedByBuyer = {};
+    challans.sort(
+      (a, b) => a.buyer.name.compareTo(b.buyer.name),
+    );
+    for (Challan challan in challans) {
+      challansSortedByBuyer
+          .putIfAbsent(challan.buyer, () => <Challan>[])
+          .add(challan);
+    }
+  }
+
+  void _resetOrientation() {
+    if (Platform.isAndroid) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    }
+  }
+
+  void _landscapeOrientation() {
+    if (Platform.isAndroid) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+      ]);
+    }
   }
 }
