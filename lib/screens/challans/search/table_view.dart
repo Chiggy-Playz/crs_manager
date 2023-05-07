@@ -151,26 +151,61 @@ class _TableViewPageState extends State<TableViewPage> {
 
       for (Challan challan in buyerChallans) {
         for (Product product in challan.products) {
+          var cancelledStyle = challan.cancelled
+              ? TextStyle(color: Theme.of(context).colorScheme.onError)
+              : null;
           rows.add(
             TableRow(
+              decoration: challan.cancelled
+                  ? BoxDecoration(
+                      color: Theme.of(context).colorScheme.error,
+                    )
+                  : null,
               children: [
-                Center(child: Text(formatterDate.format(challan.createdAt))),
+                Center(
+                    child: Text(
+                  formatterDate.format(challan.createdAt),
+                  style: cancelledStyle,
+                )),
                 Center(
                   child: Text(
                     "${challan.number} / ${challan.session.split("-").map((e) => e.replaceFirst("20", "")).join("-")}",
+                    style: cancelledStyle,
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
-                  child: Text(product.description),
+                  child: Text(
+                    product.description,
+                    style: cancelledStyle,
+                  ),
                 ),
                 Center(
-                  child: Text("${product.quantity} ${product.quantityUnit}"),
+                  child: Text(
+                    "${product.quantity} ${product.quantityUnit}",
+                    style: cancelledStyle,
+                  ),
                 ),
-                Center(child: Text(product.serial)),
-                Center(child: Text(challan.billNumber?.toString() ?? "")),
-                Center(child: Text(product.additionalDescription)),
-                Center(child: Text(challan.notes)),
+                Center(
+                    child: Text(
+                  product.serial,
+                  style: cancelledStyle,
+                )),
+                Center(
+                    child: Text(
+                  challan.billNumber?.toString() ?? "",
+                  style: cancelledStyle,
+                )),
+                Center(
+                    child: Text(
+                  product.additionalDescription,
+                  style: cancelledStyle,
+                )),
+                Center(
+                    child: Text(
+                  challan.notes,
+                  style: cancelledStyle,
+                )),
               ].map((e) {
                 return GestureDetector(
                     child: e,
