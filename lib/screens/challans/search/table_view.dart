@@ -10,6 +10,7 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 import '../../../models/buyer.dart';
 import '../../../models/challan.dart';
 import '../../../utils/constants.dart';
+import '../challan_pageview.dart';
 
 final columns = [
   "Date",
@@ -188,7 +189,17 @@ class _TableViewPageState extends State<TableViewPage> {
                 Center(child: Text(challan.billNumber?.toString() ?? "")),
                 Center(child: Text(product.additionalDescription)),
                 Center(child: Text(challan.notes)),
-              ],
+              ].map((e) {
+                return GestureDetector(
+                  child: e,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ChallanPageView(initialIndex: 0, challans: [challan]),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           );
         }
