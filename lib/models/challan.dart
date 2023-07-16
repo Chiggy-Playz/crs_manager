@@ -102,8 +102,8 @@ class Product {
   Map<String, dynamic> toMap() => {
         "description": description,
         "quantity": quantity,
-        "quantityUnit": quantityUnit,
+        "quantity_unit": quantityUnit,
         "serial": serial,
-        "additionalDescription": additionalDescription,
+        "additional_description": additionalDescription,
       };
 }
