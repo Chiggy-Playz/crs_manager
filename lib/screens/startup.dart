@@ -1,4 +1,10 @@
+import "dart:convert";
+import "dart:io";
 
+import "package:crs_manager/main.dart";
+import "package:crs_manager/utils/extensions.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:url_launcher/url_launcher.dart";
 
 import "../utils/exceptions.dart";
 
@@ -26,6 +32,7 @@ class _StartupPageState extends State<StartupPage> {
     Future.delayed(Duration.zero, () async {
       await _connectToDb();
       if (!mounted) return;
+      _checkForUpdates();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -66,5 +73,42 @@ class _StartupPageState extends State<StartupPage> {
     }
     await db.loadCache();
     destination = const HomePage();
+  }
+
+  Future<void> _checkForUpdates() async {
+    // Get current version
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+    // Get latest release version
+    String url =
+        "https://api.github.com/repos/Chiggy-Playz/crs_manager/releases/latest";
+    var http = HttpClient();
+    String version = await http
+        .getUrl(Uri.parse(url))
+        .then((request) => request.close())
+        .then((response) => response.transform(utf8.decoder).join())
+        .then((json) => jsonDecode(json)['tag_name']);
+
+    String latestVersionCode = version.split("+")[1];
+
+    // Compare version and prompt for update
+    if (latestVersionCode == packageInfo.buildNumber) {
+      return;
+    }
+
+    if (!navigatorState.currentContext!.mounted) return;
+
+    // ignore: use_build_context_synchronously
+    navigatorState.currentContext!.showSnackBar(
+        message: "An update is available",
+        action: SnackBarAction(
+          label: "Update",
+          onPressed: () async {
+            String downloadUrl =
+                "https://github.com/Chiggy-Playz/crs_manager/releases/latest/download/app-release.apk";
+            await launchUrl(Uri.parse(downloadUrl),
+                mode: LaunchMode.externalApplication);
+          },
+        ));
   }
 }

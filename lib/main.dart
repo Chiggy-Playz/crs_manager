@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import 'providers/database.dart';
 import 'screens/startup.dart';
 
+final GlobalKey<NavigatorState> navigatorState = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -84,6 +86,7 @@ class MyApp extends StatelessWidget {
             ),
             themeMode: settings.themeMode,
             home: const StartupPage(),
+            navigatorKey: navigatorState,
           ),
         ),
       ),
