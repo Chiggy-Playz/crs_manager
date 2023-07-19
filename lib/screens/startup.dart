@@ -105,7 +105,7 @@ class _StartupPageState extends State<StartupPage> {
           label: "Update",
           onPressed: () async {
             String downloadUrl =
-                "https://github.com/Chiggy-Playz/crs_manager/releases/latest/download/app-release.apk";
+                "https://github.com/Chiggy-Playz/crs_manager/releases/latest/download/$version.apk";
             await launchUrl(Uri.parse(downloadUrl),
                 mode: LaunchMode.externalApplication);
           },
