@@ -11,11 +11,11 @@ enum ConditionType {
   fields
 }
 
-class Condition {
+class Condition<T>{
   ConditionType type;
-  dynamic value;
+  T value;
 
-  Condition(this.type, this.value);
+  Condition({required this.type, required this.value});
 }
 
 String? conditionTypeToName(ConditionType? type) {

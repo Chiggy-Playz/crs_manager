@@ -1,4 +1,5 @@
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/screens/buyers/choose_buyer.dart';
 import 'package:crs_manager/screens/challans/search/table_view.dart';
 import 'package:crs_manager/screens/challans/search/tree_view.dart';
 import 'package:crs_manager/utils/widgets.dart';
@@ -6,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import '../../../models/buyer.dart';
 import '../../../models/challan.dart';
 import '../../../models/condition.dart';
+import '../../../providers/buyer_select.dart';
 import '../../../utils/constants.dart';
 import '../challans_list.dart';
 import 'condition_page.dart';
@@ -195,34 +198,195 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<void> onConditionTap(Condition condition) async {
-    Condition? newCondition = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ConditionPage(condition: condition),
+    switch (condition.type) {
+      case ConditionType.buyers:
+      case ConditionType.fields:
+        // Condition is mutated...
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ConditionPage(
+              condition: condition,
+            ),
+          ),
+        );
+        // If all buyers removed, remove the condition
+        if (condition.type == ConditionType.buyers) {
+          if (condition.value.isEmpty) {
+            setState(() {
+              _conditions.remove(condition);
+              _searched = false;
+            });
+            return;
+          }
+        }
+        break;
+      case ConditionType.product:
+      case ConditionType.raw:
+        String? keyword = await getKeyword(initialText: condition.value);
+        if (keyword == null) return;
+        setState(() {
+          condition.value = keyword;
+        });
+        break;
+      case ConditionType.date:
+        var newCondition = await getDateRange();
+        if (newCondition == null) return;
+        setState(() {
+          condition.value = newCondition.value;
+        });
+        break;
+    }
+  }
+
+  void addCondition() async {
+    // show radiolist as dialog
+    var dialog = AlertDialog(
+      title: const Center(child: Text("Add condition")),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            title: const Text("If buyer is one of specified Buyers"),
+            onTap: () => Navigator.pop(context, ConditionType.buyers),
+          ),
+          ListTile(
+            title: const Text(
+                "If product's description or serial number contains keyword"),
+            onTap: () => Navigator.pop(context, ConditionType.product),
+          ),
+          ListTile(
+            title: const Text("If the challan was created between"),
+            onTap: () => Navigator.pop(context, ConditionType.date),
+          ),
+          ListTile(
+            title: const Text("Raw search"),
+            onTap: () => Navigator.pop(context, ConditionType.raw),
+          ),
+          ListTile(
+            title: const Text("If the fields contains the values"),
+            onTap: () => Navigator.pop(context, ConditionType.fields),
+          ),
+        ],
       ),
     );
 
-    if (newCondition != null) {
+    ConditionType? conditionType = await showDialog<ConditionType>(
+      context: context,
+      builder: (context) => dialog,
+    );
+
+    if (conditionType == null) return;
+    if (!mounted) return;
+
+    Condition? condition;
+
+    switch (conditionType) {
+      case ConditionType.buyers:
+        condition = await chooseBuyers();
+        break;
+      case ConditionType.date:
+        condition = await getDateRange();
+        break;
+      case ConditionType.product:
+      case ConditionType.raw:
+        String? keyword = await getKeyword();
+        if (keyword == null) return;
+        condition = Condition<String>(
+          type: conditionType,
+          value: keyword,
+        );
+        break;
+      case ConditionType.fields:
+        // : Handle this case.
+        break;
+    }
+
+    if (condition != null) {
       setState(() {
-        _conditions[_conditions.indexOf(condition)] = newCondition;
+        _conditions.add(condition!);
         _searched = false;
       });
     }
   }
 
-  void addCondition() async {
-    Condition? condition = await Navigator.push(
-      context,
+  Future<Condition<List<Buyer>>?> chooseBuyers() async {
+    Buyer? buyer;
+    List<Buyer>? buyers = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const ConditionPage(),
+        builder: (context) => ChangeNotifierProvider(
+          create: (_) => BuyerSelectionProvider(
+            multiple: true,
+            onBuyerSelected: (b) {
+              buyer = b;
+              Navigator.of(context).pop();
+            },
+          ),
+          child: const ChooseBuyer(),
+        ),
       ),
     );
-
-    if (condition != null) {
-      setState(() {
-        _conditions.add(condition);
-        _searched = false;
-      });
+    if (buyers == null && buyer == null) {
+      return null;
     }
+
+    return Condition<List<Buyer>>(
+      type: ConditionType.buyers,
+      value: buyers ?? [buyer!],
+    );
+  }
+
+  Future<String?> getKeyword({String initialText = ""}) async {
+    String? keyword = await showDialog<String>(
+        context: context,
+        builder: (context) {
+          String keyword = "";
+          return AlertDialog(
+            title: const Text("Enter keyword"),
+            content: TextFormField(
+              initialValue: initialText,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: "Keyword",
+              ),
+              onChanged: (value) {
+                keyword = value;
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, keyword);
+                },
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        });
+
+    if (keyword == null) return null;
+
+    return keyword;
+  }
+
+  Future<Condition<DateTimeRange>?> getDateRange() async {
+    DateTimeRange? range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020, 01, 01, 00, 00, 00),
+      lastDate: DateTime.now(),
+    );
+
+    if (range == null) return null;
+
+    return Condition<DateTimeRange>(
+      type: ConditionType.date,
+      value: range,
+    );
   }
 }

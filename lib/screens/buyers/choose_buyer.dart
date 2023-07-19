@@ -19,7 +19,6 @@ class ChooseBuyer extends StatelessWidget {
         return Scaffold(
           appBar: TransparentAppBar(
             title: const Text("Choose Buyer"),
-            
           ),
           body: const BuyersList(),
           floatingActionButton: Column(
@@ -27,6 +26,7 @@ class ChooseBuyer extends StatelessWidget {
             children: [
               if (selector.multiple)
                 FloatingActionButton(
+                  heroTag: "Save",
                   onPressed: () {
                     Navigator.of(context).pop(selector.selectedBuyers);
                   },

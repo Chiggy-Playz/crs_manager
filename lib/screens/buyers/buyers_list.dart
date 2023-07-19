@@ -7,8 +7,6 @@ import '../../models/buyer.dart';
 import '../../providers/database.dart';
 import '../../utils/constants.dart';
 
-
-
 class BuyersList extends StatefulWidget {
   const BuyersList({
     super.key,
@@ -98,18 +96,27 @@ class _BuyersListState extends State<BuyersList> {
                               margin: const EdgeInsets.symmetric(
                                   vertical: 6.0, horizontal: 6.0),
                               elevation: 4,
-                              child: ListTile(
-                                title: Text(buyer.name),
-                                subtitle: Text(buyer.address.split("\n")[0]),
-                                onTap: () => selector.onBuyerSelected(buyer),
-                                onLongPress: selector.multiple
-                                    ? () {
-                                        buyerLongPressed(buyer);
-                                      }
-                                    : null,
-                                selected:
-                                    selector.selectedBuyers.contains(buyer),
-                              ),
+                              child: selector.multiple
+                                  ? CheckboxListTile(
+                                      title: Text(buyer.name),
+                                      subtitle:
+                                          Text(buyer.address.split("\n")[0]),
+                                      value: selector.selectedBuyers
+                                          .contains(buyer),
+                                      onChanged: (value) {
+                                        if (value!) {
+                                          selector.addBuyer(buyer);
+                                        } else {
+                                          selector.removeBuyer(buyer);
+                                        }
+                                      })
+                                  : ListTile(
+                                      title: Text(buyer.name),
+                                      subtitle:
+                                          Text(buyer.address.split("\n")[0]),
+                                      onTap: () =>
+                                          selector.onBuyerSelected(buyer),
+                                    ),
                             );
                           },
                         ),
