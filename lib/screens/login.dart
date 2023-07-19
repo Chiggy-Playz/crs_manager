@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:rich_clipboard/rich_clipboard.dart';
 
 import '../providers/database.dart';
 import '../utils/extensions.dart';
@@ -18,8 +19,17 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
+  final _hostController = TextEditingController();
+  final _keyController = TextEditingController();
   String _host = "";
   String _key = "";
+
+  @override
+  void dispose() {
+    _hostController.dispose();
+    _keyController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +64,7 @@ class _LoginState extends State<Login> {
                   height: 6.h,
                 ),
                 TextFormField(
+                  controller: _hostController,
                   decoration: const InputDecoration(
                     labelText: "Host",
                   ),
@@ -69,6 +80,7 @@ class _LoginState extends State<Login> {
                   height: 3.h,
                 ),
                 TextFormField(
+                  controller: _keyController,
                   decoration: const InputDecoration(
                     labelText: "Key",
                   ),
@@ -81,16 +93,20 @@ class _LoginState extends State<Login> {
                   onSaved: (newValue) => _key = newValue ?? "",
                 ),
                 SizedBox(
-                  height: 3.h,
+                  height: 1.h,
+                ),
+                TextButton(
+                  onPressed: _parseFromClipboard,
+                  child: const Text("Paste from clipboard"),
+                ),
+                SizedBox(
+                  height: 1.h,
                 ),
                 Center(
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () async {
-                        Navigator.of(context).push(opaquePage(const LoadingPage()));
-                        await _saveConnectionInfo();
-                      },
+                      onPressed: _saveConnectionInfo,
                       child: const Text("Save"),
                     ),
                   ),
@@ -108,6 +124,7 @@ class _LoginState extends State<Login> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    Navigator.of(context).push(opaquePage(const LoadingPage()));
     _formKey.currentState!.save();
     var db = Provider.of<DatabaseModel>(context, listen: false);
     // Get database model and connect
@@ -145,5 +162,42 @@ class _LoginState extends State<Login> {
         builder: (context) => const HomePage(),
       ),
     );
+  }
+
+  Future<void> _parseFromClipboard() async {
+    final clipboardData = await RichClipboard.getData();
+
+    var text = clipboardData.text;
+    if (text == null) {
+      return;
+    }
+    if (!mounted) return;
+
+    // Match text for name;host;key
+    var match = RegExp(r"(.+);(.+);(.+)").firstMatch(text);
+    if (match == null) {
+      context.showErrorSnackBar(message: "No match found");
+      return;
+    }
+
+    var host = match.group(2);
+    var key = match.group(3);
+
+    if (host == null || key == null) {
+      context.showErrorSnackBar(message: "No match found");
+      return;
+    }
+
+    _hostController.text = host;
+    _keyController.text = key;
+
+    // Set text fields
+    setState(() {
+      _host = host;
+      _key = key;
+    });
+
+    // Save connection info
+    await _saveConnectionInfo();
   }
 }
