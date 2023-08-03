@@ -28,9 +28,10 @@ import 'product_page.dart';
 final formatter = DateFormat("dd-MMMM-y");
 
 class ChallanWidget extends StatefulWidget {
-  const ChallanWidget({super.key, this.challan});
+  const ChallanWidget({super.key, this.challan, this.copyFromChallan});
 
   final Challan? challan;
+  final Challan? copyFromChallan;
 
   @override
   State<ChallanWidget> createState() => ChallanWidgetState();
@@ -46,7 +47,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
   int _productsValue = 0;
   int? _billNumber;
   String _deliveredBy = "";
-  String _vehicleNumber = "";
+  String _vehicleNumber = "None";
   String _notes = "";
   bool _received = false;
   bool _cancelled = false;
@@ -55,18 +56,26 @@ class ChallanWidgetState extends State<ChallanWidget> {
 
   @override
   void initState() {
-    if (widget.challan != null) {
-      _buyer = widget.challan!.buyer;
-      _products = List.from(widget.challan!.products);
-      _productsValue = widget.challan!.productsValue;
-      _billNumber = widget.challan!.billNumber;
-      _deliveredBy = widget.challan!.deliveredBy;
-      _vehicleNumber = widget.challan!.vehicleNumber;
-      _notes = widget.challan!.notes;
-      _received = widget.challan!.received;
-      _cancelled = widget.challan!.cancelled;
-      _digitallySigned = widget.challan!.digitallySigned;
-      _photoId = widget.challan!.photoId;
+    if (widget.challan != null && widget.copyFromChallan != null) {
+      throw Exception("both can't be provided");
+    }
+
+    var challan = widget.challan ?? widget.copyFromChallan;
+    if (challan != null) {
+      _buyer = challan.buyer;
+      _products = List.from(challan.products);
+      _productsValue = challan.productsValue;
+      _deliveredBy = challan.deliveredBy;
+      _vehicleNumber = challan.vehicleNumber;
+      _notes = challan.notes;
+      _received = challan.received;
+      _digitallySigned = challan.digitallySigned;
+
+      if (widget.challan != null) {
+        _billNumber = widget.challan!.billNumber;
+        _cancelled = widget.challan!.cancelled;
+        _photoId = widget.challan!.photoId;
+      }
     }
     super.initState();
   }
@@ -233,7 +242,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   enabled: !_cancelled,
                   decoration:
                       const InputDecoration(labelText: "Products Value"),
-                  initialValue: widget.challan?.productsValue.toString() ?? "0",
+                  initialValue: _productsValue.toString(),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Field cannot be empty";
@@ -255,7 +264,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
                 TextFormField(
                   enabled: !_cancelled,
                   decoration: const InputDecoration(labelText: "Delivered By"),
-                  initialValue: widget.challan?.deliveredBy ?? "",
+                  initialValue: _deliveredBy,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Field cannot be empty";
@@ -272,7 +281,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   enabled: !_cancelled,
                   decoration:
                       const InputDecoration(labelText: "Vehicle Number"),
-                  initialValue: widget.challan?.vehicleNumber ?? "None",
+                  initialValue: _vehicleNumber,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return "Field cannot be empty";

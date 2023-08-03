@@ -1,10 +1,13 @@
+import '../../models/challan.dart';
 import 'challan_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/widgets.dart';
 
 class NewChallanPage extends StatefulWidget {
-  const NewChallanPage({super.key});
+  const NewChallanPage({super.key, this.copyFromChallan});
+
+  final Challan? copyFromChallan;
 
   @override
   State<NewChallanPage> createState() => _NewChallanPageState();
@@ -41,6 +44,7 @@ class _NewChallanPageState extends State<NewChallanPage> {
         ),
         body: ChallanWidget(
           key: _key,
+          copyFromChallan: widget.copyFromChallan,
         ));
   }
 }

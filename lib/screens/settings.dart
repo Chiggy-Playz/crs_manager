@@ -10,7 +10,6 @@ import 'package:url_launcher/url_launcher.dart';
 import "dart:convert";
 import "dart:io";
 import "package:package_info_plus/package_info_plus.dart";
-import "package:url_launcher/url_launcher.dart";
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});

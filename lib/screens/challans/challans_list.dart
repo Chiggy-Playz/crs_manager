@@ -1,3 +1,4 @@
+import 'package:crs_manager/screens/challans/new_challan.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +22,7 @@ class ChallansList extends StatefulWidget {
 
 class _ChallansListState extends State<ChallansList> {
   final scrollController = ScrollController();
+  late Offset _tapDownPosition;
 
   @override
   void dispose() {
@@ -66,7 +68,7 @@ class _ChallansListState extends State<ChallansList> {
     );
   }
 
-  Card challanCard(List<Challan> challans, int index) {
+  Widget challanCard(List<Challan> challans, int index) {
     Challan challan = challans[index];
     Widget productCount = Text(challan.products
         .fold(0, (previousValue, element) => previousValue + element.quantity)
@@ -81,55 +83,88 @@ class _ChallansListState extends State<ChallansList> {
             ],
           );
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
-      elevation: 12,
-      color: challan.cancelled
-          ? Theme.of(context).colorScheme.errorContainer
-          : Theme.of(context).cardColor,
-      child: ListTile(
-        title: Text(challan.buyer.name),
-        subtitle: Text(cardFormatter.format(challan.createdAt)),
-        leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(challan.number.toString()),
-          Text(
-            challan.session
-                .toString()
-                .split("-")
-                .map((e) => e.substring(2))
-                .join("-"),
-          ),
-        ]),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            trailing,
-            if (challan.received) ...[
-              const SizedBox(
-                width: 4,
-              ),
-              Icon(
-                Icons.check,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ],
-            if (challan.billNumber != null) ...[
-              const SizedBox(
-                width: 4,
-              ),
-              Icon(
-                Icons.receipt_long,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ],
+    return GestureDetector(
+      onTapDown: (TapDownDetails details) {
+        _tapDownPosition = details.globalPosition;
+      },
+      onLongPress: () async {
+        final overlay =
+            Overlay.of(context).context.findRenderObject() as RenderBox;
+
+        var value = await showMenu<int>(
+          context: context,
+          items: const [
+            PopupMenuItem(value: 0, child: Text("Copy Challan")),
           ],
-        ),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => ChallanPageView(
-            challans: challans,
-            initialIndex: index,
+          position: RelativeRect.fromLTRB(
+            _tapDownPosition.dx,
+            _tapDownPosition.dy,
+            overlay.size.width - _tapDownPosition.dx,
+            overlay.size.height - _tapDownPosition.dy,
           ),
-        )),
+        );
+
+        if (value == null) {
+          return;
+        }
+        if (!mounted) return;
+
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => NewChallanPage(
+                  copyFromChallan: challan,
+                )));
+      },
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
+        elevation: 12,
+        color: challan.cancelled
+            ? Theme.of(context).colorScheme.errorContainer
+            : Theme.of(context).cardColor,
+        child: ListTile(
+          title: Text(challan.buyer.name),
+          subtitle: Text(cardFormatter.format(challan.createdAt)),
+          leading:
+              Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text(challan.number.toString()),
+            Text(
+              challan.session
+                  .toString()
+                  .split("-")
+                  .map((e) => e.substring(2))
+                  .join("-"),
+            ),
+          ]),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              trailing,
+              if (challan.received) ...[
+                const SizedBox(
+                  width: 4,
+                ),
+                Icon(
+                  Icons.check,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+              if (challan.billNumber != null) ...[
+                const SizedBox(
+                  width: 4,
+                ),
+                Icon(
+                  Icons.receipt_long,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+            ],
+          ),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => ChallanPageView(
+              challans: challans,
+              initialIndex: index,
+            ),
+          )),
+        ),
       ),
     );
   }
