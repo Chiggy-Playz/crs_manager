@@ -14,6 +14,7 @@ class DatabaseModel extends ChangeNotifier {
 
   late SupabaseClient _client;
   bool connected = false;
+  bool loadingData = false;
 
   Future<void> connect(String host, String key) async {
     try {
@@ -36,25 +37,96 @@ class DatabaseModel extends ChangeNotifier {
   }
 
   Future<void> loadCache() async {
+    loadingData = true;
+
+    const buyerPageCount = 10;
+    const challanPageCount = 25;
+
+    // Load initial buyers
     buyers = (await _client
             .from("buyers")
             .select<List<Map<String, dynamic>>>()
-            .order("name", ascending: true))
+            .order("name", ascending: true)
+            .limit(buyerPageCount))
         .map((e) => Buyer.fromMap(e))
         .toList();
 
+    // Load rest of the buyers in background
+    loadBuyers(buyerPageCount);
+
+    // Load initial challans
     challans = (await _client
             .from("challans")
             .select<List<Map<String, dynamic>>>()
-            .order("created_at"))
+            .order("created_at")
+            .limit(challanPageCount))
         .map((e) => Challan.fromMap(e))
         .toList();
+
+    // Load rest of the challans in background
+    loadChallans(challanPageCount);
 
     secrets =
         (await _client.from("secrets").select<List<Map<String, dynamic>>>())
             .asMap()
             .map((index, row) => MapEntry(row["name"], row["value"]));
 
+    notifyListeners();
+  }
+
+  Future<void> loadBuyers(int buyerPageCount) async {
+    Future<int> fetchMoreBuyers(int offset, int limit) async {
+      final from = offset * limit;
+      final to = from + limit - 1;
+      var newBuyers = (await _client
+              .from("buyers")
+              .select<List<Map<String, dynamic>>>()
+              .order("name", ascending: true)
+              .range(from, to))
+          .map((e) => Buyer.fromMap(e))
+          .toList();
+      buyers.addAll(newBuyers);
+      return newBuyers.length;
+    }
+
+    int buyerOffset = 1;
+    while (true) {
+      var newBuyersLength = await fetchMoreBuyers(buyerOffset, buyerPageCount);
+      buyerOffset += 1;
+      notifyListeners();
+      if (newBuyersLength < buyerPageCount) {
+        break;
+      }
+    }
+    
+  }
+
+  Future<void> loadChallans(int challanPageCount) async {
+    Future<int> fetchMoreChallans(int offset, int limit) async {
+      final from = offset * limit;
+      final to = from + limit - 1;
+      var newChallans = (await _client
+              .from("challans")
+              .select<List<Map<String, dynamic>>>()
+              .order("created_at")
+              .range(from, to))
+          .map((e) => Challan.fromMap(e))
+          .toList();
+      challans.addAll(newChallans);
+      return newChallans.length;
+    }
+
+    int challanOffset = 1;
+    while (true) {
+      var newChallansLength =
+          await fetchMoreChallans(challanOffset, challanPageCount);
+      challanOffset += 1;
+      notifyListeners();
+      if (newChallansLength < challanPageCount) {
+        break;
+      }
+    }
+    loadingData = true;
     notifyListeners();
   }
 
