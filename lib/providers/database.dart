@@ -5,12 +5,14 @@ import 'package:collection/collection.dart';
 import '../models/buyer.dart';
 import '../models/challan.dart';
 import '../models/condition.dart';
+import '../models/template.dart';
 import '../utils/exceptions.dart';
 
 class DatabaseModel extends ChangeNotifier {
   List<Buyer> buyers = [];
   List<Challan> challans = [];
   Map<String, Map<String, dynamic>> secrets = {};
+  List<Template> templates = [];
 
   late SupabaseClient _client;
   bool connected = false;
@@ -98,7 +100,6 @@ class DatabaseModel extends ChangeNotifier {
         break;
       }
     }
-    
   }
 
   Future<void> loadChallans(int challanPageCount) async {
@@ -384,5 +385,52 @@ class DatabaseModel extends ChangeNotifier {
     }
 
     return filteredChallans;
+  }
+
+  Future<Template> createTemplate(
+      {required String name, required List<Field> fields}) async {
+    final response = await _client.from("templates").insert({
+      "name": name,
+      "fields": fields.map((e) => e.toMap()).toList(),
+    }).select();
+
+    if (response == null) {
+      throw DatabaseError();
+    }
+
+    final template = Template.fromMap(response[0]);
+    templates.add(template);
+    notifyListeners();
+    return template;
+  }
+
+  Future<Template> updateTemplate(
+      {required Template template, String? name, List<Field>? fields}) async {
+    if (name == null && fields == null) {
+      return template;
+    }
+
+    await _client.from("templates").update({
+      "name": name ?? template.name,
+      "fields": fields?.map((e) => e.toMap()).toList() ?? template.fields,
+    }).eq("id", template.id);
+
+    templates = templates.map((e) {
+      if (e.id == template.id) {
+        return Template(
+          id: e.id,
+          name: name ?? e.name,
+          fields: fields ?? e.fields,
+        );
+      }
+      return e;
+    }).toList();
+
+    notifyListeners();
+    return Template(
+      id: template.id,
+      name: name ?? template.name,
+      fields: fields ?? template.fields,
+    );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
+import 'package:crs_manager/screens/templates/template_page.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/database.dart';
@@ -32,7 +33,7 @@ const List<BottomNavigationBarItem> dropDownItems = [
     ),
   ),
   BottomNavigationBarItem(
-    label: "Models",
+    label: "Templates",
     icon: Icon(
       Icons.widgets,
     ),
@@ -109,7 +110,7 @@ class _HomePageState extends State<HomePage> {
             child: Text("Assets"),
           ),
           const Center(
-            child: Text("Models"),
+            child: Text("Templates"),
           ),
           const Center(
             child: Text("History"),
@@ -151,6 +152,12 @@ class _HomePageState extends State<HomePage> {
           builder: (context) => const BuyerPage(),
         ));
         break;
+      case 3: // Template
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => const TemplatePage(),
+        ));
+        break;
+
       default:
     }
   }

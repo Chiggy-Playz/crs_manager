@@ -32,3 +32,94 @@ CREATE TABLE IF NOT EXISTS "secrets"(
     "value" JSON NOT NULL,
     PRIMARY KEY (name)
 );
+
+
+----------------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pseudo_encrypt(value int) returns int AS $$
+DECLARE
+l1 int;
+l2 int;
+r1 int;
+r2 int;
+i int:=0;
+BEGIN
+ l1:= (value >> 16) & 65535;
+ r1:= value & 65535;
+ WHILE i < 3 LOOP
+   l2 := r1;
+   r2 := l1 # ((((1368 * r1 + 150889) % 714025) / 714025.0) * 32767)::int;
+
+   l1 := l2;
+   r1 := r2;
+   i := i + 1;
+ END LOOP;
+ return ((r1 << 16) + l1);
+END;
+$$ LANGUAGE plpgsql strict immutable;
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION stringify_bigint(n bigint) RETURNS text
+    LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+DECLARE
+ alphabet text:='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+ base int:=length(alphabet);
+ _n bigint:=abs(n);
+ output text:='';
+BEGIN
+ LOOP
+   output := output || substr(alphabet, 1+(_n%base)::int, 1);
+   _n := _n / base;
+   EXIT WHEN _n=0;
+ END LOOP;
+ RETURN output;
+END $$;
+----------------------------------------------------------------------------------------------
+
+/*
+
+    field is like 
+    {
+        "name": "name",
+        "type": "text | number | date | select | checkbox",
+        "required": true | false,
+        /// Optional:
+        "default_value": "",
+        /// Only for select
+        "options": ["option1", "option2", "option3"],
+    }
+
+*/
+
+CREATE TABLE IF NOT EXISTS "templates"(
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    "fields" JSON NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "assets"(
+    "id" SERIAL PRIMARY KEY,
+    "uuid" TEXT UNIQUE NOT NULL,
+    "created_at" TIMESTAMP with TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    "location" TEXT NOT NULL,
+    "purchase_cost" INTEGER NOT NULL,
+    "purchase_date" TIMESTAMP with TIME ZONE NOT NULL,
+    "additional_cost" INTEGER NOT NULL DEFAULT 0,
+    "purchased_from" TEXT NOT NULL,
+    "template" INTEGER NOT NULL REFERENCES templates(id),
+    "custom_fields" JSON NOT NULL,
+    "notes" TEXT NOT NULL DEFAULT '',
+    "recovered_cost" INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE OR REPLACE FUNCTION asset_insert() RETURNS trigger AS '
+     BEGIN
+         NEW.uuid = stringify_bigint(pseudo_encrypt(NEW.id));
+         RETURN NEW;
+     END;
+ ' LANGUAGE plpgsql;
+
+
+CREATE TRIGGER asset_insert BEFORE INSERT OR UPDATE ON assets FOR
+ EACH ROW EXECUTE PROCEDURE asset_insert();
+
+----------------------------------------------------------------------------------------------
