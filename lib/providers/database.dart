@@ -73,6 +73,13 @@ class DatabaseModel extends ChangeNotifier {
             .asMap()
             .map((index, row) => MapEntry(row["name"], row["value"]));
 
+    templates =
+        (await _client.from("templates").select<List<Map<String, dynamic>>>())
+            .map(
+              (e) => Template.fromMap(e),
+            )
+            .toList();
+
     notifyListeners();
   }
 

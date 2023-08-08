@@ -288,7 +288,8 @@ class FieldWidget extends StatefulWidget {
 class _FieldWidgetState extends State<FieldWidget> {
   String name = "";
   FieldType type = FieldType.text;
-  bool required = false;
+  // Default required is true for new fields
+  bool required = true;
   final _formKey = GlobalKey<FormState>();
 
   @override

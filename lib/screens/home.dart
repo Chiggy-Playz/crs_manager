@@ -2,6 +2,7 @@ import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
 import 'package:crs_manager/screens/templates/template_page.dart';
+import 'package:crs_manager/screens/templates/templates_list.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/database.dart';
@@ -109,9 +110,7 @@ class _HomePageState extends State<HomePage> {
           const Center(
             child: Text("Assets"),
           ),
-          const Center(
-            child: Text("Templates"),
-          ),
+          const Center(child: TemplatesList()),
           const Center(
             child: Text("History"),
           ),
