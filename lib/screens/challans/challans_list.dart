@@ -1,9 +1,12 @@
 import 'package:crs_manager/screens/challans/new_challan.dart';
+import 'package:crs_manager/utils/extensions.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/challan.dart';
+import '../../providers/database.dart';
 import 'challan_pageview.dart';
 
 final DateFormat cardFormatter = DateFormat('HH:mm:ss  dd-MM-yyyy');
@@ -93,8 +96,12 @@ class _ChallansListState extends State<ChallansList> {
 
         var value = await showMenu<int>(
           context: context,
-          items: const [
-            PopupMenuItem(value: 0, child: Text("Copy Challan")),
+          items: [
+            const PopupMenuItem(value: 0, child: Text("Copy Challan")),
+            PopupMenuItem(
+              value: 1,
+              child: Text("Mark as ${challan.received ? "Not " : ""}Received"),
+            ),
           ],
           position: RelativeRect.fromLTRB(
             _tapDownPosition.dx,
@@ -108,11 +115,23 @@ class _ChallansListState extends State<ChallansList> {
           return;
         }
         if (!mounted) return;
-
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => NewChallanPage(
-                  copyFromChallan: challan,
-                )));
+        if (value == 0) {
+          // Copy challan
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => NewChallanPage(
+                    copyFromChallan: challan,
+                  )));
+        } else if (value == 1) {
+          // Mark as received / unnreceived
+          await Provider.of<DatabaseModel>(context, listen: false)
+              .updateChallan(
+            challan: challan,
+            received: !challan.received,
+          );
+          if (!mounted) return;
+          context.showSnackBar(
+              message: "Marked as ${challan.received ? "Not " : ""}received");
+        }
       },
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),

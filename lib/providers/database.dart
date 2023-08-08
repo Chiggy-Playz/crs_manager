@@ -281,7 +281,9 @@ class DatabaseModel extends ChangeNotifier {
         notes == null &&
         received == null &&
         digitallySigned == null &&
-        cancelled == null) {
+        cancelled == null &&
+        billNumber == null &&
+        photoId == null) {
       return;
     }
 
