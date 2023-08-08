@@ -90,49 +90,11 @@ class _ChallansListState extends State<ChallansList> {
       onTapDown: (TapDownDetails details) {
         _tapDownPosition = details.globalPosition;
       },
-      onLongPress: () async {
-        final overlay =
-            Overlay.of(context).context.findRenderObject() as RenderBox;
-
-        var value = await showMenu<int>(
-          context: context,
-          items: [
-            const PopupMenuItem(value: 0, child: Text("Copy Challan")),
-            PopupMenuItem(
-              value: 1,
-              child: Text("Mark as ${challan.received ? "Not " : ""}Received"),
-            ),
-          ],
-          position: RelativeRect.fromLTRB(
-            _tapDownPosition.dx,
-            _tapDownPosition.dy,
-            overlay.size.width - _tapDownPosition.dx,
-            overlay.size.height - _tapDownPosition.dy,
-          ),
-        );
-
-        if (value == null) {
-          return;
-        }
-        if (!mounted) return;
-        if (value == 0) {
-          // Copy challan
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => NewChallanPage(
-                    copyFromChallan: challan,
-                  )));
-        } else if (value == 1) {
-          // Mark as received / unnreceived
-          await Provider.of<DatabaseModel>(context, listen: false)
-              .updateChallan(
-            challan: challan,
-            received: !challan.received,
-          );
-          if (!mounted) return;
-          context.showSnackBar(
-              message: "Marked as ${challan.received ? "Not " : ""}received");
-        }
+      onSecondaryTapDown: (details) {
+        _tapDownPosition = details.globalPosition;
       },
+      onSecondaryTapCancel: () => showContextMenu(challan: challan),
+      onLongPress: () => showContextMenu(challan: challan),
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
         elevation: 12,
@@ -177,14 +139,65 @@ class _ChallansListState extends State<ChallansList> {
               ],
             ],
           ),
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => ChallanPageView(
-              challans: challans,
-              initialIndex: index,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => ChallanPageView(
+                challans: challans,
+                initialIndex: index,
+              ),
             ),
-          )),
+          ),
         ),
       ),
     );
+  }
+
+  void showContextMenu({
+    TapUpDetails? details,
+    required Challan challan,
+  }) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    if (details != null) {
+      _tapDownPosition = details.globalPosition;
+    }
+
+    var value = await showMenu<int>(
+      context: context,
+      items: [
+        const PopupMenuItem(value: 0, child: Text("Copy Challan")),
+        PopupMenuItem(
+          value: 1,
+          child: Text("Mark as ${challan.received ? "Not " : ""}Received"),
+        ),
+      ],
+      position: RelativeRect.fromLTRB(
+        _tapDownPosition.dx,
+        _tapDownPosition.dy,
+        overlay.size.width - _tapDownPosition.dx,
+        overlay.size.height - _tapDownPosition.dy,
+      ),
+    );
+
+    if (value == null) {
+      return;
+    }
+    if (!mounted) return;
+    if (value == 0) {
+      // Copy challan
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => NewChallanPage(
+                copyFromChallan: challan,
+              )));
+    } else if (value == 1) {
+      // Mark as received / unnreceived
+      await Provider.of<DatabaseModel>(context, listen: false).updateChallan(
+        challan: challan,
+        received: !challan.received,
+      );
+      if (!mounted) return;
+      context.showSnackBar(
+          message: "Marked as ${challan.received ? "Not " : ""}received");
+    }
   }
 }
