@@ -230,6 +230,10 @@ class _TemplatePageState extends State<TemplatePage> {
       if (widget.template == null) {
         await Provider.of<DatabaseModel>(context, listen: false)
             .createTemplate(name: name, fields: fields);
+      } else {
+        await Provider.of<DatabaseModel>(context, listen: false).updateTemplate(
+          template: widget.template!, name: name, fields: fields
+        );
       }
     } catch (e) {
       print(e);
