@@ -1,4 +1,5 @@
 import 'package:crs_manager/providers/buyer_select.dart';
+import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
 import 'package:crs_manager/screens/templates/template_page.dart';
@@ -149,6 +150,11 @@ class _HomePageState extends State<HomePage> {
       case 1: // Buyer
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => const BuyerPage(),
+        ));
+        break;
+      case 2: // Asset
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => const AssetPage(),
         ));
         break;
       case 3: // Template
