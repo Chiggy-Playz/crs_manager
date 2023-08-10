@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:crs_manager/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -119,7 +118,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
         borderLength: 30,
         borderWidth: 10,
         cutOutWidth: 75.w,
-        cutOutHeight: 5.h,
+        cutOutHeight: 10.h,
       ),
       onPermissionSet: (ctrl, p) => _onPermissionSet(context, ctrl, p),
     );
