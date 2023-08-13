@@ -81,11 +81,7 @@ END $$;
     {
         "name": "name",
         "type": "text | number | date | select | checkbox",
-        "required": true | false,
-        /// Optional:
-        "default_value": "",
-        /// Only for select
-        "options": ["option1", "option2", "option3"],
+        "required": true | false
     }
 
 */

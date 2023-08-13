@@ -1,6 +1,8 @@
 import 'package:crs_manager/providers/database.dart';
 import 'package:crs_manager/screens/assets/optical_textformfield.dart';
+import 'package:crs_manager/screens/loading.dart';
 import 'package:crs_manager/utils/constants.dart';
+import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +24,17 @@ class _AssetPageState extends State<AssetPage> {
   Template? template;
   Map<String, FieldValue> customFields = {};
 
+  // Asset fields
+  String assetUuid = "";
+  DateTime? createdAt;
+  String location = "";
+  int purchaseCost = 0;
+  DateTime? purchaseDate;
+  int additionalCost = 0;
+  String purchasedFrom = "";
+  String notes = "";
+  int recoveredCost = 0;
+
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -30,6 +43,17 @@ class _AssetPageState extends State<AssetPage> {
     if (widget.asset != null) {
       template = widget.asset!.template;
       customFields = Map.from(widget.asset!.customFields);
+
+      // Asset Fields
+      assetUuid = widget.asset!.uuid;
+      createdAt = widget.asset!.createdAt;
+      location = widget.asset!.location;
+      purchaseCost = widget.asset!.purchaseCost;
+      purchaseDate = widget.asset!.purchaseDate;
+      additionalCost = widget.asset!.additionalCost;
+      purchasedFrom = widget.asset!.purchasedFrom;
+      notes = widget.asset!.notes;
+      recoveredCost = widget.asset!.recoveredCost;
     }
   }
 
@@ -38,51 +62,61 @@ class _AssetPageState extends State<AssetPage> {
     bool isNewAsset = widget.asset == null;
     var templates = context.watch<DatabaseModel>().templates;
 
-    return Scaffold(
-      appBar: TransparentAppBar(
-        title: Text(isNewAsset ? 'New Asset' : 'Edit Asset'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(children: [
-              DropdownButtonFormField<Template>(
-                decoration: const InputDecoration(labelText: 'Template'),
-                hint: const Text("Select a template"),
-                disabledHint: template == null ? null : Text(template!.name),
-                items: List.from(templates).map(
-                  (e) {
-                    return DropdownMenuItem<Template>(
-                      value: e,
-                      child: Text(e.name),
-                    );
-                  },
-                ).toList(),
-                // Only enable the dropdown if we are creating a new asset
-                onChanged: isNewAsset
-                    ? (Template? value) {
-                        setState(() {
-                          template = value;
-                          if (template == null) return;
-                          customFields = Map.fromEntries(
-                            template!.fields.map(
-                              (e) => MapEntry(
-                                e.name,
-                                FieldValue(field: e, value: null),
+    return WillPopScope(
+      onWillPop: willPop,
+      child: Scaffold(
+        appBar: TransparentAppBar(
+          title: Text(isNewAsset ? 'New Asset' : 'Edit Asset'),
+        ),
+        body: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(children: [
+                DropdownButtonFormField<Template>(
+                  decoration: const InputDecoration(labelText: 'Template'),
+                  hint: const Text("Select a template"),
+                  disabledHint: template == null ? null : Text(template!.name),
+                  items: List.from(templates).map(
+                    (e) {
+                      return DropdownMenuItem<Template>(
+                        value: e,
+                        child: Text(e.name),
+                      );
+                    },
+                  ).toList(),
+                  // Only enable the dropdown if we are creating a new asset
+                  onChanged: isNewAsset
+                      ? (Template? value) {
+                          setState(() {
+                            template = value;
+                            if (template == null) return;
+                            customFields = Map.fromEntries(
+                              template!.fields.map(
+                                (e) => MapEntry(
+                                  e.name,
+                                  FieldValue(field: e, value: null),
+                                ),
                               ),
-                            ),
-                          );
-                        });
-                      }
-                    : null,
-                value: template,
-              ),
-              ...getCustomFieldWidgets()
-            ]),
+                            );
+                          });
+                        }
+                      : null,
+                  value: template,
+                ),
+                ...getCustomFieldWidgets(),
+                ...getAssetFieldsWidgets(),
+              ]),
+            ),
           ),
         ),
+        floatingActionButton: changesMade()
+            ? FloatingActionButton(
+                onPressed: savePressed,
+                child: Icon(isNewAsset ? Icons.save : Icons.update),
+              )
+            : null,
       ),
     );
   }
@@ -184,6 +218,8 @@ class _AssetPageState extends State<AssetPage> {
           ),
         );
       case FieldType.checkbox:
+        customFields[field.name] =
+            FieldValue(field: field, value: value ?? false);
         return CheckboxListTile(
             title: Text(field.name),
             value: value ?? false,
@@ -192,5 +228,273 @@ class _AssetPageState extends State<AssetPage> {
                       FieldValue(field: field, value: newValue!);
                 }));
     }
+  }
+
+  List<Widget> getAssetFieldsWidgets() {
+    List<Widget> widgets = [];
+
+    if (template == null) {
+      return widgets;
+    }
+
+    widgets.addAll([
+      Text(
+        "Asset Fields",
+        style: Theme.of(context).textTheme.headlineLarge,
+      ),
+      SizedBox(height: 2.h),
+    ]);
+
+    if (widget.asset != null) {
+      widgets.addAll([
+        SpacedRow(
+          widget1: const Text("Asset UUID"),
+          widget2: Text(assetUuid),
+        ),
+        SizedBox(height: 2.h),
+        SpacedRow(
+          widget1: const Text("Created At"),
+          widget2: Text(formatterDateTime.format(createdAt!)),
+        ),
+        SizedBox(height: 2.h),
+      ]);
+    }
+
+    widgets.addAll([
+      TextFormField(
+        decoration: const InputDecoration(labelText: "Location"),
+        initialValue: location,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter a location';
+          }
+          return null;
+        },
+        onSaved: (value) => setState(() => location = value!),
+      ),
+      SizedBox(height: 2.h),
+      TextFormField(
+        decoration: const InputDecoration(labelText: "Purchase Cost"),
+        initialValue: purchaseCost.toString(),
+        keyboardType: TextInputType.number,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter a purchase cost';
+          }
+          if (int.tryParse(value) == null) {
+            return 'Please enter a valid number';
+          }
+          return null;
+        },
+        onSaved: (value) => setState(() => purchaseCost = int.parse(value!)),
+      ),
+      SizedBox(height: 2.h),
+      Card(
+        elevation: 2,
+        child: ListTile(
+          title: const Text("Purchase Date"),
+          subtitle: Text(purchaseDate != null
+              ? formatterDateTime.format(purchaseDate!)
+              : "Choose a date"),
+          onTap: () async {
+            var date = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(1900),
+              lastDate: DateTime(2100),
+            );
+            if (date == null || !mounted) return;
+            var time = await showTimePicker(
+                context: context, initialTime: TimeOfDay.now());
+
+            if (time == null || !mounted) return;
+
+            setState(() {
+              purchaseDate = DateTime(
+                  date.year, date.month, date.day, time.hour, time.minute);
+            });
+          },
+        ),
+      ),
+      SizedBox(height: 2.h),
+      TextFormField(
+        decoration: const InputDecoration(labelText: "Additional Cost"),
+        initialValue: additionalCost.toString(),
+        keyboardType: TextInputType.number,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter an additional cost';
+          }
+          if (int.tryParse(value) == null) {
+            return 'Please enter a valid number';
+          }
+          return null;
+        },
+        onSaved: (value) => setState(() => additionalCost = int.parse(value!)),
+      ),
+      SizedBox(height: 2.h),
+      TextFormField(
+        decoration: const InputDecoration(labelText: "Recovered Cost"),
+        initialValue: recoveredCost.toString(),
+        keyboardType: TextInputType.number,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter a recovered cost';
+          }
+          if (int.tryParse(value) == null) {
+            return 'Please enter a valid number';
+          }
+          return null;
+        },
+        onSaved: (value) => setState(() => recoveredCost = int.parse(value!)),
+      ),
+      SizedBox(height: 2.h),
+      TextFormField(
+        decoration: const InputDecoration(labelText: "Purchased From"),
+        initialValue: purchasedFrom,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter a value';
+          }
+          return null;
+        },
+        onSaved: (value) => setState(() => purchasedFrom = value!),
+      ),
+      SizedBox(height: 2.h),
+      TextFormField(
+        decoration: const InputDecoration(labelText: "Notes"),
+        initialValue: notes,
+        onSaved: (value) => setState(() => notes = value!),
+      ),
+      SizedBox(height: 2.h),
+    ]);
+
+    return widgets;
+  }
+
+  bool changesMade() {
+    if (widget.asset == null) {
+      if (location.isNotEmpty ||
+          purchaseCost != 0 ||
+          purchaseDate != null ||
+          additionalCost != 0 ||
+          recoveredCost != 0 ||
+          purchasedFrom.isNotEmpty ||
+          notes.isNotEmpty ||
+          template != null) {
+        return true;
+      }
+      return false;
+    }
+
+    if (location != widget.asset!.location ||
+        purchaseCost != widget.asset!.purchaseCost ||
+        purchaseDate != widget.asset!.purchaseDate ||
+        additionalCost != widget.asset!.additionalCost ||
+        recoveredCost != widget.asset!.recoveredCost ||
+        purchasedFrom != widget.asset!.purchasedFrom ||
+        notes != widget.asset!.notes ||
+        template != widget.asset!.template) {
+      return true;
+    }
+
+    if (customFields.length != widget.asset!.customFields.length) {
+      return true;
+    }
+
+    for (var field in customFields.keys) {
+      if (widget.asset!.customFields[field]!.value !=
+          customFields[field]!.value) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  Future<void> savePressed() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    _formKey.currentState!.save();
+
+    // Make sure purchase date is set
+    if (purchaseDate == null) {
+      context.showErrorSnackBar(message: "Please select a purchase date");
+      return;
+    }
+
+    // Check if all custom fields are set properly, respecting the required flag
+    customFields.forEach((fieldName, fieldValue) {
+      if (fieldValue.field.required && (fieldValue.value == null)) {
+        context.showErrorSnackBar(
+            message: "Please fill in all required fields");
+        return;
+      }
+    });
+
+    Navigator.of(context).push(opaquePage(const LoadingPage()));
+
+    try {
+      // Create new asset
+      if (widget.asset == null) {
+        await Provider.of<DatabaseModel>(context, listen: false).createAsset(
+          location: location,
+          purchaseCost: purchaseCost,
+          purchaseDate: purchaseDate!,
+          additionalCost: additionalCost,
+          purchasedFrom: purchasedFrom,
+          template: template!,
+          customFields: customFields,
+          notes: notes,
+          recoveredCost: recoveredCost,
+        );
+      }
+    } catch (e) {
+      print(e);
+      Navigator.of(context).pop();
+      context.showErrorSnackBar(message: e.toString());
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    context.showSnackBar(message: "Asset Saved");
+    Navigator.of(context).pop();
+  }
+
+  Future<bool> willPop() async {
+    // If no changes have been made, just pop
+    if (!changesMade()) {
+      return true;
+    }
+
+    // If changes have been made, tell the user to save first
+    // show a dialog asking if they want to save
+
+    var result = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("You have unsaved changes"),
+        content: const Text("Are you sure you want to discard your changes?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null) {
+      return false;
+    }
+
+    return result;
   }
 }

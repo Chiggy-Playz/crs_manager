@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:crs_manager/models/template.dart';
 
 class FieldValue {
@@ -8,6 +10,21 @@ class FieldValue {
 
   final Field field;
   final dynamic value;
+
+  factory FieldValue.fromJson(String str) =>
+      FieldValue.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory FieldValue.fromMap(Map<String, dynamic> json) => FieldValue(
+        field: Field.fromMap(json["field"]),
+        value: json["value"],
+      );
+
+  Map<String, dynamic> toMap() => {
+        "field": field.toMap(),
+        "value": value is DateTime ? (value as DateTime).toUtc().toIso8601String() : value,
+      };
 }
 
 class Asset {
@@ -38,4 +55,50 @@ class Asset {
   Map<String, FieldValue> customFields;
   String notes;
   int recoveredCost;
+
+  factory Asset.fromJson(String str) => Asset.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory Asset.fromMap(Map<String, dynamic> json) => Asset(
+        id: json["id"],
+        uuid: json["uuid"],
+        createdAt: DateTime.parse(json["created_at"]),
+        location: json["location"],
+        purchaseCost: json["purchase_cost"],
+        purchaseDate: DateTime.parse(json["purchase_date"]),
+        additionalCost: json["additional_cost"],
+        purchasedFrom: json["purchased_from"],
+        template: Template.fromMap(json["template"]),
+        customFields: Map.from(json["custom_fields"]).map(
+          (k, v) => MapEntry<String, FieldValue>(
+            k,
+            FieldValue.fromMap(
+              Map<String, dynamic>.from(v),
+            ),
+          ),
+        ),
+        notes: json["notes"],
+        recoveredCost: json["recovered_cost"],
+      );
+
+  Map<String, dynamic> toMap() => {
+        "id": id,
+        "uuid": uuid,
+        "created_at": createdAt.toIso8601String(),
+        "location": location,
+        "purchase_cost": purchaseCost,
+        "purchase_date": purchaseDate.toIso8601String(),
+        "additional_cost": additionalCost,
+        "purchased_from": purchasedFrom,
+        "template": template.toMap(),
+        "custom_fields": Map.from(customFields).map(
+          (k, v) => MapEntry<String, dynamic>(
+            k,
+            v.toMap(),
+          ),
+        ),
+        "notes": notes,
+        "recovered_cost": recoveredCost,
+      };
 }

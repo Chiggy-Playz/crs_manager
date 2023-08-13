@@ -1,3 +1,4 @@
+import 'package:crs_manager/models/asset.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:collection/collection.dart';
@@ -13,6 +14,9 @@ class DatabaseModel extends ChangeNotifier {
   List<Challan> challans = [];
   Map<String, Map<String, dynamic>> secrets = {};
   List<Template> templates = [];
+
+  // UUID -> Asset
+  Map<String, Asset> assets = {};
 
   late SupabaseClient _client;
   bool connected = false;
@@ -43,7 +47,7 @@ class DatabaseModel extends ChangeNotifier {
 
     const buyerPageCount = 10;
     const challanPageCount = 25;
-
+    const assetPageCount = 25;
     // Load initial buyers
     buyers = (await _client
             .from("buyers")
@@ -79,6 +83,24 @@ class DatabaseModel extends ChangeNotifier {
               (e) => Template.fromMap(e),
             )
             .toList();
+
+    // Load initial assets
+    assets = {
+      for (var element in (await _client
+              .from("assets")
+              .select<List<Map<String, dynamic>>>()
+              .order("created_at")
+              .limit(assetPageCount))
+          .map((assetMap) {
+            var template = templates.firstWhere((template) => assetMap["template"] == template.id);
+            assetMap["template"] = template.toMap();
+        return Asset.fromMap(assetMap);
+      }))
+        element.uuid: element
+    };
+
+    // Load rest of the assets in background
+    loadAssets(assetPageCount);
 
     notifyListeners();
   }
@@ -131,6 +153,38 @@ class DatabaseModel extends ChangeNotifier {
       challanOffset += 1;
       notifyListeners();
       if (newChallansLength < challanPageCount) {
+        break;
+      }
+    }
+    loadingData = true;
+    notifyListeners();
+  }
+
+  Future<void> loadAssets(int assetPageCount) async {
+    Future<int> fetchMoreAssets(int offset, int limit) async {
+      final from = offset * limit;
+      final to = from + limit - 1;
+      var newAssets = (await _client
+              .from("assets")
+              .select<List<Map<String, dynamic>>>()
+              .order("created_at")
+              .range(from, to))
+          .map((assetMap) {
+            var template = templates.firstWhere((template) => assetMap["template"] == template.id);
+            assetMap["template"] = template.toMap();
+            return Asset.fromMap(assetMap);
+          })
+          .toList();
+      assets.addAll({for (var element in newAssets) element.uuid: element});
+      return newAssets.length;
+    }
+
+    int assetOffset = 1;
+    while (true) {
+      var newAssetsLength = await fetchMoreAssets(assetOffset, assetPageCount);
+      assetOffset += 1;
+      notifyListeners();
+      if (newAssetsLength < assetPageCount) {
         break;
       }
     }
@@ -441,5 +495,43 @@ class DatabaseModel extends ChangeNotifier {
       name: name ?? template.name,
       fields: fields ?? template.fields,
     );
+  }
+
+  Future<Asset> createAsset({
+    required String location,
+    required int purchaseCost,
+    required DateTime purchaseDate,
+    required int additionalCost,
+    required String purchasedFrom,
+    required Template template,
+    required Map<String, FieldValue> customFields,
+    required String notes,
+    required int recoveredCost,
+  }) async {
+    final response = await _client.from("assets").insert({
+      "location": location,
+      "purchase_cost": purchaseCost,
+      "purchase_date": purchaseDate.toUtc().toIso8601String(),
+      "additional_cost": additionalCost,
+      "purchased_from": purchasedFrom,
+      "template": template.id,
+      "custom_fields":
+          customFields.map((key, value) => MapEntry(key, value.toMap())),
+      "notes": notes,
+      "recovered_cost": recoveredCost,
+    }).select();
+
+    if (response == null) {
+      throw DatabaseError();
+    }
+
+    // var template = templates
+    //     .firstWhere((element) => element.id == response[0]["template"]);
+    response[0]["template"] = template.toMap();
+    final asset = Asset.fromMap(response[0]);
+
+    assets[asset.uuid] = asset;
+    notifyListeners();
+    return asset;
   }
 }
