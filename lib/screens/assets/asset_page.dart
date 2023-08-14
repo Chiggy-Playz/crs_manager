@@ -74,6 +74,9 @@ class _AssetPageState extends State<AssetPage> {
             child: Form(
               key: _formKey,
               child: Column(children: [
+                SizedBox(
+                  height: 2.h,
+                ),
                 DropdownButtonFormField<Template>(
                   decoration: const InputDecoration(labelText: 'Template'),
                   hint: const Text("Select a template"),

@@ -14,13 +14,16 @@ class OpticalTextFormField extends StatefulWidget {
       required this.initialValue,
       this.keyboardType,
       this.validator,
-      this.onSaved});
+      this.onSaved,
+      this.onChanged
+      });
 
   final String labelText;
   final String initialValue;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final Future<void> Function(String?)? onSaved;
+  final Future<void> Function(String?)? onChanged;
 
   @override
   State<OpticalTextFormField> createState() => _OpticalTextFormFieldState();
@@ -50,6 +53,7 @@ class _OpticalTextFormFieldState extends State<OpticalTextFormField> {
       ),
       validator: widget.validator,
       onSaved: widget.onSaved,
+      onChanged: widget.onChanged,
     );
 
     if (Platform.isWindows) {

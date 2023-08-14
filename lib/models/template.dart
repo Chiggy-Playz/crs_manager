@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:equatable/equatable.dart';
+
 enum FieldType { text, number, datetime, checkbox }
 
 class Field {
@@ -31,7 +33,7 @@ class Field {
       };
 }
 
-class Template {
+class Template extends Equatable {
   Template({
     required this.id,
     required this.name,
@@ -41,6 +43,12 @@ class Template {
   int id;
   String name;
   List<Field> fields;
+
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+      ];
 
   factory Template.fromJson(String str) => Template.fromMap(json.decode(str));
 

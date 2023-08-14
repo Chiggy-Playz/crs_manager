@@ -25,6 +25,7 @@ class _BuyersListState extends State<BuyersList> {
   Widget build(BuildContext context) {
     return Consumer<DatabaseModel>(
       builder: (context, value, child) {
+        
         List<Buyer> buyers = value.buyers
             .where(
               (buyer) =>

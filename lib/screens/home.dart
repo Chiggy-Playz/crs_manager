@@ -1,4 +1,5 @@
 import 'package:crs_manager/providers/buyer_select.dart';
+import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
@@ -108,9 +109,10 @@ class _HomePageState extends State<HomePage> {
             ),
             child: const BuyersList(),
           ),
-          const Center(
-            child: Text("Assets"),
-          ),
+          Consumer<DatabaseModel>(
+              builder: (context, value, child) => AssetList(
+                    allAssets: (value.assets.values.toList()),
+                  )),
           const Center(child: TemplatesList()),
           const Center(
             child: Text("History"),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crs_manager/models/template.dart';
+import 'package:equatable/equatable.dart';
 
 class FieldValue {
   const FieldValue({
@@ -16,14 +17,19 @@ class FieldValue {
 
   String toJson() => json.encode(toMap());
 
-  factory FieldValue.fromMap(Map<String, dynamic> json) => FieldValue(
-        field: Field.fromMap(json["field"]),
-        value: json["value"],
-      );
+  factory FieldValue.fromMap(Map<String, dynamic> json) {
+    var field = Field.fromMap(json["field"]);
+    return FieldValue(
+      field: field,
+      value: field.type != FieldType.datetime ? json["value"] : DateTime.parse(json["value"]),
+    );
+  }
 
   Map<String, dynamic> toMap() => {
         "field": field.toMap(),
-        "value": value is DateTime ? (value as DateTime).toUtc().toIso8601String() : value,
+        "value": value is DateTime
+            ? (value as DateTime).toUtc().toIso8601String()
+            : value,
       };
 }
 
