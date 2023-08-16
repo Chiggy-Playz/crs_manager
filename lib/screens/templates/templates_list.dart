@@ -15,7 +15,7 @@ class _TemplatesListState extends State<TemplatesList> {
   @override
   Widget build(BuildContext context) {
     return Consumer<DatabaseModel>(builder: (context, value, child) {
-      var templates = value.templates;
+      var templates = value.templates..sort((a, b) => a.name.compareTo(b.name));
 
       return Padding(
         padding: EdgeInsets.symmetric(horizontal: 2.w),
