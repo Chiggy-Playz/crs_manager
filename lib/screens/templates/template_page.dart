@@ -1,4 +1,5 @@
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/utils/exceptions.dart';
 import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
@@ -49,6 +50,56 @@ class _TemplatePageState extends State<TemplatePage> {
           title:
               Text(widget.template == null ? "New Template" : "Edit Template"),
           actions: [
+            if (widget.template != null)
+              IconButton(
+                  onPressed: () async {
+                    // Confirm delete
+                    bool? delete = await showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Delete Template?"),
+                        content: const Text(
+                            "Are you sure you want to delete this template?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text("Yes"),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (delete == null || !delete || !mounted) return;
+
+                    Navigator.of(context).push(opaquePage(const LoadingPage()));
+
+                    try {
+                      await Provider.of<DatabaseModel>(context, listen: false)
+                          .deleteTemplate(widget.template!);
+                    } on TemplateInUseError {
+                      Navigator.pop(context);
+                      context.showErrorSnackBar(message: "Template in use");
+                      return;
+                    } catch (e) {
+                      Navigator.pop(context);
+                      context.showErrorSnackBar(
+                          message: "Failed to delete: $e");
+                      return;
+                    }
+
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                    context.showSnackBar(message: "Template deleted");
+                  },
+                  icon: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).colorScheme.error,
+                  )),
             advancedView
                 ? IconButton.filled(
                     onPressed: () =>

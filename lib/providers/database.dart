@@ -452,7 +452,9 @@ class DatabaseModel extends ChangeNotifier {
   }
 
   Future<Template> createTemplate(
-      {required String name, required List<Field> fields, required Map<String, String> productLink}) async {
+      {required String name,
+      required List<Field> fields,
+      required Map<String, String> productLink}) async {
     final response = await _client.from("templates").insert({
       "name": name,
       "fields": fields.map((e) => e.toMap()).toList(),
@@ -470,7 +472,10 @@ class DatabaseModel extends ChangeNotifier {
   }
 
   Future<Template> updateTemplate(
-      {required Template template, String? name, List<Field>? fields, Map<String, String>? productlink}) async {
+      {required Template template,
+      String? name,
+      List<Field>? fields,
+      Map<String, String>? productlink}) async {
     if (name == null && fields == null) {
       return template;
     }
@@ -498,6 +503,22 @@ class DatabaseModel extends ChangeNotifier {
         name: name ?? template.name,
         fields: fields ?? template.fields,
         productLink: productlink ?? template.productLink);
+  }
+
+  Future<void> deleteTemplate(Template template) async {
+    // Check if the template is used in any asset
+    final assets = this
+        .assets
+        .values
+        .where((asset) => asset.template.id == template.id)
+        .toList();
+    if (assets.isNotEmpty) {
+      throw TemplateInUseError();
+    }
+
+    await _client.from("templates").delete().eq("id", template.id);
+    templates.remove(template);
+    notifyListeners();
   }
 
   Future<Asset> createAsset({

@@ -11,3 +11,5 @@ class BadSecretsError extends Error {}
 class UnknownDriveError extends Error {}
 
 class UnfilledFieldsError extends Error {}
+
+class TemplateInUseError extends Error {}
