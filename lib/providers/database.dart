@@ -525,8 +525,6 @@ class DatabaseModel extends ChangeNotifier {
       throw DatabaseError();
     }
 
-    // var template = templates
-    //     .firstWhere((element) => element.id == response[0]["template"]);
     response[0]["template"] = template.toMap();
     final asset = Asset.fromMap(response[0]);
 

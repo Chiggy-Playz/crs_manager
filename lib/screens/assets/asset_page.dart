@@ -117,7 +117,7 @@ class _AssetPageState extends State<AssetPage> {
         floatingActionButton: changesMade()
             ? FloatingActionButton(
                 onPressed: savePressed,
-                child: Icon(isNewAsset ? Icons.save : Icons.update),
+                child: const Icon(Icons.save),
               )
             : null,
       ),
@@ -166,6 +166,10 @@ class _AssetPageState extends State<AssetPage> {
                     return null;
                   }
                 : null,
+            onChanged: (newValue) async => setState(() {
+                  customFields[field.name] =
+                      FieldValue(field: field, value: newValue!);
+                }),
             onSaved: (newValue) async => setState(() {
                   customFields[field.name] =
                       FieldValue(field: field, value: newValue!);
@@ -173,7 +177,7 @@ class _AssetPageState extends State<AssetPage> {
       case FieldType.number:
         return OpticalTextFormField(
             labelText: field.name,
-            initialValue: value ?? "",
+            initialValue: value?.toString() ?? "",
             keyboardType: TextInputType.number,
             validator: field.required
                 ? (value) {
@@ -186,9 +190,17 @@ class _AssetPageState extends State<AssetPage> {
                     return null;
                   }
                 : null,
+            onChanged: (newValue) async {
+              var numValue = num.tryParse(newValue!);
+              if (numValue == null || numValue == value) return;
+              setState(() {
+                customFields[field.name] =
+                    FieldValue(field: field, value: numValue);
+              });
+            },
             onSaved: (newValue) async => setState(() {
                   customFields[field.name] =
-                      FieldValue(field: field, value: newValue!);
+                      FieldValue(field: field, value: num.parse(newValue!));
                 }));
       case FieldType.datetime:
         return Card(
@@ -251,13 +263,25 @@ class _AssetPageState extends State<AssetPage> {
     if (widget.asset != null) {
       widgets.addAll([
         SpacedRow(
-          widget1: const Text("Asset UUID"),
-          widget2: Text(assetUuid),
+          widget1: Text(
+            "Asset UUID",
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          widget2: Text(
+            assetUuid,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
         ),
         SizedBox(height: 2.h),
         SpacedRow(
-          widget1: const Text("Created At"),
-          widget2: Text(formatterDateTime.format(createdAt!)),
+          widget1: Text(
+            "Created At",
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          widget2: Text(
+            formatterDateTime.format(createdAt!),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
         ),
         SizedBox(height: 2.h),
       ]);
@@ -273,6 +297,7 @@ class _AssetPageState extends State<AssetPage> {
           }
           return null;
         },
+        onChanged: (value) => setState(() => location = value),
         onSaved: (value) => setState(() => location = value!),
       ),
       SizedBox(height: 2.h),
@@ -288,6 +313,11 @@ class _AssetPageState extends State<AssetPage> {
             return 'Please enter a valid number';
           }
           return null;
+        },
+        onChanged: (value) {
+          var numValue = int.tryParse(value);
+          if (numValue == null || numValue == purchaseCost) return;
+          setState(() => purchaseCost = numValue);
         },
         onSaved: (value) => setState(() => purchaseCost = int.parse(value!)),
       ),
@@ -307,14 +337,13 @@ class _AssetPageState extends State<AssetPage> {
               lastDate: DateTime(2100),
             );
             if (date == null || !mounted) return;
-            var time = await showTimePicker(
-                context: context, initialTime: TimeOfDay.now());
-
-            if (time == null || !mounted) return;
 
             setState(() {
               purchaseDate = DateTime(
-                  date.year, date.month, date.day, time.hour, time.minute);
+                date.year,
+                date.month,
+                date.day,
+              );
             });
           },
         ),
@@ -333,6 +362,11 @@ class _AssetPageState extends State<AssetPage> {
           }
           return null;
         },
+        onChanged: (value) {
+          var numValue = int.tryParse(value);
+          if (numValue == null || numValue == additionalCost) return;
+          setState(() => additionalCost = numValue);
+        },
         onSaved: (value) => setState(() => additionalCost = int.parse(value!)),
       ),
       SizedBox(height: 2.h),
@@ -349,6 +383,11 @@ class _AssetPageState extends State<AssetPage> {
           }
           return null;
         },
+        onChanged: (value) {
+          var numValue = int.tryParse(value);
+          if (numValue == null || numValue == recoveredCost) return;
+          setState(() => recoveredCost = numValue);
+        },
         onSaved: (value) => setState(() => recoveredCost = int.parse(value!)),
       ),
       SizedBox(height: 2.h),
@@ -361,12 +400,14 @@ class _AssetPageState extends State<AssetPage> {
           }
           return null;
         },
+        onChanged: (value) => setState(() => purchasedFrom = value),
         onSaved: (value) => setState(() => purchasedFrom = value!),
       ),
       SizedBox(height: 2.h),
       TextFormField(
         decoration: const InputDecoration(labelText: "Notes"),
         initialValue: notes,
+        onChanged: (value) => setState(() => notes = value),
         onSaved: (value) => setState(() => notes = value!),
       ),
       SizedBox(height: 2.h),

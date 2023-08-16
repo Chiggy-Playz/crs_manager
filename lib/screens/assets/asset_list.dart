@@ -19,20 +19,19 @@ class AssetList extends StatefulWidget {
 class AssetListState extends State<AssetList> {
   String filter = "";
   var filterController = TextEditingController();
-  var recentAssets = <Asset>[];
 
   @override
   void initState() {
     super.initState();
-    recentAssets = (widget.allAssets
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
-        .toList()
-        .sublist(
-            0, widget.allAssets.length >= 50 ? 50 : widget.allAssets.length);
   }
 
   @override
   Widget build(BuildContext context) {
+    List<Asset> recentAssets = (widget.allAssets
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+        .toList()
+        .sublist(
+            0, widget.allAssets.length >= 50 ? 50 : widget.allAssets.length);
     List<Asset> assets;
     if (filter.isNotEmpty) {
       assets = (widget.allAssets.where(

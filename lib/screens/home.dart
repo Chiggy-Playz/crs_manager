@@ -110,8 +110,8 @@ class _HomePageState extends State<HomePage> {
             child: const BuyersList(),
           ),
           Consumer<DatabaseModel>(
-              builder: (context, value, child) => AssetList(
-                    allAssets: (value.assets.values.toList()),
+              builder: (context, db, child) => AssetList(
+                    allAssets: (db.assets.values.toList()),
                   )),
           const Center(child: TemplatesList()),
           const Center(
