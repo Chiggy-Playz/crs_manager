@@ -139,9 +139,9 @@ CREATE OR REPLACE FUNCTION asset_insert() RETURNS trigger AS '
 CREATE TRIGGER asset_insert BEFORE INSERT OR UPDATE ON assets FOR
  EACH ROW EXECUTE PROCEDURE asset_insert();
 
-CREATE TABLE IF NOT EXISTS "history"(
+CREATE TABLE IF NOT EXISTS "assets_history"(
     id SERIAL PRIMARY KEY,
-    "asset_id" INTEGER NOT NULL REFERENCES assets(id),
+    "asset_uuid" TEXT NOT NULL,
     "when" TIMESTAMP with TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     "changes" JSON NOT NULL
 )

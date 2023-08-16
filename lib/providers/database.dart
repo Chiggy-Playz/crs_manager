@@ -713,8 +713,8 @@ class DatabaseModel extends ChangeNotifier {
       };
     }
 
-    var response = await _client.from("history").insert({
-      "asset_id": asset.id,
+    var response = await _client.from("assets_history").insert({
+      "asset_uuid": asset.uuid,
       "changes": changes,
     }).select();
 
@@ -722,6 +722,14 @@ class DatabaseModel extends ChangeNotifier {
       throw DatabaseError();
     }
     assetHistory.add(AssetHistory.fromMap(response[0]));
+    notifyListeners();
+  }
+
+  Future<void> deleteAsset({
+    required Asset asset,
+  }) async {
+    await _client.from("assets").delete().eq("id", asset.id);
+    assets.remove(asset.uuid);
     notifyListeners();
   }
 }

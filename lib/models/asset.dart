@@ -111,13 +111,13 @@ class Asset {
 
 class AssetHistory {
   int id;
-  int assetId;
+  String assetUuid;
   DateTime when;
   Map<String, dynamic> changes;
 
   AssetHistory({
     required this.id,
-    required this.assetId,
+    required this.assetUuid,
     required this.when,
     required this.changes,
   });
@@ -129,14 +129,14 @@ class AssetHistory {
 
   factory AssetHistory.fromMap(Map<String, dynamic> json) => AssetHistory(
         id: json["id"],
-        assetId: json["asset_id"],
+        assetUuid: json["asset_uuid"],
         when: DateTime.parse(json["when"]).toLocal(),
         changes: json["changes"],
       );
 
   Map<String, dynamic> toMap() => {
         "id": id,
-        "asset_id": assetId,
+        "asset_uuid": assetUuid,
         "when": when.toIso8601String(),
         "changes": changes,
       };

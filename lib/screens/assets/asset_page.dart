@@ -68,6 +68,52 @@ class _AssetPageState extends State<AssetPage> {
       child: Scaffold(
         appBar: TransparentAppBar(
           title: Text(isNewAsset ? 'New Asset' : 'Edit Asset'),
+          actions: [
+            if (!isNewAsset)
+              IconButton(
+                icon: Icon(Icons.delete,
+                    color: Theme.of(context).colorScheme.error),
+                onPressed: () async {
+                  var result = await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Delete Asset"),
+                      content: const Text(
+                          "Are you sure you want to delete this asset?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text("No"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text("Yes"),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (result == null || !result || !mounted) return;
+
+                  Navigator.of(context).push(opaquePage(const LoadingPage()));
+
+                  try {
+                    await Provider.of<DatabaseModel>(context, listen: false)
+                        .deleteAsset(asset: widget.asset!);
+                  } catch (e) {
+                    debugPrint(e.toString());
+                    Navigator.of(context).pop();
+                    context.showErrorSnackBar(message: e.toString());
+                    return;
+                  }
+
+                  if (!mounted) return;
+                  Navigator.of(context).pop();
+                  context.showSnackBar(message: "Asset Deleted");
+                  Navigator.of(context).pop();
+                },
+              ),
+          ],
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
