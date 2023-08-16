@@ -109,7 +109,8 @@ END $$;
 CREATE TABLE IF NOT EXISTS "templates"(
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
-    "fields" JSON NOT NULL
+    "fields" JSON NOT NULL,
+    "product_link" JSON NOT NULL DEFAULT '{"Description": "","Serial": "","Quantity": "","Quantity Unit": "","Additional Description": ""}',
 );
 
 CREATE TABLE IF NOT EXISTS "assets"(

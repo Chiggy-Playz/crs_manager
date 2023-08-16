@@ -452,10 +452,11 @@ class DatabaseModel extends ChangeNotifier {
   }
 
   Future<Template> createTemplate(
-      {required String name, required List<Field> fields}) async {
+      {required String name, required List<Field> fields, required Map<String, String> productLink}) async {
     final response = await _client.from("templates").insert({
       "name": name,
       "fields": fields.map((e) => e.toMap()).toList(),
+      "product_link": productLink,
     }).select();
 
     if (response == null) {
@@ -469,7 +470,7 @@ class DatabaseModel extends ChangeNotifier {
   }
 
   Future<Template> updateTemplate(
-      {required Template template, String? name, List<Field>? fields}) async {
+      {required Template template, String? name, List<Field>? fields, Map<String, String>? productlink}) async {
     if (name == null && fields == null) {
       return template;
     }
@@ -477,25 +478,26 @@ class DatabaseModel extends ChangeNotifier {
     await _client.from("templates").update({
       "name": name ?? template.name,
       "fields": fields?.map((e) => e.toMap()).toList() ?? template.fields,
+      "product_link": productlink ?? template.productLink,
     }).eq("id", template.id);
 
     templates = templates.map((e) {
       if (e.id == template.id) {
         return Template(
-          id: e.id,
-          name: name ?? e.name,
-          fields: fields ?? e.fields,
-        );
+            id: e.id,
+            name: name ?? e.name,
+            fields: fields ?? e.fields,
+            productLink: productlink ?? e.productLink);
       }
       return e;
     }).toList();
 
     notifyListeners();
     return Template(
-      id: template.id,
-      name: name ?? template.name,
-      fields: fields ?? template.fields,
-    );
+        id: template.id,
+        name: name ?? template.name,
+        fields: fields ?? template.fields,
+        productLink: productlink ?? template.productLink);
   }
 
   Future<Asset> createAsset({

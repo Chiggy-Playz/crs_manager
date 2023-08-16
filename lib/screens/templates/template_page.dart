@@ -21,6 +21,14 @@ class TemplatePage extends StatefulWidget {
 class _TemplatePageState extends State<TemplatePage> {
   String name = "";
   List<Field> fields = [];
+  Map<String, String> productLink = {
+    "Description": "",
+    "Serial": "",
+    "Quantity": "",
+    "Quantity Unit": "",
+    "Additional Description": "",
+  };
+  bool advancedView = false;
 
   @override
   void initState() {
@@ -28,6 +36,7 @@ class _TemplatePageState extends State<TemplatePage> {
     if (widget.template != null) {
       name = widget.template!.name;
       fields = List.from(widget.template!.fields);
+      productLink = Map.from(widget.template!.productLink);
     }
   }
 
@@ -39,11 +48,24 @@ class _TemplatePageState extends State<TemplatePage> {
         appBar: TransparentAppBar(
           title:
               Text(widget.template == null ? "New Template" : "Edit Template"),
+          actions: [
+            advancedView
+                ? IconButton.filled(
+                    onPressed: () =>
+                        setState(() => advancedView = !advancedView),
+                    icon: const Icon(Icons.settings))
+                : IconButton(
+                    onPressed: () =>
+                        setState(() => advancedView = !advancedView),
+                    icon: const Icon(Icons.settings),
+                  )
+          ],
         ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 2.h),
-          child: Center(
+          child: SingleChildScrollView(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 SizedBox(
                   height: 10.h,
@@ -70,6 +92,7 @@ class _TemplatePageState extends State<TemplatePage> {
                 SizedBox(height: 1.h),
                 ...getFieldsListWidget(),
                 SizedBox(height: 1.h),
+                ...getProductsLinkWidget(),
               ],
             ),
           ),
@@ -80,8 +103,8 @@ class _TemplatePageState extends State<TemplatePage> {
             if (changesMade()) ...[
               FloatingActionButton(
                 onPressed: savePressed,
-                child: const Icon(Icons.save),
                 heroTag: "Save-fab",
+                child: const Icon(Icons.save),
               ),
               SizedBox(height: 1.h),
             ],
@@ -181,6 +204,96 @@ class _TemplatePageState extends State<TemplatePage> {
     });
   }
 
+  List<Widget> getProductsLinkWidget() {
+    List<Widget> widgets = [];
+
+    if (fields.isEmpty) {
+      return widgets;
+    }
+
+    widgets.add(
+      Text(
+        "Product Relation",
+        style: Theme.of(context).textTheme.displaySmall,
+      ),
+    );
+
+    var productFields = [
+      "Description",
+      "Serial",
+      "Quantity",
+      "Quantity Unit",
+      "Additional Description",
+    ];
+
+    TextFormField getTextField(String productField) {
+      return TextFormField(
+        initialValue: productLink[productField],
+        onChanged: (value) {
+          setState(() {
+            productLink[productField] = value;
+          });
+        },
+      );
+    }
+
+    widgets.addAll(productFields.map(
+      (productField) {
+        return SpacedRow(
+          widget1: SizedBox(
+            width: 40.w,
+            child: Text(
+              productField,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          ),
+          widget2: SizedBox(
+            width: 50.w,
+            child: advancedView
+                ? getTextField(productField)
+                : (fields
+                        .map(
+                          (e) => "{${e.name}}",
+                        )
+                        .contains(productLink[productField])
+                    ? DropdownButtonFormField<String>(
+                        items: fields
+                            .map(
+                              (field) => DropdownMenuItem(
+                                value: "{${field.name}}",
+                                child: Text(field.name),
+                              ),
+                            )
+                            .toList()
+                          ..add(const DropdownMenuItem(
+                            value: "",
+                            child: Text("Empty"),
+                          )),
+                        onChanged: (value) {
+                          setState(() {
+                            productLink[productField] = value!;
+                          });
+                        },
+                        value: productLink[productField],
+                      )
+                    : getTextField(productField)),
+          ),
+        );
+      },
+    ));
+
+    // Add some space between every widget by adding a SizedBox
+    List<Widget> spacedWidgets = [];
+    for (var i = 0; i < widgets.length; i++) {
+      spacedWidgets.add(widgets[i]);
+      if (i != widgets.length - 1) {
+        spacedWidgets.add(SizedBox(height: 1.h));
+      }
+    }
+
+    return spacedWidgets;
+  }
+
   bool changesMade() {
     if (widget.template == null) {
       return name.isNotEmpty || fields.isNotEmpty;
@@ -196,6 +309,13 @@ class _TemplatePageState extends State<TemplatePage> {
 
     for (var i = 0; i < fields.length; i++) {
       if (fields[i] != widget.template!.fields[i]) {
+        return true;
+      }
+    }
+
+    // Check if product link values changed
+    for (var key in productLink.keys) {
+      if (productLink[key] != widget.template!.productLink[key]) {
         return true;
       }
     }
@@ -228,12 +348,14 @@ class _TemplatePageState extends State<TemplatePage> {
 
     try {
       if (widget.template == null) {
-        await Provider.of<DatabaseModel>(context, listen: false)
-            .createTemplate(name: name, fields: fields);
+        await Provider.of<DatabaseModel>(context, listen: false).createTemplate(
+            name: name, fields: fields, productLink: productLink);
       } else {
         await Provider.of<DatabaseModel>(context, listen: false).updateTemplate(
-          template: widget.template!, name: name, fields: fields
-        );
+            template: widget.template!,
+            name: name,
+            fields: fields,
+            productlink: productLink);
       }
     } catch (e) {
       print(e);
