@@ -92,8 +92,9 @@ class DatabaseModel extends ChangeNotifier {
               .order("created_at")
               .limit(assetPageCount))
           .map((assetMap) {
-            var template = templates.firstWhere((template) => assetMap["template"] == template.id);
-            assetMap["template"] = template.toMap();
+        var template = templates
+            .firstWhere((template) => assetMap["template"] == template.id);
+        assetMap["template"] = template.toMap();
         return Asset.fromMap(assetMap);
       }))
         element.uuid: element
@@ -170,11 +171,11 @@ class DatabaseModel extends ChangeNotifier {
               .order("created_at")
               .range(from, to))
           .map((assetMap) {
-            var template = templates.firstWhere((template) => assetMap["template"] == template.id);
-            assetMap["template"] = template.toMap();
-            return Asset.fromMap(assetMap);
-          })
-          .toList();
+        var template = templates
+            .firstWhere((template) => assetMap["template"] == template.id);
+        assetMap["template"] = template.toMap();
+        return Asset.fromMap(assetMap);
+      }).toList();
       assets.addAll({for (var element in newAssets) element.uuid: element});
       return newAssets.length;
     }
@@ -516,7 +517,7 @@ class DatabaseModel extends ChangeNotifier {
       "purchased_from": purchasedFrom,
       "template": template.id,
       "custom_fields":
-          customFields.map((key, value) => MapEntry(key, value.toMap())),
+          customFields.map((key, value) => MapEntry(key, value.getValue())),
       "notes": notes,
       "recovered_cost": recoveredCost,
     }).select();

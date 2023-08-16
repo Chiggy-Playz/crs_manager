@@ -1,36 +1,29 @@
 import 'dart:convert';
 
 import 'package:crs_manager/models/template.dart';
-import 'package:equatable/equatable.dart';
 
 class FieldValue {
-  const FieldValue({
+  FieldValue({
     required this.field,
     required this.value,
-  });
-
-  final Field field;
-  final dynamic value;
-
-  factory FieldValue.fromJson(String str) =>
-      FieldValue.fromMap(json.decode(str));
-
-  String toJson() => json.encode(toMap());
-
-  factory FieldValue.fromMap(Map<String, dynamic> json) {
-    var field = Field.fromMap(json["field"]);
-    return FieldValue(
-      field: field,
-      value: field.type != FieldType.datetime ? json["value"] : DateTime.parse(json["value"]),
-    );
+  }) {
+    if (value is String && field.type == FieldType.datetime) {
+      value = DateTime.parse(
+        value,
+      ).toLocal();
+    } else {
+      value = value;
+    }
   }
 
-  Map<String, dynamic> toMap() => {
-        "field": field.toMap(),
-        "value": value is DateTime
-            ? (value as DateTime).toUtc().toIso8601String()
-            : value,
-      };
+  Field field;
+  dynamic value;
+
+  dynamic getValue() {
+    return value is DateTime
+        ? (value as DateTime).toUtc().toIso8601String()
+        : value;
+  }
 }
 
 class Asset {
@@ -66,27 +59,34 @@ class Asset {
 
   String toJson() => json.encode(toMap());
 
-  factory Asset.fromMap(Map<String, dynamic> json) => Asset(
-        id: json["id"],
-        uuid: json["uuid"],
-        createdAt: DateTime.parse(json["created_at"]),
-        location: json["location"],
-        purchaseCost: json["purchase_cost"],
-        purchaseDate: DateTime.parse(json["purchase_date"]),
-        additionalCost: json["additional_cost"],
-        purchasedFrom: json["purchased_from"],
-        template: Template.fromMap(json["template"]),
-        customFields: Map.from(json["custom_fields"]).map(
-          (k, v) => MapEntry<String, FieldValue>(
-            k,
-            FieldValue.fromMap(
-              Map<String, dynamic>.from(v),
-            ),
+  factory Asset.fromMap(Map<String, dynamic> json) {
+    Template template = Template.fromMap(json["template"]);
+
+    return Asset(
+      id: json["id"],
+      uuid: json["uuid"],
+      createdAt: DateTime.parse(json["created_at"]).toLocal(),
+      location: json["location"],
+      purchaseCost: json["purchase_cost"],
+      purchaseDate: DateTime.parse(json["purchase_date"]).toLocal(),
+      additionalCost: json["additional_cost"],
+      purchasedFrom: json["purchased_from"],
+      template: template,
+      customFields: Map.from(json["custom_fields"]).map(
+        (fieldName, fieldValue) => MapEntry<String, FieldValue>(
+          fieldName,
+          FieldValue(
+            field: template.fields
+                .where((element) => fieldName == element.name)
+                .first,
+            value: fieldValue,
           ),
         ),
-        notes: json["notes"],
-        recoveredCost: json["recovered_cost"],
-      );
+      ),
+      notes: json["notes"],
+      recoveredCost: json["recovered_cost"],
+    );
+  }
 
   Map<String, dynamic> toMap() => {
         "id": id,
@@ -101,7 +101,7 @@ class Asset {
         "custom_fields": Map.from(customFields).map(
           (k, v) => MapEntry<String, dynamic>(
             k,
-            v.toMap(),
+            v.getValue(),
           ),
         ),
         "notes": notes,

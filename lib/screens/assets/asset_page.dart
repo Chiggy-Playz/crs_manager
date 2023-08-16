@@ -327,7 +327,7 @@ class _AssetPageState extends State<AssetPage> {
         child: ListTile(
           title: const Text("Purchase Date"),
           subtitle: Text(purchaseDate != null
-              ? formatterDateTime.format(purchaseDate!)
+              ? formatterDate.format(purchaseDate!)
               : "Choose a date"),
           onTap: () async {
             var date = await showDatePicker(
