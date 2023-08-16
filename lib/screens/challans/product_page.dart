@@ -1,6 +1,11 @@
+import 'package:crs_manager/providers/asset_select.dart';
+import 'package:crs_manager/screens/assets/choose_asset.dart';
+import 'package:crs_manager/utils/template_string.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+import '../../models/asset.dart';
 import '../../models/challan.dart';
 import '../../utils/widgets.dart';
 
@@ -22,6 +27,13 @@ class _ProductPageState extends State<ProductPage> {
 
   final _formKey = GlobalKey<FormState>();
 
+  // Controllers
+  final _descriptionController = TextEditingController();
+  final _quantityController = TextEditingController();
+  final _quantityUnitController = TextEditingController();
+  final _serialController = TextEditingController();
+  final _additionalDescriptionController = TextEditingController();
+
   @override
   void initState() {
     if (widget.product != null) {
@@ -30,8 +42,24 @@ class _ProductPageState extends State<ProductPage> {
       _quantityUnit = widget.product!.quantityUnit;
       _serial = widget.product!.serial;
       _additionalDescription = widget.product!.additionalDescription;
+
+      _descriptionController.text = _description;
+      _quantityController.text = _quantity != 0 ? _quantity.toString() : "";
+      _quantityUnitController.text = _quantityUnit;
+      _serialController.text = _serial;
+      _additionalDescriptionController.text = _additionalDescription;
     }
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _quantityController.dispose();
+    _quantityUnitController.dispose();
+    _serialController.dispose();
+    _additionalDescriptionController.dispose();
+    super.dispose();
   }
 
   // Detect back button press, and if changes made, ask for confirmation
@@ -68,6 +96,12 @@ class _ProductPageState extends State<ProductPage> {
       child: Scaffold(
         appBar: TransparentAppBar(
           title: Text(widget.product == null ? "New Product" : "Edit Product"),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.download),
+              onPressed: importAssetPressed,
+            )
+          ],
         ),
         body: Form(
           key: _formKey,
@@ -75,7 +109,7 @@ class _ProductPageState extends State<ProductPage> {
             padding: EdgeInsets.all(5.w),
             children: [
               TextFormField(
-                  initialValue: _description,
+                  controller: _descriptionController,
                   decoration: const InputDecoration(
                     labelText: "Description",
                   ),
@@ -97,7 +131,7 @@ class _ProductPageState extends State<ProductPage> {
                   SizedBox(
                     width: 55.w,
                     child: TextFormField(
-                      initialValue: _quantity != 0 ? _quantity.toString() : "",
+                      controller: _quantityController,
                       decoration: const InputDecoration(
                         labelText: "Quantity",
                       ),
@@ -125,7 +159,7 @@ class _ProductPageState extends State<ProductPage> {
                   SizedBox(
                     width: 30.w,
                     child: TextFormField(
-                      initialValue: _quantityUnit,
+                      controller: _quantityUnitController,
                       decoration: const InputDecoration(
                         labelText: "Unit",
                       ),
@@ -147,7 +181,7 @@ class _ProductPageState extends State<ProductPage> {
               ),
               SizedBox(height: 2.h),
               TextFormField(
-                  initialValue: _serial,
+                  controller: _serialController,
                   decoration: const InputDecoration(
                     labelText: "Serial",
                   ),
@@ -165,7 +199,7 @@ class _ProductPageState extends State<ProductPage> {
                   onSaved: (value) => _serial = value!),
               SizedBox(height: 2.h),
               TextFormField(
-                  initialValue: _additionalDescription,
+                  controller: _additionalDescriptionController,
                   decoration: const InputDecoration(
                     labelText: "Additional Description",
                   ),
@@ -241,5 +275,67 @@ class _ProductPageState extends State<ProductPage> {
       serial: _serial.toUpperCase(),
       additionalDescription: _additionalDescription.toUpperCase(),
     ));
+  }
+
+  Future<void> importAssetPressed() async {
+    List<Asset>? assets = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ChangeNotifierProvider(
+          create: (_) => AssetSelectionProvider(
+            onAssetSelected: (asset) => Navigator.of(context).pop([asset]),
+            multiple: true,
+          ),
+          child: const ChooseAsset(),
+        ),
+      ),
+    );
+
+    if (assets == null || assets.isEmpty) {
+      return;
+    }
+
+    if (assets.length == 1) {
+      var asset = assets.first;
+      setState(() {
+        var productLink = asset.template.productLink;
+        for (var productField in [
+          "Description",
+          "Quantity",
+          "Quantity Unit",
+          "Serial",
+          "Additional Description",
+        ]) {
+          var rawAssetField = productLink[productField];
+          if (rawAssetField == null || rawAssetField.isEmpty) {
+            continue;
+          }
+
+          var templateString = TemplateString(rawAssetField);
+          var value = templateString.format(asset.toMap()["custom_fields"]);
+          switch (productField) {
+            case "Description":
+              _description = value;
+              _descriptionController.text = _description;
+              break;
+            case "Quantity":
+              _quantity = int.tryParse(value) ?? 0;
+              _quantityController.text = _quantity.toString();
+              break;
+            case "Quantity Unit":
+              _quantityUnit = value;
+              _quantityUnitController.text = _quantityUnit;
+              break;
+            case "Serial":
+              _serial = value;
+              _serialController.text = _serial;
+              break;
+            case "Additional Description":
+              _additionalDescription = value;
+              _additionalDescriptionController.text = _additionalDescription;
+              break;
+          }
+        }
+      });
+    } else {}
   }
 }
