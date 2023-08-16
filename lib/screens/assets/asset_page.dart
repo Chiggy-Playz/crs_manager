@@ -2,6 +2,7 @@ import 'package:crs_manager/providers/database.dart';
 import 'package:crs_manager/screens/assets/optical_textformfield.dart';
 import 'package:crs_manager/screens/loading.dart';
 import 'package:crs_manager/utils/constants.dart';
+import 'package:crs_manager/utils/exceptions.dart';
 import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
@@ -469,15 +470,17 @@ class _AssetPageState extends State<AssetPage> {
       return;
     }
 
-    // Check if all custom fields are set properly, respecting the required flag
-    customFields.forEach((fieldName, fieldValue) {
-      if (fieldValue.field.required && (fieldValue.value == null)) {
-        context.showErrorSnackBar(
-            message: "Please fill in all required fields");
-        return;
-      }
-    });
-
+    try {
+      // Check if all custom fields are set properly, respecting the required flag
+      customFields.forEach((fieldName, fieldValue) {
+        if (fieldValue.field.required && (fieldValue.value == null)) {
+          throw UnfilledFieldsError();
+        }
+      });
+    } on UnfilledFieldsError catch (_) {
+      context.showErrorSnackBar(message: "Please fill in all required fields");
+      return;
+    }
     Navigator.of(context).push(opaquePage(const LoadingPage()));
 
     try {
@@ -494,9 +497,31 @@ class _AssetPageState extends State<AssetPage> {
           notes: notes,
           recoveredCost: recoveredCost,
         );
+      } else {
+        // Update existing asset
+
+        await Provider.of<DatabaseModel>(context, listen: false).updateAsset(
+          asset: widget.asset!,
+          location: location == widget.asset!.location ? null : location,
+          purchaseCost:
+              purchaseCost == widget.asset!.purchaseCost ? null : purchaseCost,
+          purchaseDate:
+              purchaseDate == widget.asset!.purchaseDate ? null : purchaseDate,
+          additionalCost: additionalCost == widget.asset!.additionalCost
+              ? null
+              : additionalCost,
+          purchasedFrom: purchasedFrom == widget.asset!.purchasedFrom
+              ? null
+              : purchasedFrom,
+          notes: notes == widget.asset!.notes ? null : notes,
+          recoveredCost: recoveredCost == widget.asset!.recoveredCost
+              ? null
+              : recoveredCost,
+          customFields: Map.from(customFields),
+        );
       }
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
       Navigator.of(context).pop();
       context.showErrorSnackBar(message: e.toString());
       return;

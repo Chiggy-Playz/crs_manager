@@ -14,9 +14,9 @@ class DatabaseModel extends ChangeNotifier {
   List<Challan> challans = [];
   Map<String, Map<String, dynamic>> secrets = {};
   List<Template> templates = [];
-
   // UUID -> Asset
   Map<String, Asset> assets = {};
+  List<AssetHistory> assetHistory = [];
 
   late SupabaseClient _client;
   bool connected = false;
@@ -532,5 +532,173 @@ class DatabaseModel extends ChangeNotifier {
     assets[asset.uuid] = asset;
     notifyListeners();
     return asset;
+  }
+
+  Future<Asset> updateAsset({
+    required Asset asset,
+    String? location,
+    int? purchaseCost,
+    DateTime? purchaseDate,
+    int? additionalCost,
+    String? purchasedFrom,
+    Map<String, FieldValue>? customFields,
+    String? notes,
+    int? recoveredCost,
+  }) async {
+    if (location == null &&
+        purchaseCost == null &&
+        purchaseDate == null &&
+        additionalCost == null &&
+        purchasedFrom == null &&
+        customFields == null &&
+        notes == null &&
+        recoveredCost == null) {
+      return asset;
+    }
+
+    final response = await _client
+        .from("assets")
+        .update({
+          "location": location ?? asset.location,
+          "purchase_cost": purchaseCost ?? asset.purchaseCost,
+          "purchase_date":
+              (purchaseDate ?? asset.purchaseDate).toUtc().toIso8601String(),
+          "additional_cost": additionalCost ?? asset.additionalCost,
+          "purchased_from": purchasedFrom ?? asset.purchasedFrom,
+          "custom_fields":
+              (customFields ?? asset.customFields).map((key, value) {
+            return MapEntry(key, value.getValue());
+          }),
+          "notes": notes ?? asset.notes,
+          "recovered_cost": recoveredCost ?? asset.recoveredCost,
+        })
+        .eq("id", asset.id)
+        .select();
+
+    if (response == null) {
+      throw DatabaseError();
+    }
+
+    await _insertHistory(
+      asset: asset,
+      location: location,
+      purchaseCost: purchaseCost,
+      purchaseDate: purchaseDate,
+      additionalCost: additionalCost,
+      purchasedFrom: purchasedFrom,
+      customFields: customFields!
+        ..removeWhere((key, value) {
+          if (asset.customFields[key] == null) return true;
+          return asset.customFields[key]!.value == value.value;
+        }),
+      notes: notes,
+      recoveredCost: recoveredCost,
+    );
+    response[0]["template"] = asset.template.toMap();
+    final updatedAsset = Asset.fromMap(response[0]);
+    assets[asset.uuid] = updatedAsset;
+    notifyListeners();
+    return updatedAsset;
+  }
+
+  Future<void> _insertHistory({
+    required Asset asset,
+    String? location,
+    int? purchaseCost,
+    DateTime? purchaseDate,
+    int? additionalCost,
+    String? purchasedFrom,
+    Map<String, FieldValue>? customFields,
+    String? notes,
+    int? recoveredCost,
+  }) async {
+    /*
+    history.changes is like 
+    {
+        "custom_fields" : [
+            {
+                "fieldName": "name",
+                "before": "before",
+                "after": "after",
+            },
+        ],
+        "fieldName": {
+            "before": "before",
+            "after": "after",
+        }
+    }
+    */
+    var changes = {};
+
+    if (location != null) {
+      changes["location"] = {
+        "before": asset.location,
+        "after": location,
+      };
+    }
+
+    if (purchaseCost != null) {
+      changes["purchase_cost"] = {
+        "before": asset.purchaseCost,
+        "after": purchaseCost,
+      };
+    }
+
+    if (purchaseDate != null) {
+      changes["purchase_date"] = {
+        "before": asset.purchaseDate.toUtc().toIso8601String(),
+        "after": purchaseDate.toUtc().toIso8601String(),
+      };
+    }
+
+    if (additionalCost != null) {
+      changes["additional_cost"] = {
+        "before": asset.additionalCost,
+        "after": additionalCost,
+      };
+    }
+
+    if (purchasedFrom != null) {
+      changes["purchased_from"] = {
+        "before": asset.purchasedFrom,
+        "after": purchasedFrom,
+      };
+    }
+
+    if (customFields != null && customFields.isNotEmpty) {
+      changes["custom_fields"] = [];
+      for (var key in customFields.keys) {
+        changes["custom_fields"].add({
+          "fieldName": key,
+          "before": asset.customFields[key]?.getValue(),
+          "after": customFields[key]?.getValue(),
+        });
+      }
+    }
+
+    if (notes != null) {
+      changes["notes"] = {
+        "before": asset.notes,
+        "after": notes,
+      };
+    }
+
+    if (recoveredCost != null) {
+      changes["recovered_cost"] = {
+        "before": asset.recoveredCost,
+        "after": recoveredCost,
+      };
+    }
+
+    var response = await _client.from("history").insert({
+      "asset_id": asset.id,
+      "changes": changes,
+    }).select();
+
+    if (response == null) {
+      throw DatabaseError();
+    }
+    assetHistory.add(AssetHistory.fromMap(response[0]));
+    notifyListeners();
   }
 }

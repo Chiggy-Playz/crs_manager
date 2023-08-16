@@ -97,7 +97,7 @@ class Asset {
         "purchase_date": purchaseDate.toIso8601String(),
         "additional_cost": additionalCost,
         "purchased_from": purchasedFrom,
-        "template": template.toMap(),
+        "template": template.id,
         "custom_fields": Map.from(customFields).map(
           (k, v) => MapEntry<String, dynamic>(
             k,
@@ -106,5 +106,38 @@ class Asset {
         ),
         "notes": notes,
         "recovered_cost": recoveredCost,
+      };
+}
+
+class AssetHistory {
+  int id;
+  int assetId;
+  DateTime when;
+  Map<String, dynamic> changes;
+
+  AssetHistory({
+    required this.id,
+    required this.assetId,
+    required this.when,
+    required this.changes,
+  });
+
+  factory AssetHistory.fromJson(String str) =>
+      AssetHistory.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory AssetHistory.fromMap(Map<String, dynamic> json) => AssetHistory(
+        id: json["id"],
+        assetId: json["asset_id"],
+        when: DateTime.parse(json["when"]).toLocal(),
+        changes: json["changes"],
+      );
+
+  Map<String, dynamic> toMap() => {
+        "id": id,
+        "asset_id": assetId,
+        "when": when.toIso8601String(),
+        "changes": changes,
       };
 }

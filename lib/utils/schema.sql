@@ -77,11 +77,31 @@ END $$;
 
 /*
 
-    field is like 
+    templates.field is like 
     {
         "name": "name",
         "type": "text | number | date | select | checkbox",
         "required": true | false
+    }
+
+    assets.custom_fields is like 
+    {
+        "field_name": "value"
+    }
+
+    history.changes is like 
+    {
+        "custom_fields" : [
+            {
+                "fieldName": "name",
+                "before": "before",
+                "after": "after",
+            },
+        ],
+        "fieldName": {
+            "before": "before",
+            "after": "after",
+        }
     }
 
 */
@@ -120,7 +140,7 @@ CREATE TRIGGER asset_insert BEFORE INSERT OR UPDATE ON assets FOR
 
 CREATE TABLE IF NOT EXISTS "history"(
     id SERIAL PRIMARY KEY,
-    "asset" INTEGER NOT NULL REFERENCES assets(id),
+    "asset_id" INTEGER NOT NULL REFERENCES assets(id),
     "when" TIMESTAMP with TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     "changes" JSON NOT NULL
 )
