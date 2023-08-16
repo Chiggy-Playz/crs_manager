@@ -303,10 +303,11 @@ class _TemplatePageState extends State<TemplatePage> {
             child: advancedView
                 ? getTextField(productField)
                 : (fields
-                        .map(
-                          (e) => "{${e.name}}",
-                        )
-                        .contains(productLink[productField])
+                            .map(
+                              (e) => "{${e.name}}",
+                            )
+                            .contains(productLink[productField]) ||
+                        productLink[productField] == ""
                     ? DropdownButtonFormField<String>(
                         items: fields
                             .map(
