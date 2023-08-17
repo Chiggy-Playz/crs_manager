@@ -20,6 +20,7 @@ class AssetList extends StatefulWidget {
 class AssetListState extends State<AssetList> {
   String filter = "";
   var filterController = TextEditingController();
+  late Offset _tapDownPosition;
 
   @override
   void initState() {
@@ -72,32 +73,44 @@ class AssetListState extends State<AssetList> {
                         itemBuilder: (context, index) {
                           Asset asset = assets[index];
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 6.0, horizontal: 6.0),
-                            elevation: 4,
-                            child: selector.multiple
-                                ? CheckboxListTile(
-                                    title: Text(asset.template.name),
-                                    subtitle: Text(asset.uuid),
-                                    value: selector.selectedAssets.contains(
-                                      asset,
+                          return GestureDetector(
+                            onTapDown: (TapDownDetails details) {
+                              _tapDownPosition = details.globalPosition;
+                            },
+                            onSecondaryTapDown: (details) {
+                              _tapDownPosition = details.globalPosition;
+                            },
+                            onSecondaryTapCancel: () =>
+                                showContextMenu(asset: asset),
+                            onLongPress: () => showContextMenu(asset: asset),
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(
+                                  vertical: 6.0, horizontal: 6.0),
+                              elevation: 4,
+                              child: selector.multiple
+                                  ? CheckboxListTile(
+                                      title: Text(asset.template.name),
+                                      subtitle: Text(asset.uuid),
+                                      value: selector.selectedAssets.contains(
+                                        asset,
+                                      ),
+                                      onChanged: (value) {
+                                        if (value!) {
+                                          selector.addAsset(asset);
+                                        } else {
+                                          selector.removeAsset(asset);
+                                        }
+                                      },
+                                    )
+                                  : ListTile(
+                                      title: Text(asset.template.name),
+                                      subtitle: Text(asset.uuid),
+                                      trailing: Text(
+                                          formatter.format(asset.createdAt)),
+                                      onTap: () =>
+                                          selector.onAssetSelected(asset),
                                     ),
-                                    onChanged: (value) {
-                                      if (value!) {
-                                        selector.addAsset(asset);
-                                      } else {
-                                        selector.removeAsset(asset);
-                                      }
-                                    },
-                                  )
-                                : ListTile(
-                                    title: Text(asset.template.name),
-                                    subtitle: Text(asset.uuid),
-                                    trailing:
-                                        Text(formatter.format(asset.createdAt)),
-                                    onTap: () => selector.onAssetSelected(asset),
-                                  ),
+                            ),
                           );
                         },
                       ),
@@ -117,5 +130,44 @@ class AssetListState extends State<AssetList> {
         ),
       );
     });
+  }
+
+  void showContextMenu({
+    TapUpDetails? details,
+    required Asset asset,
+  }) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    if (details != null) {
+      _tapDownPosition = details.globalPosition;
+    }
+
+    var value = await showMenu<int>(
+      context: context,
+      items: [
+        const PopupMenuItem(value: 0, child: Text("Clone Asset")),
+      ],
+      position: RelativeRect.fromLTRB(
+        _tapDownPosition.dx,
+        _tapDownPosition.dy,
+        overlay.size.width - _tapDownPosition.dx,
+        overlay.size.height - _tapDownPosition.dy,
+      ),
+    );
+
+    if (value == null) {
+      return;
+    }
+    if (!mounted) return;
+    if (value == 0) {
+      // Copy challan
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => AssetPage(
+            copyFromAsset: asset,
+          ),
+        ),
+      );
+    }
   }
 }

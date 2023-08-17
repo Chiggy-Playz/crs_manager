@@ -13,9 +13,10 @@ import '../../models/asset.dart';
 import '../../models/template.dart';
 
 class AssetPage extends StatefulWidget {
-  const AssetPage({super.key, this.asset});
+  const AssetPage({super.key, this.asset, this.copyFromAsset});
 
   final Asset? asset;
+  final Asset? copyFromAsset;
 
   @override
   State<AssetPage> createState() => _AssetPageState();
@@ -55,6 +56,14 @@ class _AssetPageState extends State<AssetPage> {
       purchasedFrom = widget.asset!.purchasedFrom;
       notes = widget.asset!.notes;
       recoveredCost = widget.asset!.recoveredCost;
+    } else {
+      if (widget.copyFromAsset != null) {
+        template = widget.copyFromAsset!.template;
+        customFields = Map.from(widget.copyFromAsset!.customFields);
+        location = widget.copyFromAsset!.location;
+        purchaseDate = widget.copyFromAsset!.purchaseDate;
+        purchasedFrom = widget.copyFromAsset!.purchasedFrom;
+      }
     }
   }
 
