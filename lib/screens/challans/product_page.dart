@@ -1,5 +1,6 @@
 import 'package:crs_manager/providers/asset_select.dart';
 import 'package:crs_manager/screens/assets/choose_asset.dart';
+import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/template_string.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -312,30 +313,72 @@ class _ProductPageState extends State<ProductPage> {
 
           var templateString = TemplateString(rawAssetField);
           var value = templateString.format(asset.toMap()["custom_fields"]);
-          switch (productField) {
-            case "Description":
-              _description = value;
-              _descriptionController.text = _description;
-              break;
-            case "Quantity":
-              _quantity = int.tryParse(value) ?? 0;
-              _quantityController.text = _quantity.toString();
-              break;
-            case "Quantity Unit":
-              _quantityUnit = value;
-              _quantityUnitController.text = _quantityUnit;
-              break;
-            case "Serial":
-              _serial = value;
-              _serialController.text = _serial;
-              break;
-            case "Additional Description":
-              _additionalDescription = value;
-              _additionalDescriptionController.text = _additionalDescription;
-              break;
+          setFieldValue(productField, value);
+        }
+      });
+    } else {
+      // Ensure all assets have same template, otherwise throw error
+      var templateId = assets.first.template.id;
+
+      if (assets.any((element) => element.template.id != templateId)) {
+        if (!mounted) return;
+        context.showErrorSnackBar(
+            message: "All assets must have same template");
+        return;
+      }
+
+      setState(() {
+        // Loop over all assets, if field is same, set it, otherwise join it by space
+        var productLink = assets.first.template.productLink;
+        for (var productField in [
+          "Description",
+          "Quantity",
+          "Quantity Unit",
+          "Serial",
+          "Additional Description",
+        ]) {
+          var rawAssetField = productLink[productField];
+          if (rawAssetField == null || rawAssetField.isEmpty) {
+            continue;
+          }
+
+          var templateString = TemplateString(rawAssetField);
+          var values = assets
+              .map((e) => templateString.format(e.toMap()["custom_fields"]))
+              .toList();
+
+          if (values.toSet().length == 1) {
+            setFieldValue(productField, values.first);
+          } else {
+            setFieldValue(productField, values.join(" "));
           }
         }
       });
-    } else {}
+    }
+  }
+
+  void setFieldValue(String productField, String value) {
+    switch (productField) {
+      case "Description":
+        _description = value;
+        _descriptionController.text = _description;
+        break;
+      case "Quantity":
+        _quantity = int.tryParse(value) ?? 0;
+        _quantityController.text = _quantity.toString();
+        break;
+      case "Quantity Unit":
+        _quantityUnit = value;
+        _quantityUnitController.text = _quantityUnit;
+        break;
+      case "Serial":
+        _serial = value;
+        _serialController.text = _serial;
+        break;
+      case "Additional Description":
+        _additionalDescription = value;
+        _additionalDescriptionController.text = _additionalDescription;
+        break;
+    }
   }
 }
