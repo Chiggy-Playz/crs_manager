@@ -38,6 +38,25 @@ class _TemplatePageState extends State<TemplatePage> {
       name = widget.template!.name;
       fields = List.from(widget.template!.fields);
       productLink = Map.from(widget.template!.productLink);
+    } else {
+      // Add default fields
+      fields.add(Field(
+        name: "Description",
+        type: FieldType.text,
+        required: true,
+      ));
+      fields.add(
+        Field(
+          name: "Model",
+          type: FieldType.text,
+          required: true,
+        ),
+      );
+      fields.add(Field(
+        name: "Serial",
+        type: FieldType.text,
+        required: false,
+      ));
     }
   }
 
