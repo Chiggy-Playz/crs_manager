@@ -48,6 +48,7 @@ class DatabaseModel extends ChangeNotifier {
     const buyerPageCount = 10;
     const challanPageCount = 25;
     const assetPageCount = 25;
+    const assetHistoryPageCount = 25;
     // Load initial buyers
     buyers = (await _client
             .from("buyers")
@@ -102,6 +103,18 @@ class DatabaseModel extends ChangeNotifier {
 
     // Load rest of the assets in background
     loadAssets(assetPageCount);
+
+    // Load initial assetHistory
+    assetHistory = (await _client
+            .from("assets_history")
+            .select<List<Map<String, dynamic>>>()
+            .order("when")
+            .limit(assetHistoryPageCount))
+        .map((e) => AssetHistory.fromMap(e))
+        .toList();
+
+    // Load rest of the assetHistory in background
+    loadAssetHistory(assetHistoryPageCount);
 
     notifyListeners();
   }
@@ -186,6 +199,35 @@ class DatabaseModel extends ChangeNotifier {
       assetOffset += 1;
       notifyListeners();
       if (newAssetsLength < assetPageCount) {
+        break;
+      }
+    }
+    loadingData = true;
+    notifyListeners();
+  }
+
+  Future<void> loadAssetHistory(int assetHistoryPageCount) async {
+    Future<int> fetchMoreAssetHistory(int offset, int limit) async {
+      final from = offset * limit;
+      final to = from + limit - 1;
+      var newAssetHistory = (await _client
+              .from("assets_history")
+              .select<List<Map<String, dynamic>>>()
+              .order("when")
+              .range(from, to))
+          .map((e) => AssetHistory.fromMap(e))
+          .toList();
+      assetHistory.addAll(newAssetHistory);
+      return newAssetHistory.length;
+    }
+
+    int assetHistoryOffset = 1;
+    while (true) {
+      var newAssetHistoryLength = await fetchMoreAssetHistory(
+          assetHistoryOffset, assetHistoryPageCount);
+      assetHistoryOffset += 1;
+      notifyListeners();
+      if (newAssetHistoryLength < assetHistoryPageCount) {
         break;
       }
     }
