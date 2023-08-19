@@ -44,3 +44,4 @@ final Widget brokenMagnifyingGlassSvg = SvgPicture.asset(
 
 final formatterDate = DateFormat("dd-MM-yyyy");
 final formatterDateTime = DateFormat("dd-MM-yyyy HH:mm:ss");
+final numberFormatter = NumberFormat('#,##,000');

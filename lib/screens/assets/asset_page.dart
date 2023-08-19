@@ -32,7 +32,7 @@ class _AssetPageState extends State<AssetPage> {
   String location = "";
   int purchaseCost = 0;
   DateTime? purchaseDate;
-  int additionalCost = 0;
+  Map<String, int> additionalCost = {};
   String purchasedFrom = "";
   String notes = "";
   int recoveredCost = 0;
@@ -52,7 +52,7 @@ class _AssetPageState extends State<AssetPage> {
       location = widget.asset!.location;
       purchaseCost = widget.asset!.purchaseCost;
       purchaseDate = widget.asset!.purchaseDate;
-      additionalCost = widget.asset!.additionalCost;
+      additionalCost = Map.from(widget.asset!.additionalCost);
       purchasedFrom = widget.asset!.purchasedFrom;
       notes = widget.asset!.notes;
       recoveredCost = widget.asset!.recoveredCost;
@@ -357,27 +357,6 @@ class _AssetPageState extends State<AssetPage> {
         onSaved: (value) => setState(() => location = value!),
       ),
       SizedBox(height: 2.h),
-      TextFormField(
-        decoration: const InputDecoration(labelText: "Purchase Cost"),
-        initialValue: purchaseCost.toString(),
-        keyboardType: TextInputType.number,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter a purchase cost';
-          }
-          if (int.tryParse(value) == null) {
-            return 'Please enter a valid number';
-          }
-          return null;
-        },
-        onChanged: (value) {
-          var numValue = int.tryParse(value);
-          if (numValue == null || numValue == purchaseCost) return;
-          setState(() => purchaseCost = numValue);
-        },
-        onSaved: (value) => setState(() => purchaseCost = int.parse(value!)),
-      ),
-      SizedBox(height: 2.h),
       Card(
         elevation: 2,
         child: ListTile(
@@ -406,12 +385,25 @@ class _AssetPageState extends State<AssetPage> {
       ),
       SizedBox(height: 2.h),
       TextFormField(
-        decoration: const InputDecoration(labelText: "Additional Cost"),
-        initialValue: additionalCost.toString(),
+        decoration: const InputDecoration(labelText: "Purchased From"),
+        initialValue: purchasedFrom,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter a value';
+          }
+          return null;
+        },
+        onChanged: (value) => setState(() => purchasedFrom = value),
+        onSaved: (value) => setState(() => purchasedFrom = value!),
+      ),
+      SizedBox(height: 2.h),
+      TextFormField(
+        decoration: const InputDecoration(labelText: "Purchase Cost"),
+        initialValue: purchaseCost.toString(),
         keyboardType: TextInputType.number,
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Please enter an additional cost';
+            return 'Please enter a purchase cost';
           }
           if (int.tryParse(value) == null) {
             return 'Please enter a valid number';
@@ -420,10 +412,10 @@ class _AssetPageState extends State<AssetPage> {
         },
         onChanged: (value) {
           var numValue = int.tryParse(value);
-          if (numValue == null || numValue == additionalCost) return;
-          setState(() => additionalCost = numValue);
+          if (numValue == null || numValue == purchaseCost) return;
+          setState(() => purchaseCost = numValue);
         },
-        onSaved: (value) => setState(() => additionalCost = int.parse(value!)),
+        onSaved: (value) => setState(() => purchaseCost = int.parse(value!)),
       ),
       SizedBox(height: 2.h),
       TextFormField(
@@ -447,18 +439,11 @@ class _AssetPageState extends State<AssetPage> {
         onSaved: (value) => setState(() => recoveredCost = int.parse(value!)),
       ),
       SizedBox(height: 2.h),
-      TextFormField(
-        decoration: const InputDecoration(labelText: "Purchased From"),
-        initialValue: purchasedFrom,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter a value';
-          }
-          return null;
-        },
-        onChanged: (value) => setState(() => purchasedFrom = value),
-        onSaved: (value) => setState(() => purchasedFrom = value!),
-      ),
+      AdditionalCostsWidget(
+          intialValue: additionalCost,
+          onChange: () => setState(
+                () {},
+              )),
       SizedBox(height: 2.h),
       TextFormField(
         decoration: const InputDecoration(labelText: "Notes"),
@@ -477,7 +462,7 @@ class _AssetPageState extends State<AssetPage> {
       if (location.isNotEmpty ||
           purchaseCost != 0 ||
           purchaseDate != null ||
-          additionalCost != 0 ||
+          additionalCost.isNotEmpty ||
           recoveredCost != 0 ||
           purchasedFrom.isNotEmpty ||
           notes.isNotEmpty ||
@@ -490,7 +475,6 @@ class _AssetPageState extends State<AssetPage> {
     if (location != widget.asset!.location ||
         purchaseCost != widget.asset!.purchaseCost ||
         purchaseDate != widget.asset!.purchaseDate ||
-        additionalCost != widget.asset!.additionalCost ||
         recoveredCost != widget.asset!.recoveredCost ||
         purchasedFrom != widget.asset!.purchasedFrom ||
         notes != widget.asset!.notes ||
@@ -505,6 +489,16 @@ class _AssetPageState extends State<AssetPage> {
     for (var field in customFields.keys) {
       if (widget.asset!.customFields[field]!.value !=
           customFields[field]!.value) {
+        return true;
+      }
+    }
+
+    if (additionalCost.length != widget.asset!.additionalCost.length) {
+      return true;
+    }
+
+    for (var field in additionalCost.keys) {
+      if (widget.asset!.additionalCost[field] != additionalCost[field]) {
         return true;
       }
     }
@@ -620,5 +614,267 @@ class _AssetPageState extends State<AssetPage> {
     }
 
     return result;
+  }
+}
+
+class AdditionalCostsWidget extends StatefulWidget {
+  const AdditionalCostsWidget(
+      {super.key, required this.intialValue, required this.onChange});
+
+  final Map<String, int> intialValue;
+  final Function onChange;
+
+  @override
+  State<AdditionalCostsWidget> createState() => _AdditionalCostsWidgetState();
+}
+
+class _AdditionalCostsWidgetState extends State<AdditionalCostsWidget> {
+  late Map<String, int> additionalCost;
+
+  @override
+  void initState() {
+    super.initState();
+    additionalCost = widget.intialValue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: additionalCost.isEmpty ? 25.h : 45.h,
+      width: double.infinity,
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 2.h),
+          child: Column(
+            children: [
+              Text(
+                "Additional Costs",
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              if (additionalCost.isNotEmpty)
+                Expanded(
+                  child: ListView.builder(
+                    // + 2 for the divider and the last row showing total
+                    itemCount: additionalCost.length + 2,
+                    itemBuilder: (context, index) {
+                      return costCard(index);
+                    },
+                  ),
+                )
+              else
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      "None",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ),
+              FloatingActionButton.extended(
+                heroTag: "addAdditionalCost",
+                onPressed: onAdd,
+                label: const Text("Add Product"),
+                icon: const Icon(Icons.add),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void onAdd() async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (context) =>
+          AdditionalCostModalWidget(additionalCost: additionalCost),
+    );
+
+    widget.onChange();
+    setState(() {});
+  }
+
+  Future<void> onEdit(int index) async {
+    await showModalBottomSheet(
+      context: context,
+      builder: (context) => AdditionalCostModalWidget(
+        additionalCost: additionalCost,
+        index: index,
+      ),
+    );
+
+    widget.onChange();
+    setState(() {});
+  }
+
+  Widget costCard(int index) {
+    if (index < additionalCost.length) {
+      return Card(
+        elevation: 12,
+        child: ListTile(
+          title: Text(additionalCost.keys.elementAt(index)),
+          trailing: Text(
+            numberFormatter.format(additionalCost.values.elementAt(index)),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          onTap: () => onEdit(index),
+        ),
+      );
+    } else if (index == additionalCost.length) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 3.w),
+        child: const Divider(),
+      );
+    } else {
+      return Card(
+        elevation: 12,
+        child: ListTile(
+          title: const Text("Total"),
+          trailing: Text(
+            numberFormatter
+                .format(additionalCost.values.reduce((a, b) => a + b)),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+      );
+    }
+  }
+}
+
+class AdditionalCostModalWidget extends StatefulWidget {
+  const AdditionalCostModalWidget(
+      {super.key, required this.additionalCost, this.index});
+
+  final Map<String, int> additionalCost;
+  final int? index;
+
+  @override
+  State<AdditionalCostModalWidget> createState() =>
+      _AdditionalCostModalWidgetState();
+}
+
+class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
+  String reason = "";
+  int cost = 0;
+
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.index != null) {
+      reason = widget.additionalCost.keys.elementAt(widget.index!);
+      cost = widget.additionalCost.values.elementAt(widget.index!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool newCost = widget.index == null;
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      newCost ? "New Cost" : "Edit Cost",
+                      style: Theme.of(context).textTheme.displaySmall,
+                    ),
+                  ),
+                  const Expanded(
+                    child: SizedBox(),
+                  ),
+                  if (!newCost)
+                    IconButton(
+                        onPressed: () {
+                          if (newCost) {
+                            Navigator.of(context).pop();
+                            return;
+                          }
+                          widget.additionalCost.remove(widget
+                              .additionalCost.keys
+                              .elementAt(widget.index!));
+                          Navigator.of(context).pop();
+                        },
+                        icon: Icon(
+                          Icons.delete,
+                          color: Theme.of(context).colorScheme.error,
+                        )),
+                  SizedBox(width: 1.w),
+                  FilledButton.icon(
+                    onPressed: savePressed,
+                    icon: const Icon(Icons.save),
+                    label: const Text("Save"),
+                  )
+                ],
+              ),
+              SizedBox(height: 3.h),
+              TextFormField(
+                decoration: const InputDecoration(
+                    hintText: "Reason", label: Text("Reason")),
+                initialValue: reason,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "Please enter a reason";
+                  }
+                  return null;
+                },
+                onSaved: (value) => reason = value!,
+              ),
+              SizedBox(height: 2.h),
+              TextFormField(
+                decoration: const InputDecoration(
+                    hintText: "Cost", label: Text("Cost")),
+                initialValue: cost.toString(),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "Please enter a cost";
+                  }
+                  if (int.tryParse(value) == null) {
+                    return "Please enter a valid number";
+                  }
+                  return null;
+                },
+                onSaved: (value) => cost = int.parse(value!),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> savePressed() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    _formKey.currentState!.save();
+
+    // Mutate the additionalCosts map in the parent widget
+    if (widget.index == null) {
+      widget.additionalCost[reason] = cost;
+    } else {
+      widget.additionalCost
+          .remove(widget.additionalCost.keys.elementAt(widget.index!));
+      widget.additionalCost[reason] = cost;
+    }
+
+    Navigator.of(context).pop();
   }
 }

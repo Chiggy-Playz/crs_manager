@@ -608,7 +608,7 @@ class DatabaseModel extends ChangeNotifier {
     required String location,
     required int purchaseCost,
     required DateTime purchaseDate,
-    required int additionalCost,
+    required Map<String, int> additionalCost,
     required String purchasedFrom,
     required Template template,
     required Map<String, FieldValue> customFields,
@@ -645,7 +645,7 @@ class DatabaseModel extends ChangeNotifier {
     String? location,
     int? purchaseCost,
     DateTime? purchaseDate,
-    int? additionalCost,
+    Map<String, int>? additionalCost,
     String? purchasedFrom,
     Map<String, FieldValue>? customFields,
     String? notes,
@@ -690,9 +690,9 @@ class DatabaseModel extends ChangeNotifier {
       location: location,
       purchaseCost: purchaseCost,
       purchaseDate: purchaseDate,
-      additionalCost: additionalCost,
+      additionalCost: Map.from(additionalCost ?? asset.additionalCost),
       purchasedFrom: purchasedFrom,
-      customFields: Map.from((customFields ?? asset.customFields))
+      customFields: Map.from(customFields ?? asset.customFields)
         ..removeWhere((key, value) {
           if (asset.customFields[key] == null) return true;
           return asset.customFields[key]!.value == value.value;
@@ -712,7 +712,7 @@ class DatabaseModel extends ChangeNotifier {
     String? location,
     int? purchaseCost,
     DateTime? purchaseDate,
-    int? additionalCost,
+    Map<String, int>? additionalCost,
     String? purchasedFrom,
     Map<String, FieldValue>? customFields,
     String? notes,
@@ -757,11 +757,46 @@ class DatabaseModel extends ChangeNotifier {
       };
     }
 
+    // TODO
     if (additionalCost != null) {
-      changes["additional_cost"] = {
-        "before": asset.additionalCost,
-        "after": additionalCost,
-      };
+      changes["additional_cost"] = [];
+      // If key is in new but not in asset, then it is a new field
+      // If key is in asset but not in new, then it is a deleted field
+      // If key is in both, then it is a changed field
+      // Either name or value could be changed
+
+      var newKeys = additionalCost.keys.toSet();
+      var oldKeys = asset.additionalCost.keys.toSet();
+      var addedKeys = newKeys.difference(oldKeys);
+      var removedKeys = oldKeys.difference(newKeys);
+      var commonKeys = newKeys.intersection(oldKeys);
+
+      for (var key in addedKeys) {
+        changes["additional_cost"].add({
+          "fieldName": key,
+          "before": null,
+          "after": additionalCost[key],
+        });
+      }
+
+      for (var key in removedKeys) {
+        changes["additional_cost"].add({
+          "fieldName": key,
+          "before": asset.additionalCost[key],
+          "after": null,
+        });
+      }
+
+      for (var key in commonKeys) {
+        if (asset.additionalCost[key] == additionalCost[key]) {
+          continue;
+        }
+        changes["additional_cost"].add({
+          "fieldName": key,
+          "before": asset.additionalCost[key],
+          "after": additionalCost[key],
+        });
+      }
     }
 
     if (purchasedFrom != null) {

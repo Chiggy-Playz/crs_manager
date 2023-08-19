@@ -89,6 +89,11 @@ END $$;
         "field_name": "value"
     }
 
+    assets.additional_costs is like
+    {
+        "Reason": "Money Spent"
+    }
+
     history.changes is like 
     {
         "custom_fields" : [
@@ -120,7 +125,7 @@ CREATE TABLE IF NOT EXISTS "assets"(
     "location" TEXT NOT NULL,
     "purchase_cost" INTEGER NOT NULL,
     "purchase_date" TIMESTAMP with TIME ZONE NOT NULL,
-    "additional_cost" INTEGER NOT NULL DEFAULT 0,
+    "additional_cost" JSON NOT NULL DEFAULT '{}',
     "purchased_from" TEXT NOT NULL,
     "template" INTEGER NOT NULL REFERENCES templates(id),
     "custom_fields" JSON NOT NULL,

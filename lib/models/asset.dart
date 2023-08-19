@@ -48,7 +48,8 @@ class Asset {
   String location;
   int purchaseCost;
   DateTime purchaseDate;
-  int additionalCost;
+  // Reason -> how much was spent on the asset
+  Map<String, int> additionalCost;
   String purchasedFrom;
   Template template;
   Map<String, FieldValue> customFields;
@@ -69,7 +70,7 @@ class Asset {
       location: json["location"],
       purchaseCost: json["purchase_cost"],
       purchaseDate: DateTime.parse(json["purchase_date"]).toLocal(),
-      additionalCost: json["additional_cost"],
+      additionalCost: Map<String, int>.from(json["additional_cost"]),
       purchasedFrom: json["purchased_from"],
       template: template,
       customFields: Map.from(json["custom_fields"]).map(
@@ -95,7 +96,7 @@ class Asset {
         "location": location,
         "purchase_cost": purchaseCost,
         "purchase_date": purchaseDate.toIso8601String(),
-        "additional_cost": additionalCost,
+        "additional_cost": Map.from(additionalCost),
         "purchased_from": purchasedFrom,
         "template": template.id,
         "custom_fields": Map.from(customFields).map(
