@@ -49,34 +49,6 @@ class DatabaseModel extends ChangeNotifier {
     const challanPageCount = 25;
     const assetPageCount = 25;
     const assetHistoryPageCount = 25;
-    // Load initial buyers
-    buyers = (await _client
-            .from("buyers")
-            .select<List<Map<String, dynamic>>>()
-            .order("name", ascending: true)
-            .limit(buyerPageCount))
-        .map((e) => Buyer.fromMap(e))
-        .toList();
-
-    // Load rest of the buyers in background
-    loadBuyers(buyerPageCount);
-
-    // Load initial challans
-    challans = (await _client
-            .from("challans")
-            .select<List<Map<String, dynamic>>>()
-            .order("created_at")
-            .limit(challanPageCount))
-        .map((e) => Challan.fromMap(e))
-        .toList();
-
-    // Load rest of the challans in background
-    loadChallans(challanPageCount);
-
-    secrets =
-        (await _client.from("secrets").select<List<Map<String, dynamic>>>())
-            .asMap()
-            .map((index, row) => MapEntry(row["name"], row["value"]));
 
     templates =
         (await _client.from("templates").select<List<Map<String, dynamic>>>())
@@ -101,8 +73,47 @@ class DatabaseModel extends ChangeNotifier {
         element.uuid: element
     };
 
-    // Load rest of the assets in background
-    loadAssets(assetPageCount);
+    // Load rest of the assets instantly
+    // This is needed for challan products later
+    await loadAssets(assetPageCount);
+
+    // Load initial buyers
+    buyers = (await _client
+            .from("buyers")
+            .select<List<Map<String, dynamic>>>()
+            .order("name", ascending: true)
+            .limit(buyerPageCount))
+        .map((e) => Buyer.fromMap(e))
+        .toList();
+
+    // Load rest of the buyers in background
+    loadBuyers(buyerPageCount);
+
+    // Load initial challans
+    challans = (await _client
+            .from("challans")
+            .select<List<Map<String, dynamic>>>()
+            .order("created_at")
+            .limit(challanPageCount))
+        .map((e) {
+      for (var i = 0; i < (e["products"] as List).length; i++) {
+        var rawProduct = e["products"][i];
+        if (rawProduct["assets"] != null) {
+          // That means it contains asset ids, replace them with actual assets
+          rawProduct["assets"] =
+              rawProduct["assets"].map((assetId) => assets[assetId]).toList();
+        }
+      }
+      return Challan.fromMap(e);
+    }).toList();
+
+    // Load rest of the challans in background
+    loadChallans(challanPageCount);
+
+    secrets =
+        (await _client.from("secrets").select<List<Map<String, dynamic>>>())
+            .asMap()
+            .map((index, row) => MapEntry(row["name"], row["value"]));
 
     // Load initial assetHistory
     assetHistory = (await _client
@@ -154,8 +165,17 @@ class DatabaseModel extends ChangeNotifier {
               .select<List<Map<String, dynamic>>>()
               .order("created_at")
               .range(from, to))
-          .map((e) => Challan.fromMap(e))
-          .toList();
+          .map((e) {
+        for (var i = 0; i < (e["products"] as List).length; i++) {
+          var rawProduct = e["products"][i];
+          if (rawProduct["assets"] != null) {
+            // That means it contains asset ids, replace them with actual assets
+            rawProduct["assets"] =
+                rawProduct["assets"].map((assetId) => assets[assetId]).toList();
+          }
+        }
+        return Challan.fromMap(e);
+      }).toList();
       challans.addAll(newChallans);
       return newChallans.length;
     }
@@ -357,7 +377,18 @@ class DatabaseModel extends ChangeNotifier {
     if (response == null) {
       throw DatabaseError();
     }
-    final challan = Challan.fromMap(response[0]);
+
+    var rawChallan = response[0];
+    for (var i = 0; i < (rawChallan["products"] as List).length; i++) {
+      var rawProduct = rawChallan["products"][i];
+      if (rawProduct["assets"] != null) {
+        // That means it contains asset ids, replace them with actual assets
+        rawProduct["assets"] =
+            rawProduct["assets"].map((assetId) => assets[assetId]).toList();
+      }
+    }
+
+    final challan = Challan.fromMap(rawChallan);
     challans.insert(0, challan);
     notifyListeners();
     return challan;
@@ -651,7 +682,7 @@ class DatabaseModel extends ChangeNotifier {
       purchaseDate: purchaseDate,
       additionalCost: additionalCost,
       purchasedFrom: purchasedFrom,
-      customFields: customFields!
+      customFields: Map.from((customFields ?? asset.customFields))
         ..removeWhere((key, value) {
           if (asset.customFields[key] == null) return true;
           return asset.customFields[key]!.value == value.value;

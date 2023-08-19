@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 
+import '../../models/asset.dart';
 import '../../models/buyer.dart';
 import '../../providers/database.dart';
 import '../../models/challan.dart';
@@ -540,6 +541,39 @@ class ChallanWidgetState extends State<ChallanWidget> {
       );
     }
     if (!mounted) return;
+
+    // Update location of assets
+    // For newly added products, set location to buyer name
+    var assets =
+        _products.map((p) => p.assets).expand((element) => element).toList();
+    var db = Provider.of<DatabaseModel>(context, listen: false);
+    for (Asset asset in assets) {
+      await db.updateAsset(asset: asset, location: _buyer!.name);
+    }
+
+    // Now for deleted products, set location to office
+
+    if (widget.challan != null) {
+      var deletedAssets = widget.challan!.products
+          .map((p) => p.assets)
+          .expand((element) => element)
+          .map((e) => e.uuid)
+          .toList();
+      deletedAssets.removeWhere((element) => _products
+          .map((p) => p.assets)
+          .expand((e) => e)
+          .map((e) => e.uuid)
+          .contains(element));
+      for (String uuid in deletedAssets) {
+        if (!db.assets.containsKey(uuid)) {
+          continue;
+        }
+        await db.updateAsset(asset: db.assets[uuid]!, location: "Office");
+      }
+    }
+
+    if (!mounted) return;
+
     Navigator.of(context).pop();
     context.showSnackBar(message: "Challan $action");
     Navigator.of(context).pop();

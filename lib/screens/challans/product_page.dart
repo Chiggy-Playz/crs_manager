@@ -26,6 +26,7 @@ class _ProductPageState extends State<ProductPage> {
   String _serial = "";
   String _additionalDescription = "";
 
+  List<Asset>? assets;
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
@@ -269,17 +270,20 @@ class _ProductPageState extends State<ProductPage> {
 
     _formKey.currentState!.save();
 
-    Navigator.of(context).pop(Product(
-      description: _description.toUpperCase(),
-      quantity: _quantity,
-      quantityUnit: _quantityUnit.toUpperCase(),
-      serial: _serial.toUpperCase(),
-      additionalDescription: _additionalDescription.toUpperCase(),
-    ));
+    Navigator.of(context).pop(
+      Product(
+        description: _description.toUpperCase(),
+        quantity: _quantity,
+        quantityUnit: _quantityUnit.toUpperCase(),
+        serial: _serial.toUpperCase(),
+        additionalDescription: _additionalDescription.toUpperCase(),
+        assets: assets ?? [],
+      ),
+    );
   }
 
   Future<void> importAssetPressed() async {
-    List<Asset>? assets = await Navigator.of(context).push(
+    assets = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ChangeNotifierProvider(
           create: (_) => AssetSelectionProvider(
@@ -291,12 +295,28 @@ class _ProductPageState extends State<ProductPage> {
       ),
     );
 
-    if (assets == null || assets.isEmpty) {
+    if (assets == null || assets!.isEmpty) {
       return;
     }
 
-    if (assets.length == 1) {
-      var asset = assets.first;
+    // Ensure all assets have same template, otherwise throw error
+    var templateId = assets!.first.template.id;
+
+    if (assets!.any((element) => element.template.id != templateId)) {
+      if (!mounted) return;
+      context.showErrorSnackBar(message: "All assets must have same template");
+      return;
+    }
+
+    // Ensure all assets' location is Office
+    if (assets!.any((element) => element.location != "Office")) {
+      if (!mounted) return;
+      context.showErrorSnackBar(message: "All assets must be in Office");
+      return;
+    }
+
+    if (assets!.length == 1) {
+      var asset = assets!.first;
       setState(() {
         var productLink = asset.template.productLink;
         for (var productField in [
@@ -317,19 +337,9 @@ class _ProductPageState extends State<ProductPage> {
         }
       });
     } else {
-      // Ensure all assets have same template, otherwise throw error
-      var templateId = assets.first.template.id;
-
-      if (assets.any((element) => element.template.id != templateId)) {
-        if (!mounted) return;
-        context.showErrorSnackBar(
-            message: "All assets must have same template");
-        return;
-      }
-
       setState(() {
         // Loop over all assets, if field is same, set it, otherwise join it by space
-        var productLink = assets.first.template.productLink;
+        var productLink = assets!.first.template.productLink;
         for (var productField in [
           "Description",
           "Quantity",
@@ -343,7 +353,7 @@ class _ProductPageState extends State<ProductPage> {
           }
 
           var templateString = TemplateString(rawAssetField);
-          var values = assets
+          var values = assets!
               .map((e) => templateString.format(e.toMap()["custom_fields"]))
               .toList();
 

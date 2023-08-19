@@ -1,3 +1,4 @@
+import 'asset.dart';
 import 'buyer.dart';
 
 class Challan {
@@ -82,6 +83,7 @@ class Product {
     required this.quantityUnit,
     required this.serial,
     required this.additionalDescription,
+    required this.assets,
   });
 
   String description;
@@ -89,6 +91,7 @@ class Product {
   String quantityUnit;
   String serial;
   String additionalDescription;
+  List<Asset> assets;
 
   factory Product.fromMap(Map<String, dynamic> json) => Product(
         description: json["description"],
@@ -97,6 +100,7 @@ class Product {
         quantityUnit: json["quantity_unit"] ?? "",
         serial: json["serial"] ?? "",
         additionalDescription: json["additional_description"] ?? "",
+        assets: List<Asset>.from(json["assets"] ?? []),
       );
 
   Map<String, dynamic> toMap() => {
@@ -105,5 +109,6 @@ class Product {
         "quantity_unit": quantityUnit,
         "serial": serial,
         "additional_description": additionalDescription,
+        "assets": List<String>.from(assets.map((x) => x.uuid)),
       };
 }
