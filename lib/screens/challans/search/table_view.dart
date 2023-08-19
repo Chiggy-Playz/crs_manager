@@ -63,7 +63,11 @@ class _TableViewPageState extends State<TableViewPage> {
           IconButton(
             icon: const Icon(Icons.upload),
             onPressed: _exportCsv,
-          )
+          ),
+          IconButton(
+            icon: const Icon(Icons.format_list_numbered),
+            onPressed: _exportIndex,
+          ),
         ],
       ),
       body: Scrollbar(
@@ -261,6 +265,7 @@ class _TableViewPageState extends State<TableViewPage> {
       row++;
 
       for (Challan challan in buyerChallans) {
+        bool cancelled = challan.cancelled;
         for (Product product in challan.products) {
           sheet
               .getRangeByIndex(row, 1)
@@ -278,6 +283,10 @@ class _TableViewPageState extends State<TableViewPage> {
           sheet.getRangeByIndex(row, 7).setText(product.additionalDescription);
           sheet.getRangeByIndex(row, 8).setText(challan.notes);
 
+          if (cancelled) {
+            sheet.getRangeByIndex(row, 1, row, 8).cellStyle.backColor =
+                '#ff0000';
+          }
           row++;
         }
       }
@@ -285,12 +294,75 @@ class _TableViewPageState extends State<TableViewPage> {
 
     final List<int> bytes = workbook.saveAsStream();
     var directory = await getApplicationDocumentsDirectory();
-    File("${directory.path}/search.xlsx")
+    // Create file is path available otherwise add 1,2,3 etc to the file name
+
+    File file = File("${directory.path}/search.xlsx");
+    if (await file.exists()) {
+      int i = 1;
+      while (await file.exists()) {
+        file = File("${directory.path}/search$i.xlsx");
+        i++;
+      }
+    }
+
+    file
       ..createSync(recursive: true)
       ..writeAsBytesSync(bytes);
     workbook.dispose();
 
-    OpenFile.open("${directory.path}/search.xlsx");
+    OpenFile.open(file.path);
+  }
+
+  void _exportIndex() async {
+    final Workbook workbook = Workbook();
+    final Worksheet sheet = workbook.worksheets[0];
+
+    var columns = [
+      "S. No",
+      "Date",
+      "Challan No.",
+      "Buyer",
+    ];
+
+    // Write header row
+    for (int i = 0; i < columns.length; i++) {
+      sheet.getRangeByIndex(1, i + 1).setText(columns[i]);
+    }
+
+    // Write data rows for challans sorted by date, earliest first
+    int row = 2;
+    var dateSortedChallans = List.from(challans)
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    for (Challan challan in dateSortedChallans) {
+      sheet.getRangeByIndex(row, 1).setText((row - 1).toString());
+      sheet
+          .getRangeByIndex(row, 2)
+          .setText(formatterDate.format(challan.createdAt));
+      sheet.getRangeByIndex(row, 3).setText(
+          "${challan.number} / ${challan.session.split("-").map((e) => e.replaceFirst("20", "")).join("-")}");
+      sheet.getRangeByIndex(row, 4).setText(challan.buyer.name);
+      row++;
+    }
+
+    final List<int> bytes = workbook.saveAsStream();
+    var directory = await getApplicationDocumentsDirectory();
+
+    File file = File("${directory.path}/index.xlsx");
+    if (await file.exists()) {
+      int i = 1;
+      while (await file.exists()) {
+        file = File("${directory.path}/index$i.xlsx");
+        i++;
+      }
+    }
+
+    file
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(bytes);
+    workbook.dispose();
+
+    OpenFile.open(file.path);
   }
 
   void _prepareData() {
