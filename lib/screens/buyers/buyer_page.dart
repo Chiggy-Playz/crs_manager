@@ -26,6 +26,7 @@ class _BuyerPageState extends State<BuyerPage> {
   String _address = "";
   String _gst = "";
   String _state = "";
+  String _alias = "";
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _BuyerPageState extends State<BuyerPage> {
       _address = widget.buyer!.address;
       _gst = widget.buyer!.gst;
       _state = widget.buyer!.state;
+      _alias = widget.buyer!.alias;
       _gstController.text = _gst;
     }
     super.initState();
@@ -49,7 +51,8 @@ class _BuyerPageState extends State<BuyerPage> {
   Future<bool> _onWillPop() async {
     // Any required fields should not be empty, and should go in the list below
     if (changesMade() &&
-        [_name, _address, _gst, _state].any((element) => element.isNotEmpty)) {
+        [_name, _address, _gst, _state, _alias]
+            .any((element) => element.isNotEmpty)) {
       return await showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -195,13 +198,26 @@ class _BuyerPageState extends State<BuyerPage> {
                   onSaved: (newValue) => _state = newValue!,
                 ),
                 SizedBox(
+                  height: 2.h,
+                ),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: "Alias",
+                  ),
+                  initialValue: widget.buyer == null ? "" : widget.buyer!.alias,
+                  onChanged: (value) => setState(() {
+                    _alias = value;
+                  }),
+                  onSaved: (newValue) => _alias = newValue!,
+                ),
+                SizedBox(
                   height: 5.h,
                 ),
                 Center(
                     child: SizedBox(
                   width: 46.w,
                   height: 8.h,
-                  child: ElevatedButton.icon(
+                  child: FilledButton.icon(
                     onPressed: changesMade() ? savePressed : null,
                     label: const Text("Save", style: TextStyle(fontSize: 32)),
                     icon: const Icon(Icons.save),
@@ -236,6 +252,10 @@ class _BuyerPageState extends State<BuyerPage> {
       return true;
     }
 
+    if (_alias != widget.buyer!.alias) {
+      return true;
+    }
+
     return false;
   }
 
@@ -258,6 +278,7 @@ class _BuyerPageState extends State<BuyerPage> {
           address: _address,
           gst: _gst,
           state: _state,
+          alias: _alias,
         );
       } else {
         action = "updated";
@@ -267,6 +288,7 @@ class _BuyerPageState extends State<BuyerPage> {
           address: _address,
           gst: _gst,
           state: _state,
+          alias: _alias,
         );
       }
     } on BuyerInUseError {

@@ -25,12 +25,12 @@ class _BuyersListState extends State<BuyersList> {
   Widget build(BuildContext context) {
     return Consumer<DatabaseModel>(
       builder: (context, value, child) {
-        
         List<Buyer> buyers = value.buyers
             .where(
               (buyer) =>
                   buyer.name.toLowerCase().contains(filter.toLowerCase()) ||
-                  buyer.address.toLowerCase().contains(filter.toLowerCase()),
+                  buyer.address.toLowerCase().contains(filter.toLowerCase()) ||
+                  buyer.alias.toLowerCase().contains(filter.toLowerCase()),
             )
             .toList()
           ..sort((a, b) {

@@ -263,12 +263,14 @@ class DatabaseModel extends ChangeNotifier {
       {required String name,
       required String address,
       required String gst,
-      required String state}) async {
+      required String state,
+      required String alias}) async {
     final response = await _client.from("buyers").insert({
       "name": name.toUpperCase(),
       "address": address.toUpperCase(),
       "gst": gst.toUpperCase(),
       "state": state.toUpperCase(),
+      "alias": alias.toUpperCase(),
     }).select();
     if (response == null) {
       throw DatabaseError();
@@ -285,8 +287,13 @@ class DatabaseModel extends ChangeNotifier {
     String? address,
     String? gst,
     String? state,
+    String? alias,
   }) async {
-    if (name == null && address == null && gst == null && state == null) {
+    if (name == null &&
+        address == null &&
+        gst == null &&
+        state == null &&
+        alias == null) {
       return;
     }
 
@@ -294,17 +301,20 @@ class DatabaseModel extends ChangeNotifier {
       "name": name?.toUpperCase() ?? buyer.name,
       "address": address?.toUpperCase() ?? buyer.address,
       "gst": gst?.toUpperCase() ?? buyer.gst,
-      "state": state?.toUpperCase() ?? buyer.state
+      "state": state?.toUpperCase() ?? buyer.state,
+      "alias": alias?.toUpperCase() ?? buyer.alias,
     }).eq("id", buyer.id);
 
     buyers = buyers.map((e) {
       if (e.id == buyer.id) {
         return Buyer(
-            id: e.id,
-            name: name?.toUpperCase() ?? e.name,
-            address: address?.toUpperCase() ?? e.address,
-            gst: gst?.toUpperCase() ?? e.gst,
-            state: state?.toUpperCase() ?? e.state);
+          id: e.id,
+          name: name?.toUpperCase() ?? e.name,
+          address: address?.toUpperCase() ?? e.address,
+          gst: gst?.toUpperCase() ?? e.gst,
+          state: state?.toUpperCase() ?? e.state,
+          alias: alias?.toUpperCase() ?? e.alias,
+        );
       }
       return e;
     }).toList();

@@ -6,6 +6,7 @@ class Buyer extends Equatable {
     required this.address,
     required this.gst,
     required this.state,
+    required this.alias,
     required this.id,
   });
 
@@ -13,6 +14,7 @@ class Buyer extends Equatable {
   String address;
   String gst;
   String state;
+  String alias;
   int id;
 
   @override
@@ -23,8 +25,10 @@ class Buyer extends Equatable {
         address: json["address"],
         gst: json["gst"],
         state: json["state"],
-        // id can be missing when the map is from challan model
+        // id and alias can be missing when the map is from challan model
         id: json["id"] ?? -1,
+        alias: json["alias"] ?? "",
+
       );
 
   Map<String, dynamic> toMap() => {
@@ -32,6 +36,7 @@ class Buyer extends Equatable {
         "address": address,
         "gst": gst,
         "state": state,
+        "alias": alias,
         "id": id,
       };
 }
