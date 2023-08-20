@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS "templates"(
     name TEXT UNIQUE NOT NULL,
     "fields" JSON NOT NULL,
     "product_link" JSON NOT NULL DEFAULT '{"Description": "","Serial": "","Quantity": "","Quantity Unit": "","Additional Description": ""}',
+    "metadata" TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS "assets"(

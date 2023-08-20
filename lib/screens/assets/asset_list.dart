@@ -3,6 +3,7 @@ import 'package:crs_manager/providers/database.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/assets/optical_textformfield.dart';
 import 'package:crs_manager/screens/challans/challan_widget.dart';
+import 'package:crs_manager/utils/template_string.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -90,7 +91,17 @@ class AssetListState extends State<AssetList> {
                               child: selector.multiple
                                   ? CheckboxListTile(
                                       title: Text(asset.template.name),
-                                      subtitle: Text(asset.uuid),
+                                      subtitle: asset.template.metadata.isEmpty
+                                          ? Text(asset.uuid)
+                                          : Text(TemplateString(
+                                                  asset.template.metadata)
+                                              .format(asset.customFields
+                                                  .map((key, value) => MapEntry(
+                                                        key,
+                                                        value.getValue(),
+                                                      )))),
+                                      isThreeLine: asset.template.metadata
+                                          .contains("\n"),
                                       value: selector.selectedAssets.contains(
                                         asset,
                                       ),
@@ -104,7 +115,17 @@ class AssetListState extends State<AssetList> {
                                     )
                                   : ListTile(
                                       title: Text(asset.template.name),
-                                      subtitle: Text(asset.uuid),
+                                      subtitle: asset.template.metadata.isEmpty
+                                          ? Text(asset.uuid)
+                                          : Text(TemplateString(
+                                                  asset.template.metadata)
+                                              .format(asset.customFields
+                                                  .map((key, value) => MapEntry(
+                                                        key,
+                                                        value.getValue(),
+                                                      )))),
+                                      isThreeLine: asset.template.metadata
+                                          .contains("\n"),
                                       trailing: Text(
                                           formatter.format(asset.createdAt)),
                                       onTap: () =>

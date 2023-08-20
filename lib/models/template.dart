@@ -39,6 +39,7 @@ class Template extends Equatable {
     required this.name,
     required this.fields,
     required this.productLink,
+    required this.metadata,
   });
 
   int id;
@@ -46,6 +47,7 @@ class Template extends Equatable {
   List<Field> fields;
   // Product part -> field part
   Map<String, String> productLink;
+  String metadata;
 
   @override
   List<Object?> get props => [
@@ -62,6 +64,7 @@ class Template extends Equatable {
         name: json["name"],
         fields: List<Field>.from(json["fields"].map((x) => Field.fromMap(x))),
         productLink: Map.from(json["product_link"]),
+        metadata: json["metadata"],
       );
 
   Map<String, dynamic> toMap() => {
@@ -69,5 +72,6 @@ class Template extends Equatable {
         "name": name,
         "fields": List<dynamic>.from(fields.map((x) => x.toMap())),
         "product_link": productLink,
+        "metadata": metadata,
       };
 }

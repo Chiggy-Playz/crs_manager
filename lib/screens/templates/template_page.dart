@@ -30,6 +30,7 @@ class _TemplatePageState extends State<TemplatePage> {
     "Additional Description": "",
   };
   bool advancedView = false;
+  String metadata = "";
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _TemplatePageState extends State<TemplatePage> {
       name = widget.template!.name;
       fields = List.from(widget.template!.fields);
       productLink = Map.from(widget.template!.productLink);
+      metadata = widget.template!.metadata;
     } else {
       // Add default fields
       fields.add(Field(
@@ -163,6 +165,8 @@ class _TemplatePageState extends State<TemplatePage> {
                 ...getFieldsListWidget(),
                 SizedBox(height: 1.h),
                 ...getProductsLinkWidget(),
+                SizedBox(height: 1.h),
+                ...getMetadataWidget(),
               ],
             ),
           ),
@@ -391,6 +395,10 @@ class _TemplatePageState extends State<TemplatePage> {
       }
     }
 
+    if (metadata != widget.template!.metadata) {
+      return true;
+    }
+
     return false;
   }
 
@@ -413,6 +421,29 @@ class _TemplatePageState extends State<TemplatePage> {
       return;
     }
 
+    if (metadata.isNotEmpty) {
+      // Check if metadata is valid
+      if (metadata.split("\n").length > 2) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Metadata can only have 2 lines"),
+          ),
+        );
+        return;
+      }
+
+      if (metadata.split("\n").any((element) => element.length > 50)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Metadata lines can only have 50 characters"),
+          ),
+        );
+        return;
+      }
+
+      metadata = metadata.trim();
+    }
+
     Navigator.of(context).push(opaquePage(const LoadingPage()));
 
     String action = widget.template == null ? "create" : "update";
@@ -420,13 +451,18 @@ class _TemplatePageState extends State<TemplatePage> {
     try {
       if (widget.template == null) {
         await Provider.of<DatabaseModel>(context, listen: false).createTemplate(
-            name: name, fields: fields, productLink: productLink);
-      } else {
-        await Provider.of<DatabaseModel>(context, listen: false).updateTemplate(
-            template: widget.template!,
             name: name,
             fields: fields,
-            productlink: productLink);
+            productLink: productLink,
+            metadata: metadata);
+      } else {
+        await Provider.of<DatabaseModel>(context, listen: false).updateTemplate(
+          template: widget.template!,
+          name: name,
+          fields: fields,
+          productlink: productLink,
+          metadata: metadata,
+        );
       }
     } catch (e) {
       print(e);
@@ -470,6 +506,69 @@ class _TemplatePageState extends State<TemplatePage> {
           false;
     }
     return true;
+  }
+
+  List<Widget> getMetadataWidget() {
+    List<Widget> widgets = [];
+
+    if (widget.template == null) {
+      return widgets;
+    }
+
+    widgets.add(
+      Text(
+        "Metadata",
+        style: Theme.of(context).textTheme.displaySmall,
+      ),
+    );
+
+    widgets.add(
+      SizedBox(
+        height: 1.h,
+      ),
+    );
+
+    widgets.addAll([
+      TextFormField(
+        decoration: const InputDecoration(
+          hintText: "Metadata Line 1",
+          labelText: "Metadata Line 1",
+        ),
+        initialValue: metadata.split("\n").firstOrNull ?? "",
+        onChanged: (value) {
+          setState(() {
+            // If \n is in metadata, replace anything before it with value
+            if (metadata.contains("\n")) {
+              metadata = "$value\n${metadata.split("\n").last}";
+            } else {
+              metadata = value;
+            }
+          });
+        },
+      ),
+      SizedBox(
+        height: 1.h,
+      ),
+      TextFormField(
+        decoration: const InputDecoration(
+          hintText: "Metadata Line 2",
+          labelText: "Metadata Line 2",
+        ),
+        initialValue: metadata.split("\n").elementAtOrNull(1) ?? "",
+        onChanged: (value) {
+          setState(() {
+            // If \n is in metadata, replace anything after it with value
+            if (metadata.contains("\n")) {
+              metadata = "${metadata.split("\n").first}\n$value";
+            } else {
+              metadata = "$metadata\n$value";
+            }
+          });
+        },
+      ),
+    ]);
+
+    return widgets;
   }
 }
 

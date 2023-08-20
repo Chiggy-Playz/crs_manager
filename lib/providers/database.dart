@@ -534,14 +534,17 @@ class DatabaseModel extends ChangeNotifier {
     return filteredChallans;
   }
 
-  Future<Template> createTemplate(
-      {required String name,
-      required List<Field> fields,
-      required Map<String, String> productLink}) async {
+  Future<Template> createTemplate({
+    required String name,
+    required List<Field> fields,
+    required Map<String, String> productLink,
+    required String metadata,
+  }) async {
     final response = await _client.from("templates").insert({
       "name": name,
       "fields": fields.map((e) => e.toMap()).toList(),
       "product_link": productLink,
+      "metadata": metadata,
     }).select();
 
     if (response == null) {
@@ -554,11 +557,13 @@ class DatabaseModel extends ChangeNotifier {
     return template;
   }
 
-  Future<Template> updateTemplate(
-      {required Template template,
-      String? name,
-      List<Field>? fields,
-      Map<String, String>? productlink}) async {
+  Future<Template> updateTemplate({
+    required Template template,
+    String? name,
+    List<Field>? fields,
+    Map<String, String>? productlink,
+    String? metadata,
+  }) async {
     if (name == null && fields == null) {
       return template;
     }
@@ -567,6 +572,7 @@ class DatabaseModel extends ChangeNotifier {
       "name": name ?? template.name,
       "fields": fields?.map((e) => e.toMap()).toList() ?? template.fields,
       "product_link": productlink ?? template.productLink,
+      "metadata": metadata ?? template.metadata,
     }).eq("id", template.id);
 
     templates = templates.map((e) {
@@ -575,17 +581,47 @@ class DatabaseModel extends ChangeNotifier {
             id: e.id,
             name: name ?? e.name,
             fields: fields ?? e.fields,
-            productLink: productlink ?? e.productLink);
+            productLink: productlink ?? e.productLink,
+            metadata: metadata ?? e.metadata);
       }
       return e;
     }).toList();
+
+    // Change template of all assets using this template
+    assets = assets.map((key, value) {
+      if (value.template.id == template.id) {
+        return MapEntry(
+            key,
+            Asset(
+              id: value.id,
+              uuid: value.uuid,
+              createdAt: value.createdAt,
+              location: value.location,
+              purchaseCost: value.purchaseCost,
+              purchaseDate: value.purchaseDate,
+              additionalCost: value.additionalCost,
+              purchasedFrom: value.purchasedFrom,
+              template: Template(
+                  id: template.id,
+                  name: name ?? template.name,
+                  fields: fields ?? template.fields,
+                  productLink: productlink ?? template.productLink,
+                  metadata: metadata ?? template.metadata),
+              customFields: value.customFields,
+              notes: value.notes,
+              recoveredCost: value.recoveredCost,
+            ));
+      }
+      return MapEntry(key, value);
+    });
 
     notifyListeners();
     return Template(
         id: template.id,
         name: name ?? template.name,
         fields: fields ?? template.fields,
-        productLink: productlink ?? template.productLink);
+        productLink: productlink ?? template.productLink,
+        metadata: metadata ?? template.metadata);
   }
 
   Future<void> deleteTemplate(Template template) async {
