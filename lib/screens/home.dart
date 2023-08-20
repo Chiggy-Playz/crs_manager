@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:crs_manager/providers/asset_select.dart';
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
-import 'package:crs_manager/screens/templates/template_page.dart';
 import 'package:crs_manager/screens/templates/templates_list.dart';
 import 'package:provider/provider.dart';
 
@@ -17,35 +18,17 @@ import 'package:flutter/material.dart';
 
 import 'challans/new_challan.dart';
 
-const List<BottomNavigationBarItem> dropDownItems = [
-  BottomNavigationBarItem(
+List<BottomNavigationBarItem> bottomNavBarItems = [
+  const BottomNavigationBarItem(
     label: "Challans",
     icon: Icon(
       Icons.list,
     ),
   ),
-  BottomNavigationBarItem(
+  const BottomNavigationBarItem(
     label: "Buyers",
     icon: Icon(
       Icons.person,
-    ),
-  ),
-  BottomNavigationBarItem(
-    label: "Assets",
-    icon: Icon(
-      Icons.cases_outlined,
-    ),
-  ),
-  BottomNavigationBarItem(
-    label: "Templates",
-    icon: Icon(
-      Icons.widgets,
-    ),
-  ),
-  BottomNavigationBarItem(
-    label: "History",
-    icon: Icon(
-      Icons.history,
     ),
   ),
 ];
@@ -61,10 +44,31 @@ class _HomePageState extends State<HomePage> {
   final _pageViewController = PageController();
 
   int _activePage = 0;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    bottomNavBarItems.add(
+      BottomNavigationBarItem(
+        label: "Assets",
+        icon: GestureDetector(
+          onPanDown: (_) {
+            _timer = Timer(
+                const Duration(seconds: 3),
+                () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const TemplatesList(),
+                      ),
+                    ));
+          },
+          onPanCancel: () => _timer?.cancel(),
+          child: const Icon(
+            Icons.cases_outlined,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -122,10 +126,6 @@ class _HomePageState extends State<HomePage> {
             ),
             child: const AssetList(),
           ),
-          const Center(child: TemplatesList()),
-          const Center(
-            child: Text("History"),
-          ),
         ],
         onPageChanged: (index) {
           setState(() {
@@ -134,14 +134,13 @@ class _HomePageState extends State<HomePage> {
         },
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _activePage,
-        onTap: (index) {
-          _pageViewController.animateToPage(index,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.bounceIn);
-        },
-        items: dropDownItems,
-      ),
+          currentIndex: _activePage,
+          onTap: (index) {
+            _pageViewController.animateToPage(index,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.bounceIn);
+          },
+          items: bottomNavBarItems),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
         onPressed: _fabAction,
@@ -166,11 +165,6 @@ class _HomePageState extends State<HomePage> {
       case 2: // Asset
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => const AssetPage(),
-        ));
-        break;
-      case 3: // Template
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => const TemplatePage(),
         ));
         break;
 
