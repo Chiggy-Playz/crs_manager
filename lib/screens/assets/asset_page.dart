@@ -171,9 +171,81 @@ class _AssetPageState extends State<AssetPage> {
           ),
         ),
         floatingActionButton: changesMade()
-            ? FloatingActionButton(
-                onPressed: savePressed,
-                child: const Icon(Icons.save),
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (isNewAsset) ...[
+                    FloatingActionButton(
+                      onPressed: () async {
+                        // Ask user how many, validating an int of value at least 1, in an alert dialog box
+
+                        int count = 1;
+                        await showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text("Create Multiple Assets"),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                    "How many assets would you like to create?"),
+                                SizedBox(height: 2.h),
+                                TextFormField(
+                                  autovalidateMode:
+                                      AutovalidateMode.onUserInteraction,
+                                  decoration: const InputDecoration(
+                                      labelText: "Number of Assets"),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter a number';
+                                    }
+                                    if (int.tryParse(value) == null) {
+                                      return 'Please enter a valid number';
+                                    }
+                                    if (int.parse(value) <= 1) {
+                                      return 'Please enter a number greater than 1';
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) =>
+                                      count = int.tryParse(value) ?? count,
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text("Cancel"),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  if (count <= 1) {
+                                    return;
+                                  }
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text("Save"),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        // print("$count");
+                        await savePressed(count);
+                      },
+                      heroTag: "saveMany",
+                      child: const Icon(Icons.queue),
+                    ),
+                    SizedBox(
+                      height: 1.h,
+                    )
+                  ],
+                  FloatingActionButton(
+                    onPressed: savePressed,
+                    child: const Icon(Icons.save),
+                  ),
+                ],
               )
             : null,
       ),
@@ -506,7 +578,7 @@ class _AssetPageState extends State<AssetPage> {
     return false;
   }
 
-  Future<void> savePressed() async {
+  Future<void> savePressed([int count = 1]) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -532,48 +604,52 @@ class _AssetPageState extends State<AssetPage> {
     }
     Navigator.of(context).push(opaquePage(const LoadingPage()));
 
-    try {
-      // Create new asset
-      if (widget.asset == null) {
-        await Provider.of<DatabaseModel>(context, listen: false).createAsset(
-          location: location,
-          purchaseCost: purchaseCost,
-          purchaseDate: purchaseDate!,
-          additionalCost: additionalCost,
-          purchasedFrom: purchasedFrom,
-          template: template!,
-          customFields: customFields,
-          notes: notes,
-          recoveredCost: recoveredCost,
-        );
-      } else {
-        // Update existing asset
+    for (var i = 0; i < count; i++) {
+      try {
+        // Create new asset
+        if (widget.asset == null) {
+          await Provider.of<DatabaseModel>(context, listen: false).createAsset(
+            location: location,
+            purchaseCost: purchaseCost,
+            purchaseDate: purchaseDate!,
+            additionalCost: additionalCost,
+            purchasedFrom: purchasedFrom,
+            template: template!,
+            customFields: customFields,
+            notes: notes,
+            recoveredCost: recoveredCost,
+          );
+        } else {
+          // Update existing asset
 
-        await Provider.of<DatabaseModel>(context, listen: false).updateAsset(
-          asset: widget.asset!,
-          location: location == widget.asset!.location ? null : location,
-          purchaseCost:
-              purchaseCost == widget.asset!.purchaseCost ? null : purchaseCost,
-          purchaseDate:
-              purchaseDate == widget.asset!.purchaseDate ? null : purchaseDate,
-          additionalCost: additionalCost == widget.asset!.additionalCost
-              ? null
-              : additionalCost,
-          purchasedFrom: purchasedFrom == widget.asset!.purchasedFrom
-              ? null
-              : purchasedFrom,
-          notes: notes == widget.asset!.notes ? null : notes,
-          recoveredCost: recoveredCost == widget.asset!.recoveredCost
-              ? null
-              : recoveredCost,
-          customFields: Map.from(customFields),
-        );
+          await Provider.of<DatabaseModel>(context, listen: false).updateAsset(
+            asset: widget.asset!,
+            location: location == widget.asset!.location ? null : location,
+            purchaseCost: purchaseCost == widget.asset!.purchaseCost
+                ? null
+                : purchaseCost,
+            purchaseDate: purchaseDate == widget.asset!.purchaseDate
+                ? null
+                : purchaseDate,
+            additionalCost: additionalCost == widget.asset!.additionalCost
+                ? null
+                : additionalCost,
+            purchasedFrom: purchasedFrom == widget.asset!.purchasedFrom
+                ? null
+                : purchasedFrom,
+            notes: notes == widget.asset!.notes ? null : notes,
+            recoveredCost: recoveredCost == widget.asset!.recoveredCost
+                ? null
+                : recoveredCost,
+            customFields: Map.from(customFields),
+          );
+        }
+      } catch (e) {
+        debugPrint(e.toString());
+        Navigator.of(context).pop();
+        context.showErrorSnackBar(message: e.toString());
+        return;
       }
-    } catch (e) {
-      debugPrint(e.toString());
-      Navigator.of(context).pop();
-      context.showErrorSnackBar(message: e.toString());
-      return;
     }
 
     if (!mounted) return;

@@ -138,7 +138,7 @@ class _HomePageState extends State<HomePage> {
           onTap: (index) {
             _pageViewController.animateToPage(index,
                 duration: const Duration(milliseconds: 200),
-                curve: Curves.bounceIn);
+                curve: Curves.ease);
           },
           items: bottomNavBarItems),
       floatingActionButton: FloatingActionButton(
