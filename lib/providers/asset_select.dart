@@ -1,23 +1,28 @@
 import 'package:flutter/foundation.dart';
 
 import '../models/asset.dart';
+import '../utils/classes.dart';
 
-typedef VoidACallback = void Function(Asset asset);
+typedef VoidACallback = void Function(List<Asset> assets);
 
 class AssetSelectionProvider extends ChangeNotifier {
-  List<Asset> selectedAssets = [];
+  Map<MapKey, List<Asset>> selectedAssets = {};
   final VoidACallback onAssetSelected;
   final bool multiple;
 
-  AssetSelectionProvider({required this.onAssetSelected, this.multiple = false});
+  AssetSelectionProvider(
+      {required this.onAssetSelected, this.multiple = false});
 
-  void addAsset(Asset asset) {
-    selectedAssets.add(asset);
+  void addAsset(List<Asset> assets) {
+    var key = MapKey(assets.first.rawCustomFields);
+    selectedAssets[key] = assets;
+
     notifyListeners();
   }
 
-  void removeAsset(Asset asset) {
-    selectedAssets.remove(asset);
+  void removeAsset(List<Asset> assets) {
+    var key = MapKey(assets.first.rawCustomFields);
+    selectedAssets.remove(key);
     notifyListeners();
   }
 }

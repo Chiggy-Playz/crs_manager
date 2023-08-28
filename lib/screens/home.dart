@@ -4,6 +4,7 @@ import 'package:crs_manager/providers/asset_select.dart';
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
+import 'package:crs_manager/screens/assets/outer_asset_list.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
 import 'package:crs_manager/screens/templates/templates_list.dart';
@@ -114,17 +115,17 @@ class _HomePageState extends State<HomePage> {
             ),
             child: const BuyersList(),
           ),
-          ChangeNotifierProvider(
-            create: (_) => AssetSelectionProvider(
-              onAssetSelected: (asset) => Navigator.of(context).push(
+          OuterAssetListWidget(
+            multiple: false,
+            onAssetSelected: (assets) {
+              Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => AssetPage(
-                    asset: asset,
+                    asset: assets.first,
                   ),
                 ),
-              ),
-            ),
-            child: const AssetList(),
+              );
+            },
           ),
         ],
         onPageChanged: (index) {

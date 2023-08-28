@@ -19,7 +19,7 @@ class FieldValue {
   Field field;
   dynamic value;
 
-  dynamic getValue() {
+  String getValue() {
     return value is DateTime
         ? (value as DateTime).toUtc().toIso8601String()
         : value;
@@ -55,6 +55,14 @@ class Asset {
   Map<String, FieldValue> customFields;
   String notes;
   int recoveredCost;
+
+  Map<String, String> get rawCustomFields =>
+      Map<String, FieldValue>.from(customFields).map(
+        (k, v) => MapEntry<String, String>(
+          k,
+          v.getValue(),
+        ),
+      );
 
   factory Asset.fromJson(String str) => Asset.fromMap(json.decode(str));
 

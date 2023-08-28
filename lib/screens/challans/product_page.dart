@@ -285,12 +285,13 @@ class _ProductPageState extends State<ProductPage> {
   Future<void> importAssetPressed() async {
     assets = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ChangeNotifierProvider(
-          create: (_) => AssetSelectionProvider(
-            onAssetSelected: (asset) => Navigator.of(context).pop([asset]),
-            multiple: true,
-          ),
-          child: const ChooseAsset(),
+        builder: (context) => ChooseAsset(
+          // Pop twice, first for inner list, then for outer list
+          onAssetSelected: (assets) {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop(assets);
+          },
+          multiple: true,
         ),
       ),
     );

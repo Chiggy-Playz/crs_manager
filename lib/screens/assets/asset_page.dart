@@ -750,7 +750,7 @@ class _AdditionalCostsWidgetState extends State<AdditionalCostsWidget> {
               FloatingActionButton.extended(
                 heroTag: "addAdditionalCost",
                 onPressed: onAdd,
-                label: const Text("Add Product"),
+                label: const Text("Add Cost"),
                 icon: const Icon(Icons.add),
               )
             ],
