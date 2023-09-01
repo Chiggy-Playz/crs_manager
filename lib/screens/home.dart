@@ -5,6 +5,7 @@ import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/assets/outer_asset_list.dart';
+import 'package:crs_manager/screens/assets/transaction_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
 import 'package:crs_manager/screens/templates/templates_list.dart';
@@ -120,8 +121,8 @@ class _HomePageState extends State<HomePage> {
             onAssetSelected: (assets) {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => AssetPage(
-                    asset: assets.first,
+                  builder: (context) => TransactionPage(
+                    assets: assets,
                   ),
                 ),
               );

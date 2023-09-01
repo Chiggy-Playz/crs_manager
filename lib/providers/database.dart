@@ -671,6 +671,8 @@ class DatabaseModel extends ChangeNotifier {
     response[0]["template"] = template.toMap();
     final asset = Asset.fromMap(response[0]);
 
+    await _insertHistory(asset: asset, created: true);
+
     assets[asset.uuid] = asset;
     notifyListeners();
     return asset;
@@ -745,6 +747,7 @@ class DatabaseModel extends ChangeNotifier {
 
   Future<void> _insertHistory({
     required Asset asset,
+    bool created = false,
     String? location,
     int? purchaseCost,
     DateTime? purchaseDate,
@@ -771,6 +774,10 @@ class DatabaseModel extends ChangeNotifier {
     }
     */
     var changes = {};
+
+    if (created) {
+      changes["created"] = true;
+    }
 
     if (location != null) {
       changes["location"] = {
@@ -882,6 +889,7 @@ class DatabaseModel extends ChangeNotifier {
   Future<void> deleteAsset({
     required Asset asset,
   }) async {
+    // TODO check if asset is used in any challan
     await _client.from("assets").delete().eq("id", asset.id);
     assets.remove(asset.uuid);
     notifyListeners();

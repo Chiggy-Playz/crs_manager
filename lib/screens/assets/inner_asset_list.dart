@@ -58,6 +58,9 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
                   .where((element) => element.location == "Office")
                   .length;
 
+              bool assetsInStock =
+                  assets.any((element) => element.location == "Office");
+
               if (metadata.isNotEmpty) {
                 title = TemplateString(metadata.split("\n").first)
                     .format(asset.rawCustomFields);
@@ -71,13 +74,13 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
                 subtitle = TemplateString(metadata).format(asset.customFields);
               }
 
-              Widget inStock = SizedBox(
+              Widget inStockWidget = SizedBox(
                 width: 15.w,
                 child: Text(
-                  asset.location == "Office" ? "In Stock" : "Out of Stock",
+                  assetsInStock ? "In Stock" : "Out of Stock",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: asset.location == "Office"
+                    color: assetsInStock
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.error,
                   ),
@@ -89,7 +92,7 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text("$inStockCount / ${assets.length}"),
-                  inStock,
+                  inStockWidget,
                 ],
               );
 
@@ -194,7 +197,8 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
 
     int selectedCount = 1;
 
-    int maxCount = assets.length;
+    int maxCount =
+        assets.where((element) => element.location == "Office").length;
 
     selectedCount = await showDialog(
       context: context,
@@ -251,7 +255,10 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
     if (selectedCount == 0) {
       return null;
     }
-
-    return assets.sublist(0, selectedCount);
+    // Return only those assets which are in Office and only the first selectedCount
+    return assets
+        .where((element) => element.location == "Office")
+        .take(selectedCount)
+        .toList();
   }
 }
