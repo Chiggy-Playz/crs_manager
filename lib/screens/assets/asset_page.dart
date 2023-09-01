@@ -215,7 +215,10 @@ class _AssetPageState extends State<AssetPage> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
+                                onPressed: () {
+                                  count = -1;
+                                  Navigator.of(context).pop();
+                                },
                                 child: const Text("Cancel"),
                               ),
                               TextButton(
@@ -230,8 +233,7 @@ class _AssetPageState extends State<AssetPage> {
                             ],
                           ),
                         );
-
-                        // print("$count");
+                        if (count == -1) return;
                         await savePressed(count);
                       },
                       heroTag: "saveMany",
@@ -604,52 +606,50 @@ class _AssetPageState extends State<AssetPage> {
     }
     Navigator.of(context).push(opaquePage(const LoadingPage()));
 
-    for (var i = 0; i < count; i++) {
-      try {
-        // Create new asset
-        if (widget.asset == null) {
-          await Provider.of<DatabaseModel>(context, listen: false).createAsset(
-            location: location,
-            purchaseCost: purchaseCost,
-            purchaseDate: purchaseDate!,
-            additionalCost: additionalCost,
-            purchasedFrom: purchasedFrom,
-            template: template!,
-            customFields: customFields,
-            notes: notes,
-            recoveredCost: recoveredCost,
-          );
-        } else {
-          // Update existing asset
+    try {
+      // Create new asset
+      if (widget.asset == null) {
+        await Provider.of<DatabaseModel>(context, listen: false).createAsset(
+          location: location,
+          purchaseCost: purchaseCost,
+          purchaseDate: purchaseDate!,
+          additionalCost: additionalCost,
+          purchasedFrom: purchasedFrom,
+          template: template!,
+          customFields: customFields,
+          notes: notes,
+          recoveredCost: recoveredCost,
+          count: count,
+        );
+      } else {
+        // Update existing asset
 
-          await Provider.of<DatabaseModel>(context, listen: false).updateAsset(
-            asset: widget.asset!,
-            location: location == widget.asset!.location ? null : location,
-            purchaseCost: purchaseCost == widget.asset!.purchaseCost
-                ? null
-                : purchaseCost,
-            purchaseDate: purchaseDate == widget.asset!.purchaseDate
-                ? null
-                : purchaseDate,
-            additionalCost: additionalCost == widget.asset!.additionalCost
-                ? null
-                : additionalCost,
-            purchasedFrom: purchasedFrom == widget.asset!.purchasedFrom
-                ? null
-                : purchasedFrom,
-            notes: notes == widget.asset!.notes ? null : notes,
-            recoveredCost: recoveredCost == widget.asset!.recoveredCost
-                ? null
-                : recoveredCost,
-            customFields: Map.from(customFields),
-          );
-        }
-      } catch (e) {
-        debugPrint(e.toString());
-        Navigator.of(context).pop();
-        context.showErrorSnackBar(message: e.toString());
-        return;
+        await Provider.of<DatabaseModel>(context, listen: false).updateAsset(
+          assets: [widget.asset!],
+          location: location == widget.asset!.location ? null : location,
+          purchaseCost:
+              purchaseCost == widget.asset!.purchaseCost ? null : purchaseCost,
+          purchaseDate:
+              purchaseDate == widget.asset!.purchaseDate ? null : purchaseDate,
+          additionalCost: additionalCost == widget.asset!.additionalCost
+              ? null
+              : additionalCost,
+          purchasedFrom: purchasedFrom == widget.asset!.purchasedFrom
+              ? null
+              : purchasedFrom,
+          notes: notes == widget.asset!.notes ? null : notes,
+          recoveredCost: recoveredCost == widget.asset!.recoveredCost
+              ? null
+              : recoveredCost,
+          customFields: Map.from(customFields),
+        );
       }
+    } catch (e, stacktrace) {
+      debugPrint(e.toString());
+      debugPrintStack(stackTrace: stacktrace);
+      Navigator.of(context).pop();
+      context.showErrorSnackBar(message: e.toString());
+      return;
     }
 
     if (!mounted) return;

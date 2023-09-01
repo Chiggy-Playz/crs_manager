@@ -547,9 +547,9 @@ class ChallanWidgetState extends State<ChallanWidget> {
     var assets =
         _products.map((p) => p.assets).expand((element) => element).toList();
     var db = Provider.of<DatabaseModel>(context, listen: false);
-    for (Asset asset in assets) {
-      await db.updateAsset(asset: asset, location: _buyer!.name);
-    }
+    // for (Asset asset in assets) {
+    await db.updateAsset(assets: assets, location: _buyer!.name);
+    // }
 
     // Now for deleted products, set location to office
 
@@ -568,8 +568,14 @@ class ChallanWidgetState extends State<ChallanWidget> {
         if (!db.assets.containsKey(uuid)) {
           continue;
         }
-        await db.updateAsset(asset: db.assets[uuid]!, location: "Office");
       }
+      await db.updateAsset(
+          assets: deletedAssets
+              .map((uuid) => db.assets[uuid])
+              .where((element) => element != null)
+              .cast<Asset>()
+              .toList(),
+          location: "Office");
     }
 
     if (!mounted) return;

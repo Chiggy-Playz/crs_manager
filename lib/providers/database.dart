@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:crs_manager/models/asset.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -640,7 +642,7 @@ class DatabaseModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Asset> createAsset({
+  Future<List<Asset>> createAsset({
     required String location,
     required int purchaseCost,
     required DateTime purchaseDate,
@@ -650,36 +652,47 @@ class DatabaseModel extends ChangeNotifier {
     required Map<String, FieldValue> customFields,
     required String notes,
     required int recoveredCost,
+    int count = 1,
   }) async {
-    final response = await _client.from("assets").insert({
-      "location": location,
-      "purchase_cost": purchaseCost,
-      "purchase_date": purchaseDate.toUtc().toIso8601String(),
-      "additional_cost": additionalCost,
-      "purchased_from": purchasedFrom,
-      "template": template.id,
-      "custom_fields":
-          customFields.map((key, value) => MapEntry(key, value.getValue())),
-      "notes": notes,
-      "recovered_cost": recoveredCost,
-    }).select();
+    final response = (await _client
+        .from("assets")
+        .insert(List.filled(count, {
+          "location": location,
+          "purchase_cost": purchaseCost,
+          "purchase_date": purchaseDate.toUtc().toIso8601String(),
+          "additional_cost": additionalCost,
+          "purchased_from": purchasedFrom,
+          "template": template.id,
+          "custom_fields":
+              customFields.map((key, value) => MapEntry(key, value.getValue())),
+          "notes": notes,
+          "recovered_cost": recoveredCost,
+        }))
+        .select());
 
     if (response == null) {
       throw DatabaseError();
     }
+    for (var element in response) {
+      element["template"] = template.toMap();
+    }
 
-    response[0]["template"] = template.toMap();
-    final asset = Asset.fromMap(response[0]);
+    var assets =
+        List<Asset>.from(response.map((e) => Asset.fromMap(e)).toList());
+    await _insertHistory(assets: assets, created: true);
 
-    await _insertHistory(asset: asset, created: true);
+    for (var asset in assets) {
+      this.assets[asset.uuid] = asset;
+    }
 
-    assets[asset.uuid] = asset;
     notifyListeners();
-    return asset;
+    return assets;
   }
 
-  Future<Asset> updateAsset({
-    required Asset asset,
+  /// All the assets will be updated with the same values
+  /// So all the assets must have same values (basically an asset group)
+  Future<List<Asset>> updateAsset({
+    required List<Asset> assets,
     String? location,
     int? purchaseCost,
     DateTime? purchaseDate,
@@ -697,56 +710,67 @@ class DatabaseModel extends ChangeNotifier {
         customFields == null &&
         notes == null &&
         recoveredCost == null) {
-      return asset;
+      return assets;
     }
 
-    final response = await _client
+    final response = (await _client
         .from("assets")
-        .update({
-          "location": location ?? asset.location,
-          "purchase_cost": purchaseCost ?? asset.purchaseCost,
-          "purchase_date":
-              (purchaseDate ?? asset.purchaseDate).toUtc().toIso8601String(),
-          "additional_cost": additionalCost ?? asset.additionalCost,
-          "purchased_from": purchasedFrom ?? asset.purchasedFrom,
-          "custom_fields":
-              (customFields ?? asset.customFields).map((key, value) {
-            return MapEntry(key, value.getValue());
-          }),
-          "notes": notes ?? asset.notes,
-          "recovered_cost": recoveredCost ?? asset.recoveredCost,
-        })
-        .eq("id", asset.id)
-        .select();
+        .upsert(assets
+            .map((asset) => {
+                  "location": location ?? asset.location,
+                  "purchase_cost": purchaseCost ?? asset.purchaseCost,
+                  "purchase_date": (purchaseDate ?? asset.purchaseDate)
+                      .toUtc()
+                      .toIso8601String(),
+                  "additional_cost": additionalCost ?? asset.additionalCost,
+                  "purchased_from": purchasedFrom ?? asset.purchasedFrom,
+                  "custom_fields":
+                      (customFields ?? asset.customFields).map((key, value) {
+                    return MapEntry(key, value.getValue());
+                  }),
+                  "notes": notes ?? asset.notes,
+                  "recovered_cost": recoveredCost ?? asset.recoveredCost,
+                  "template": asset.template.id,
+                  "id": asset.id,
+                })
+            .toList())
+        .select());
 
     if (response == null) {
       throw DatabaseError();
     }
 
     await _insertHistory(
-      asset: asset,
+      assets: assets,
       location: location,
       purchaseCost: purchaseCost,
       purchaseDate: purchaseDate,
-      additionalCost: Map.from(additionalCost ?? asset.additionalCost),
+      additionalCost: Map.from(additionalCost ?? assets.first.additionalCost),
       purchasedFrom: purchasedFrom,
-      customFields: Map.from(customFields ?? asset.customFields)
-        ..removeWhere((key, value) {
-          if (asset.customFields[key] == null) return true;
-          return asset.customFields[key]!.value == value.value;
-        }),
+      customFields: Map.from(customFields ?? assets.first.customFields),
       notes: notes,
       recoveredCost: recoveredCost,
     );
-    response[0]["template"] = asset.template.toMap();
-    final updatedAsset = Asset.fromMap(response[0]);
-    assets[asset.uuid] = updatedAsset;
+
+    for (var element in response) {
+      element["template"] = assets.first.template.toMap();
+    }
+
+    final updatedAssets = List<Asset>.from(response
+        .map(
+          (e) => Asset.fromMap(e),
+        )
+        .toList());
+
+    for (var updatedAsset in updatedAssets) {
+      this.assets[updatedAsset.uuid] = updatedAsset;
+    }
     notifyListeners();
-    return updatedAsset;
+    return updatedAssets;
   }
 
   Future<void> _insertHistory({
-    required Asset asset,
+    required List<Asset> assets,
     bool created = false,
     String? location,
     int? purchaseCost,
@@ -773,7 +797,14 @@ class DatabaseModel extends ChangeNotifier {
         }
     }
     */
+
+    var asset = assets.first;
     var changes = {};
+
+    (customFields ?? {}).removeWhere((key, value) {
+      if (asset.customFields[key] == null) return true;
+      return asset.customFields[key]!.value == value.value;
+    });
 
     if (created) {
       changes["created"] = true;
@@ -800,8 +831,7 @@ class DatabaseModel extends ChangeNotifier {
       };
     }
 
-    // TODO
-    if (additionalCost != null) {
+    if (additionalCost != null && additionalCost.isNotEmpty) {
       changes["additional_cost"] = [];
       // If key is in new but not in asset, then it is a new field
       // If key is in asset but not in new, then it is a deleted field
@@ -874,15 +904,21 @@ class DatabaseModel extends ChangeNotifier {
       };
     }
 
-    var response = await _client.from("assets_history").insert({
-      "asset_uuid": asset.uuid,
-      "changes": changes,
-    }).select();
+    var response = await _client
+        .from("assets_history")
+        .insert(assets
+            .map((e) => {
+                  "asset_uuid": e.uuid,
+                  "changes": changes,
+                })
+            .toList())
+        .select();
 
     if (response == null) {
       throw DatabaseError();
     }
-    assetHistory.add(AssetHistory.fromMap(response[0]));
+    assetHistory.addAll(List<AssetHistory>.from(
+        response.map((e) => AssetHistory.fromMap(e)).toList()));
     notifyListeners();
   }
 

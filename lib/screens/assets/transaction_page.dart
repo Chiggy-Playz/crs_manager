@@ -80,11 +80,8 @@ class _TransactionPageState extends State<TransactionPage> {
     // Then, sort the history by date, oldest to newest
     allAssetHistory.sort((a, b) => a.when.compareTo(b.when));
 
-    // Group assetHistory by changes
-    Map<String, List<AssetHistory>> groupedAssetHistory = {};
-
     Map<String, dynamic> previousChanges = {};
-    final DeepCollectionEquality deepCollectionEquality =
+    const DeepCollectionEquality deepCollectionEquality =
         DeepCollectionEquality();
     TransactionRow transactionRow = TransactionRow(
       when: allAssetHistory.first.when,
