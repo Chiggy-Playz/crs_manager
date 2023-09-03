@@ -1,10 +1,15 @@
 import 'dart:io';
 
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/utils/constants.dart';
+import 'package:crs_manager/utils/template_string.dart';
+import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+// ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
 
 import '../../models/asset.dart';
 
@@ -27,6 +32,15 @@ class TransactionRow {
   });
 }
 
+final columns = [
+  "Date",
+  "Challan No.",
+  "Name",
+  "In",
+  "Out",
+  "Balance",
+];
+
 class TransactionPage extends StatefulWidget {
   const TransactionPage({super.key, required this.assets});
 
@@ -38,11 +52,15 @@ class TransactionPage extends StatefulWidget {
 
 class _TransactionPageState extends State<TransactionPage> {
   List<TransactionRow> transactionRows = [];
+  String assetDescription = "";
 
   @override
   void initState() {
     super.initState();
-    // _landscapeOrientation();
+    _landscapeOrientation();
+    var asset = widget.assets.first;
+    assetDescription =
+        TemplateString(asset.template.metadata).format(asset.rawCustomFields);
     _prepareData();
   }
 
@@ -59,7 +77,101 @@ class _TransactionPageState extends State<TransactionPage> {
         child: CircularProgressIndicator(),
       );
     }
-    return const Placeholder();
+    return Scaffold(
+      appBar: TransparentAppBar(title: Text(assetDescription)),
+      body: Scrollbar(
+        thickness: 10,
+        interactive: true,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+                height: 100 * 100.w,
+                width: 1.2 * 100.w,
+                child: Table(
+                  columnWidths: const {
+                    0: FlexColumnWidth(0.3), // Date
+                    1: FlexColumnWidth(0.3), // Challan No.
+                    2: FlexColumnWidth(1.0), // Name
+                    3: FlexColumnWidth(0.2), // Inflow
+                    4: FlexColumnWidth(0.2), // Outflow
+                    5: FlexColumnWidth(0.2), // Balance
+                  },
+                  border: TableBorder.all(
+                    color: Theme.of(context).colorScheme.onBackground,
+                    width: 1,
+                    style: BorderStyle.solid,
+                  ),
+                  children: _getRows(),
+                )),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<TableRow> _getRows() {
+    List<TableRow> rows = [];
+
+    // Header Row
+    rows.add(TableRow(
+        children: columns
+            .map((columnName) => Center(
+                  child: Text(
+                    columnName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ))
+            .toList()));
+
+    // Add rows for transactions
+    int previousBalance = 0;
+    for (var transactionRow in transactionRows) {
+      previousBalance += transactionRow.balance;
+      rows.add(TableRow(
+        children: [
+          Center(
+            child: Text(formatterDate.format(transactionRow.when)),
+          ),
+          Center(
+            child: Text(
+                "${transactionRow.challanNumber ?? ""} ${transactionRow.challanSession?.split("-").map((e) => e.substring(2)).join("-") ?? ""} "),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(transactionRow.name),
+          ),
+          Center(
+            child: Text(
+              "${transactionRow.inflow}",
+              style: transactionRow.inflow == 0
+                  ? null
+                  : TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+            ),
+          ),
+          Center(
+            child: Text(
+              "${transactionRow.outflow}",
+              style: transactionRow.outflow == 0
+                  ? null
+                  : TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+            ),
+          ),
+          Center(
+            child: Text(
+              (previousBalance).toString(),
+            ),
+          ),
+        ],
+      ));
+    }
+
+    return rows;
   }
 
   void _prepareData() {
@@ -76,7 +188,6 @@ class _TransactionPageState extends State<TransactionPage> {
         }
       }
     }
-
     // Then, sort the history by date, oldest to newest
     allAssetHistory.sort((a, b) => a.when.compareTo(b.when));
 
