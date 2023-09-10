@@ -420,7 +420,7 @@ class _AssetPageState extends State<AssetPage> {
     widgets.addAll([
       TextFormField(
         decoration: const InputDecoration(labelText: "Location"),
-        initialValue: location,
+        initialValue: location.isNotEmpty ? location : "Office",
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Please enter a location';
