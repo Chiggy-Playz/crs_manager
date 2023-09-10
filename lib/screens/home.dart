@@ -6,6 +6,7 @@ import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/assets/outer_asset_list.dart';
 import 'package:crs_manager/screens/assets/transaction_page.dart';
+import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
 import 'package:crs_manager/screens/templates/templates_list.dart';
@@ -47,6 +48,9 @@ class _HomePageState extends State<HomePage> {
 
   int _activePage = 0;
   Timer? _timer;
+  // 0 - Outwards
+  // 1 - Inwards
+  int challanCreateMode = 0;
 
   @override
   void initState() {
@@ -81,73 +85,85 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TappableAppBar(
-        onTap: () {
-          // Search
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SearchPage(),
-            ),
-          );
-        },
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         appBar: TransparentAppBar(
           title: const Text("CRS Manager"),
           actions: getActions(),
+          bottom: _activePage == 0
+              ? TabBar(
+                  tabs: const [
+                    Tab(icon: Icon(Icons.arrow_upward), text: "Outward"),
+                    Tab(icon: Icon(Icons.arrow_downward), text: "Inward"),
+                  ],
+                  onTap: (value) {
+                    setState(() {
+                      challanCreateMode = value;
+                    });
+                  },
+                )
+              : null,
         ),
-      ),
-      body: PageView(
-        controller: _pageViewController,
-        children: [
-          Consumer<DatabaseModel>(
-            builder: (context, value, child) => ChallansList(
-              challans: value.challans,
+        body: PageView(
+          controller: _pageViewController,
+          children: [
+            TabBarView(
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                Consumer<DatabaseModel>(
+                  builder: (context, value, child) => ChallansList(
+                    challans: value.challans,
+                  ),
+                ),
+                const Placeholder(),
+              ],
             ),
-          ),
-          ChangeNotifierProvider(
-            create: (_) => BuyerSelectionProvider(
-              onBuyerSelected: (buyer) => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => BuyerPage(
-                    buyer: buyer,
+            ChangeNotifierProvider(
+              create: (_) => BuyerSelectionProvider(
+                onBuyerSelected: (buyer) => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => BuyerPage(
+                      buyer: buyer,
+                    ),
                   ),
                 ),
               ),
+              child: const BuyersList(),
             ),
-            child: const BuyersList(),
-          ),
-          OuterAssetListWidget(
-            multiple: false,
-            onAssetSelected: (assets) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => TransactionPage(
-                    assets: assets,
+            OuterAssetListWidget(
+              multiple: false,
+              onAssetSelected: (assets) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TransactionPage(
+                      assets: assets,
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
-        onPageChanged: (index) {
-          setState(() {
-            _activePage = index;
-          });
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _activePage,
-          onTap: (index) {
-            _pageViewController.animateToPage(index,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.ease);
+                );
+              },
+            ),
+          ],
+          onPageChanged: (index) {
+            setState(() {
+              _activePage = index;
+            });
           },
-          items: bottomNavBarItems),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: _fabAction,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _activePage,
+            onTap: (index) {
+              _pageViewController.animateToPage(index,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.ease);
+            },
+            items: bottomNavBarItems),
+        floatingActionButton: FloatingActionButton(
+          heroTag: null,
+          onPressed: _fabAction,
+          tooltip: 'Increment',
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -155,9 +171,15 @@ class _HomePageState extends State<HomePage> {
   void _fabAction() {
     switch (_activePage) {
       case 0: // Challan
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => const NewChallanPage(),
-        ));
+        if (challanCreateMode == 0) {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => const NewChallanPage(),
+          ));
+        } else {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => const InwardChallanPage(),
+          ));
+        }
         break;
       case 1: // Buyer
         Navigator.of(context).push(MaterialPageRoute(

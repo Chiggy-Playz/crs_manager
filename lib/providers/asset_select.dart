@@ -9,9 +9,10 @@ class AssetSelectionProvider extends ChangeNotifier {
   Map<MapKey, List<Asset>> selectedAssets = {};
   final VoidACallback onAssetSelected;
   final bool multiple;
+  final bool outwards;
 
   AssetSelectionProvider(
-      {required this.onAssetSelected, this.multiple = false});
+      {required this.onAssetSelected, this.multiple = false, this.outwards = true});
 
   void addAsset(List<Asset> assets) {
     var key = MapKey(assets.first.rawCustomFields);

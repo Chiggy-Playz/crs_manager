@@ -8,11 +8,13 @@ class ChooseAsset extends StatelessWidget {
   const ChooseAsset({
     super.key,
     this.multiple = true,
+    this.outwards = true,
     required this.onAssetSelected,
   });
 
   final bool multiple;
   final void Function(List<Asset>) onAssetSelected;
+  final bool outwards;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,10 @@ class ChooseAsset extends StatelessWidget {
         title: const Text("Choose Asset"),
       ),
       body: OuterAssetListWidget(
-          multiple: multiple, onAssetSelected: onAssetSelected),
+        multiple: multiple,
+        onAssetSelected: onAssetSelected,
+        outwards: outwards,
+      ),
     );
   }
 }

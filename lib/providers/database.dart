@@ -1,7 +1,7 @@
-import 'dart:math';
-
 import 'package:crs_manager/models/asset.dart';
+import 'package:crs_manager/models/inward_challan.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:collection/collection.dart';
 
@@ -19,6 +19,7 @@ class DatabaseModel extends ChangeNotifier {
   // UUID -> Asset
   Map<String, Asset> assets = {};
   List<AssetHistory> assetHistory = [];
+  List<InwardChallan> inwardChallans = [];
 
   late SupabaseClient _client;
   bool connected = false;
@@ -111,6 +112,27 @@ class DatabaseModel extends ChangeNotifier {
 
     // Load rest of the challans in background
     loadChallans(challanPageCount);
+
+    // Load initial inward challans
+    inwardChallans = (await _client
+            .from("inward_challans")
+            .select<List<Map<String, dynamic>>>()
+            .order("created_at")
+            .limit(challanPageCount))
+        .map((e) {
+      for (var i = 0; i < (e["products"] as List).length; i++) {
+        var rawProduct = e["products"][i];
+        if (rawProduct["assets"] != null) {
+          // That means it contains asset ids, replace them with actual assets
+          rawProduct["assets"] =
+              rawProduct["assets"].map((assetId) => assets[assetId]).toList();
+        }
+      }
+      return InwardChallan.fromMap(e);
+    }).toList();
+
+    // Load rest of the inward challans in background
+    loadInwardChallans(challanPageCount);
 
     secrets =
         (await _client.from("secrets").select<List<Map<String, dynamic>>>())
@@ -257,6 +279,44 @@ class DatabaseModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadInwardChallans(int challanPageCount) async {
+    Future<int> fetchMoreInwardChallans(int offset, int limit) async {
+      final from = offset * limit;
+      final to = from + limit - 1;
+      var newInwardChallans = (await _client
+              .from("inward_challans")
+              .select<List<Map<String, dynamic>>>()
+              .order("created_at")
+              .range(from, to))
+          .map((e) {
+        for (var i = 0; i < (e["products"] as List).length; i++) {
+          var rawProduct = e["products"][i];
+          if (rawProduct["assets"] != null) {
+            // That means it contains asset ids, replace them with actual assets
+            rawProduct["assets"] =
+                rawProduct["assets"].map((assetId) => assets[assetId]).toList();
+          }
+        }
+        return InwardChallan.fromMap(e);
+      }).toList();
+      inwardChallans.addAll(newInwardChallans);
+      return newInwardChallans.length;
+    }
+
+    int challanOffset = 1;
+    while (true) {
+      var newInwardChallansLength =
+          await fetchMoreInwardChallans(challanOffset, challanPageCount);
+      challanOffset += 1;
+      notifyListeners();
+      if (newInwardChallansLength < challanPageCount) {
+        break;
+      }
+    }
+    loadingData = true;
+    notifyListeners();
+  }
+
   Future<List<Buyer>> getBuyers() async {
     return buyers;
   }
@@ -354,6 +414,30 @@ class DatabaseModel extends ChangeNotifier {
             .firstOrNull?["number"] ??
         0;
     number += 1;
+
+    return {"number": number, "session": session};
+  }
+
+  Future<Map<String, dynamic>> getNextInwardChallanInfo() async {
+    var now = DateTime.now();
+    var endOfFiscalYear = DateTime(now.year, 3, 31, 23, 59, 59);
+    var session = now.isAfter(endOfFiscalYear)
+        ? "${now.year}-${now.year + 1}"
+        : "${now.year - 1}-${now.year}";
+
+    var sessionInwardChallans =
+        inwardChallans.where((element) => element.session == session).toList();
+
+    if (sessionInwardChallans.isEmpty) {
+      return {"number": 1, "session": session};
+    }
+
+    int number = 0;
+    for (var inwardChallan in sessionInwardChallans) {
+      if (inwardChallan.number - number == 1) {
+        number = inwardChallan.number + 1;
+      }
+    }
 
     return {"number": number, "session": session};
   }
@@ -501,9 +585,14 @@ class DatabaseModel extends ChangeNotifier {
           break;
         case ConditionType.date:
           // Condition value will be DateTimeRange
+          var val = DateTimeRange(
+              start: condition.value.start,
+              end: condition.value.end
+                  .copyWith(hour: 23, minute: 59, second: 59));
+
           filteredChallans = filteredChallans.where((challan) {
-            return condition.value.start.isBefore(challan.createdAt) &&
-                condition.value.end.isAfter(challan.createdAt);
+            return val.start.isBefore(challan.createdAt) &&
+                val.end.isAfter(challan.createdAt);
           }).toList();
           break;
         case ConditionType.product:
@@ -929,5 +1018,48 @@ class DatabaseModel extends ChangeNotifier {
     await _client.from("assets").delete().eq("id", asset.id);
     assets.remove(asset.uuid);
     notifyListeners();
+  }
+
+  Future<InwardChallan> createInwardChallan({
+    required int number,
+    required String session,
+    required DateTime createdAt,
+    required Buyer buyer,
+    required List<Product> products,
+    required int productsValue,
+    required String receivedBy,
+    required String vehicleNumber,
+    required String notes,
+  }) async {
+    final response = await _client.from("inward_challans").insert({
+      "number": number,
+      "session": session,
+      "created_at": createdAt.toUtc().toIso8601String(),
+      "buyer": buyer.toMap(),
+      "products": products.map((e) => e.toMap()).toList(),
+      "products_value": productsValue,
+      "received_by": receivedBy.toUpperCase(),
+      "vehicle_number": vehicleNumber.toUpperCase(),
+      "notes": notes,
+    }).select();
+  
+    if (response == null) {
+      throw DatabaseError();
+    }
+
+    var rawInwardChallan = response[0];
+    for (var i = 0; i < (rawInwardChallan["products"] as List).length; i++) {
+      var rawProduct = rawInwardChallan["products"][i];
+      if (rawProduct["assets"] != null) {
+        // That means it contains asset ids, replace them with actual assets
+        rawProduct["assets"] =
+            rawProduct["assets"].map((assetId) => assets[assetId]).toList();
+      }
+    }
+
+    final inwardChallan = InwardChallan.fromMap(rawInwardChallan);
+    inwardChallans.insert(0, inwardChallan);
+    notifyListeners();
+    return inwardChallan;
   }
 }

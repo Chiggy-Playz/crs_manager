@@ -11,10 +11,10 @@ import '../../models/challan.dart';
 import '../../utils/widgets.dart';
 
 class ProductPage extends StatefulWidget {
-  const ProductPage({super.key, this.product});
+  const ProductPage({super.key, this.product, this.outwards = true});
 
   final Product? product;
-
+  final bool outwards;
   @override
   State<ProductPage> createState() => _ProductPageState();
 }
@@ -222,7 +222,7 @@ class _ProductPageState extends State<ProductPage> {
                   child: SizedBox(
                 width: 46.w,
                 height: 8.h,
-                child: ElevatedButton.icon(
+                child: FilledButton.icon(
                   onPressed: changesMade() ? savePressed : null,
                   label: const Text("Save", style: TextStyle(fontSize: 32)),
                   icon: const Icon(Icons.save),
@@ -292,6 +292,7 @@ class _ProductPageState extends State<ProductPage> {
             Navigator.of(context).pop(assets);
           },
           multiple: true,
+          outwards: widget.outwards,
         ),
       ),
     );
@@ -309,10 +310,16 @@ class _ProductPageState extends State<ProductPage> {
       return;
     }
 
+    // If outwards is true, that means assets are going away from office and must be in office
+    // Otherwise assets are coming in office and must be in field
     // Ensure all assets' location is Office
-    if (assets!.any((element) => element.location != "Office")) {
+    if (assets!.any((element) =>
+        (widget.outwards && element.location != "Office") ||
+        (!widget.outwards && element.location == "Office"))) {
       if (!mounted) return;
-      context.showErrorSnackBar(message: "All assets must be in Office");
+      context.showErrorSnackBar(
+          message:
+              "All assets must ${widget.outwards ? "" : "not"} be in Office");
       return;
     }
 
@@ -365,6 +372,10 @@ class _ProductPageState extends State<ProductPage> {
           }
         }
       });
+    }
+    if (_quantity == 0) {
+      _quantity = assets!.length;
+      _quantityController.text = _quantity.toString();
     }
   }
 

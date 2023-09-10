@@ -196,18 +196,22 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
     // Then return the selected assets
 
     int selectedCount = 1;
+    var selector = Provider.of<AssetSelectionProvider>(context, listen: false);
 
-    int maxCount =
-        assets.where((element) => element.location == "Office").length;
+    int maxCount = assets
+        .where((element) =>
+            (selector.outwards && element.location == "Office") ||
+            (!selector.outwards && element.location != "Office"))
+        .length;
 
     selectedCount = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Create Multiple Assets"),
+        title: const Text("Select Multiple Assets"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("How many assets would you like to create?"),
+            const Text("How many assets would you like to select?"),
             SizedBox(height: 2.h),
             TextFormField(
               autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -255,9 +259,11 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
     if (selectedCount == 0) {
       return null;
     }
-    // Return only those assets which are in Office and only the first selectedCount
+    // Return only those assets which are in (or not in) Office and only the first selectedCount
     return assets
-        .where((element) => element.location == "Office")
+        .where((element) =>
+            (selector.outwards && element.location == "Office") ||
+            (!selector.outwards && element.location != "Office"))
         .take(selectedCount)
         .toList();
   }

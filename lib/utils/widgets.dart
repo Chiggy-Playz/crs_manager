@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class TransparentAppBar extends AppBar {
-  TransparentAppBar({Key? key, required Widget title, List<Widget>? actions})
+  TransparentAppBar({Key? key, required Widget title, List<Widget>? actions, PreferredSizeWidget? bottom})
       : super(
           key: key,
           backgroundColor: Colors.transparent,
@@ -9,6 +9,7 @@ class TransparentAppBar extends AppBar {
           title: title,
           actions: actions,
           scrolledUnderElevation: 0,
+          bottom: bottom
         );
 }
 

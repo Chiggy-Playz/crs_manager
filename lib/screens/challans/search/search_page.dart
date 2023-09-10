@@ -383,7 +383,7 @@ class _SearchPageState extends State<SearchPage> {
     );
 
     if (range == null) return null;
-
+    
     return Condition<DateTimeRange>(
       type: ConditionType.date,
       value: range,

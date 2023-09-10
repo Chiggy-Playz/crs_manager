@@ -13,11 +13,13 @@ class OuterAssetListWidget extends StatefulWidget {
   const OuterAssetListWidget({
     super.key,
     this.multiple = true,
+    this.outwards = true,
     required this.onAssetSelected,
   });
 
   final bool multiple;
   final void Function(List<Asset>) onAssetSelected;
+  final bool outwards;
 
   @override
   State<OuterAssetListWidget> createState() => _OuterAssetListWidgetState();
@@ -59,7 +61,9 @@ class _OuterAssetListWidgetState extends State<OuterAssetListWidget> {
                     builder: (context) => ChangeNotifierProvider(
                       create: (_) => AssetSelectionProvider(
                           onAssetSelected: widget.onAssetSelected,
-                          multiple: widget.multiple),
+                          multiple: widget.multiple,
+                          outwards: widget.outwards
+                          ),
                       child: InnerAssetListPage(assets: assets),
                     ),
                   )),

@@ -547,10 +547,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
     var assets =
         _products.map((p) => p.assets).expand((element) => element).toList();
     var db = Provider.of<DatabaseModel>(context, listen: false);
-    // for (Asset asset in assets) {
     await db.updateAsset(assets: assets, location: _buyer!.name);
-    // }
-
     // Now for deleted products, set location to office
 
     if (widget.challan != null) {

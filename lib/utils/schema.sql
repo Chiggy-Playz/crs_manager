@@ -153,3 +153,23 @@ CREATE TABLE IF NOT EXISTS "assets_history"(
 )
 
 ----------------------------------------------------------------------------------------------
+
+-- Inward Challan
+
+CREATE TABLE IF NOT EXISTS "inward_challans" (
+
+    "id" SERIAL,
+    "number" INTEGER NOT NULL,
+    "session" TEXT NOT NULL,
+    "created_at" TIMESTAMP with TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    "buyer" JSON NOT NULL,
+    "products" JSON NOT NULL,
+    "products_value" INTEGER NOT NULL,
+    "notes" TEXT NOT NULL DEFAULT '',
+    "received_by" TEXT NOT NULL,
+    "vehicle_number" TEXT NOT NULL,
+    "cancelled" BOOLEAN NOT NULL DEFAULT '0',
+    PRIMARY KEY (number, session)
+);
+
+)
