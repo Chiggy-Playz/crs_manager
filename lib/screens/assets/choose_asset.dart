@@ -9,12 +9,14 @@ class ChooseAsset extends StatelessWidget {
     super.key,
     this.multiple = true,
     this.outwards = true,
+    this.comingFrom,
     required this.onAssetSelected,
   });
 
   final bool multiple;
   final void Function(List<Asset>) onAssetSelected;
   final bool outwards;
+  final String? comingFrom;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +28,7 @@ class ChooseAsset extends StatelessWidget {
         multiple: multiple,
         onAssetSelected: onAssetSelected,
         outwards: outwards,
+        comingFrom: comingFrom,
       ),
     );
   }

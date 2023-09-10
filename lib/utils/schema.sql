@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS "inward_challans" (
     "received_by" TEXT NOT NULL,
     "vehicle_number" TEXT NOT NULL,
     "cancelled" BOOLEAN NOT NULL DEFAULT '0',
-    PRIMARY KEY (number, session)
+    PRIMARY KEY (id)
 );
 
 )

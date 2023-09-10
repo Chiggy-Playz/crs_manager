@@ -543,11 +543,16 @@ class ChallanWidgetState extends State<ChallanWidget> {
     if (!mounted) return;
 
     // Update location of assets
-    // For newly added products, set location to buyer name
     var assets =
         _products.map((p) => p.assets).expand((element) => element).toList();
     var db = Provider.of<DatabaseModel>(context, listen: false);
-    await db.updateAsset(assets: assets, location: _buyer!.name);
+
+    // Update asset locations only if they are not already set
+    var assetsToBeUpdated =
+        assets.where((e) => e.location == "Office").toList();
+    if (assetsToBeUpdated.isNotEmpty) {
+      await db.updateAsset(assets: assetsToBeUpdated, location: _buyer!.name);
+    }
     // Now for deleted products, set location to office
 
     if (widget.challan != null) {
@@ -561,18 +566,20 @@ class ChallanWidgetState extends State<ChallanWidget> {
           .expand((e) => e)
           .map((e) => e.uuid)
           .contains(element));
-      for (String uuid in deletedAssets) {
-        if (!db.assets.containsKey(uuid)) {
-          continue;
+      if (deletedAssets.isNotEmpty) {
+        for (String uuid in deletedAssets) {
+          if (!db.assets.containsKey(uuid)) {
+            continue;
+          }
         }
+        await db.updateAsset(
+            assets: deletedAssets
+                .map((uuid) => db.assets[uuid])
+                .where((element) => element != null)
+                .cast<Asset>()
+                .toList(),
+            location: "Office");
       }
-      await db.updateAsset(
-          assets: deletedAssets
-              .map((uuid) => db.assets[uuid])
-              .where((element) => element != null)
-              .cast<Asset>()
-              .toList(),
-          location: "Office");
     }
 
     if (!mounted) return;

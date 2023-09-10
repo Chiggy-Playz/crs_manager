@@ -205,6 +205,14 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
                   viewOnly: _cancelled,
                   onUpdate: () => setState(() {}),
                   outwards: false,
+                  canUpdate: () {
+                    if (_buyer == null) {
+                      context.showErrorSnackBar(
+                          message: "Please choose a buyer first");
+                    }
+                    return _buyer != null;
+                  },
+                  comingFrom: _buyer?.name ?? "",                  
                 ),
                 SizedBox(height: 2.h),
                 TextFormField(
@@ -448,18 +456,38 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
         vehicleNumber: _vehicleNumber,
         notes: _notes,
       );
-    } else {}
+    } else {
+      action = "updated";
+      await Provider.of<DatabaseModel>(context, listen: false)
+          .updateInwardChallan(
+        inwardChallan: widget.inwardChallan!,
+        number: _number,
+        session: _session,
+        createdAt: _createdAt,
+        buyer: _buyer!,
+        products: _products,
+        productsValue: _productsValue,
+        receivedBy: _receivedBy,
+        vehicleNumber: _vehicleNumber,
+        notes: _notes,
+      );
+    }
 
     if (!mounted) return;
 
     // Update location of assets
-    // For newly added products, set location to buyer name
     var assets =
         _products.map((p) => p.assets).expand((element) => element).toList();
     var db = Provider.of<DatabaseModel>(context, listen: false);
-    await db.updateAsset(assets: assets, location: "Office");
-    // Now for deleted products, set location to buyer name
 
+    // Update asset locations only if they are not already set
+    var assetsToBeUpdated =
+        assets.where((e) => e.location != "Office").toList();
+    if (assetsToBeUpdated.isNotEmpty) {
+      await db.updateAsset(assets: assetsToBeUpdated, location: "Office");
+    }
+
+    // Now for deleted products, set location to buyer name
     if (widget.inwardChallan != null) {
       var deletedAssets = widget.inwardChallan!.products
           .map((p) => p.assets)
@@ -471,20 +499,21 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
           .expand((e) => e)
           .map((e) => e.uuid)
           .contains(element));
-      for (String uuid in deletedAssets) {
-        if (!db.assets.containsKey(uuid)) {
-          continue;
+      if (deletedAssets.isNotEmpty) {
+        for (String uuid in deletedAssets) {
+          if (!db.assets.containsKey(uuid)) {
+            continue;
+          }
         }
+        await db.updateAsset(
+            assets: deletedAssets
+                .map((uuid) => db.assets[uuid])
+                .where((element) => element != null)
+                .cast<Asset>()
+                .toList(),
+            location: _buyer!.name);
       }
-      await db.updateAsset(
-          assets: deletedAssets
-              .map((uuid) => db.assets[uuid])
-              .where((element) => element != null)
-              .cast<Asset>()
-              .toList(),
-          location: _buyer!.name);
     }
-
     if (!mounted) return;
 
     Navigator.of(context).pop();

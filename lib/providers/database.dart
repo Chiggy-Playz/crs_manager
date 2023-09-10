@@ -425,8 +425,10 @@ class DatabaseModel extends ChangeNotifier {
         ? "${now.year}-${now.year + 1}"
         : "${now.year - 1}-${now.year}";
 
-    var sessionInwardChallans =
-        inwardChallans.where((element) => element.session == session).toList();
+    var sessionInwardChallans = inwardChallans
+        .where((element) => element.session == session)
+        .toList()
+      ..sort((a, b) => a.number.compareTo(b.number));
 
     if (sessionInwardChallans.isEmpty) {
       return {"number": 1, "session": session};
@@ -435,11 +437,15 @@ class DatabaseModel extends ChangeNotifier {
     int number = 0;
     for (var inwardChallan in sessionInwardChallans) {
       if (inwardChallan.number - number == 1) {
-        number = inwardChallan.number + 1;
+        number += 1;
       }
     }
 
-    return {"number": number, "session": session};
+    if (number == 0) {
+      return {"number": 1, "session": session};
+    }
+
+    return {"number": number + 1, "session": session};
   }
 
   Future<List<Challan>> getChallans() async {
@@ -587,7 +593,7 @@ class DatabaseModel extends ChangeNotifier {
           // Condition value will be DateTimeRange
           var val = DateTimeRange(
               start: condition.value.start,
-              end: condition.value.end
+              end: (condition.value.end as DateTime)
                   .copyWith(hour: 23, minute: 59, second: 59));
 
           filteredChallans = filteredChallans.where((challan) {
@@ -1042,7 +1048,7 @@ class DatabaseModel extends ChangeNotifier {
       "vehicle_number": vehicleNumber.toUpperCase(),
       "notes": notes,
     }).select();
-  
+
     if (response == null) {
       throw DatabaseError();
     }
@@ -1061,5 +1067,70 @@ class DatabaseModel extends ChangeNotifier {
     inwardChallans.insert(0, inwardChallan);
     notifyListeners();
     return inwardChallan;
+  }
+
+  Future<void> updateInwardChallan({
+    required InwardChallan inwardChallan,
+    int? number,
+    String? session,
+    DateTime? createdAt,
+    Buyer? buyer,
+    List<Product>? products,
+    int? productsValue,
+    String? receivedBy,
+    String? vehicleNumber,
+    String? notes,
+    bool? cancelled,
+  }) async {
+    if (number == null &&
+        session == null &&
+        createdAt == null &&
+        buyer == null &&
+        products == null &&
+        productsValue == null &&
+        receivedBy == null &&
+        vehicleNumber == null &&
+        notes == null &&
+        cancelled == null) {
+      return;
+    }
+
+    await _client.from("inward_challans").update({
+      "number": number ?? inwardChallan.number,
+      "session": session ?? inwardChallan.session,
+      "created_at": createdAt?.toUtc().toIso8601String() ??
+          inwardChallan.createdAt.toUtc().toIso8601String(),
+      "buyer": (buyer ?? inwardChallan.buyer).toMap(),
+      "products": (products ?? inwardChallan.products)
+          .map(
+            (e) => e.toMap(),
+          )
+          .toList(),
+      "products_value": productsValue ?? inwardChallan.productsValue,
+      "received_by": receivedBy?.toUpperCase() ?? inwardChallan.receivedBy,
+      "vehicle_number":
+          vehicleNumber?.toUpperCase() ?? inwardChallan.vehicleNumber,
+      "notes": notes ?? inwardChallan.notes,
+      "cancelled": cancelled ?? inwardChallan.cancelled,
+    }).eq("id", inwardChallan.id);
+
+    inwardChallans = inwardChallans.map((e) {
+      if (e.id == inwardChallan.id) {
+        return InwardChallan(
+          id: e.id,
+          number: number ?? e.number,
+          session: session ?? e.session,
+          createdAt: createdAt ?? e.createdAt,
+          buyer: buyer ?? e.buyer,
+          products: products ?? e.products,
+          productsValue: productsValue ?? e.productsValue,
+          receivedBy: receivedBy?.toUpperCase() ?? e.receivedBy,
+          vehicleNumber: vehicleNumber?.toUpperCase() ?? e.vehicleNumber,
+          notes: notes ?? e.notes,
+          cancelled: cancelled ?? e.cancelled,
+        );
+      }
+      return e;
+    }).toList();
   }
 }

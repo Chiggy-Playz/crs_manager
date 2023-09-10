@@ -6,6 +6,7 @@ import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/assets/outer_asset_list.dart';
 import 'package:crs_manager/screens/assets/transaction_page.dart';
+import 'package:crs_manager/screens/challans/inward/inward_challan_list.dart';
 import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
 import 'package:crs_manager/screens/settings.dart';
@@ -116,7 +117,11 @@ class _HomePageState extends State<HomePage> {
                     challans: value.challans,
                   ),
                 ),
-                const Placeholder(),
+                Consumer<DatabaseModel>(
+                  builder: (context, value, child) => InwardChallanList(
+                    inwardChallans: value.inwardChallans,
+                  ),
+                )
               ],
             ),
             ChangeNotifierProvider(

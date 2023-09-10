@@ -3,6 +3,8 @@ import 'package:crs_manager/screens/challans/product_page.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+typedef BoolCallback = bool Function();
+
 class ProductWidget extends StatefulWidget {
   const ProductWidget({
     super.key,
@@ -12,6 +14,8 @@ class ProductWidget extends StatefulWidget {
     this.onAddProduct,
     this.onEditProduct,
     this.onUpdate,
+    this.canUpdate,
+    this.comingFrom,
   });
 
   final List<Product> products;
@@ -19,7 +23,9 @@ class ProductWidget extends StatefulWidget {
   final Function? onAddProduct;
   final Function(int index)? onEditProduct;
   final Function? onUpdate;
+  final BoolCallback? canUpdate;
   final bool outwards;
+  final String? comingFrom;
 
   @override
   State<ProductWidget> createState() => _ProductWidgetState();
@@ -83,6 +89,9 @@ class _ProductWidgetState extends State<ProductWidget> {
           onPressed: viewOnly
               ? null
               : () {
+                  if (widget.canUpdate != null && !widget.canUpdate!()) {
+                    return;
+                  }
                   setState(() {
                     products.removeAt(index);
                   });
@@ -99,9 +108,16 @@ class _ProductWidgetState extends State<ProductWidget> {
   }
 
   void onAddProduct() async {
+    if (widget.canUpdate != null && !widget.canUpdate!()) {
+      return;
+    }
+
     // null represents backed out
     Product? result = await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ProductPage(outwards: widget.outwards,),
+      builder: (context) => ProductPage(
+        comingFrom: widget.comingFrom,
+        outwards: widget.outwards,
+      ),
     ));
 
     if (result != null) {
@@ -113,9 +129,16 @@ class _ProductWidgetState extends State<ProductWidget> {
   }
 
   void onEditProduct(int index) async {
+    if (widget.canUpdate != null && !widget.canUpdate!()) {
+      return;
+    }
     // null represents backed out
     Product? result = await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ProductPage(product: products[index], outwards: widget.outwards,),
+      builder: (context) => ProductPage(
+        comingFrom: widget.comingFrom,
+        product: products[index],
+        outwards: widget.outwards,
+      ),
     ));
 
     if (result != null) {

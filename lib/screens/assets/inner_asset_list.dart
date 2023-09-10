@@ -1,6 +1,7 @@
 import 'package:crs_manager/models/asset.dart';
 import 'package:crs_manager/providers/asset_select.dart';
 import 'package:crs_manager/utils/classes.dart';
+import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/template_string.dart';
 import 'package:crs_manager/utils/widgets.dart';
 import 'package:flutter/material.dart';
@@ -206,6 +207,7 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
 
     selectedCount = await showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Select Multiple Assets"),
         content: Column(
@@ -254,17 +256,27 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
         ],
       ),
     );
+    if (!mounted) return null;
 
     // Check if the user pressed cancel
     if (selectedCount == 0) {
       return null;
     }
+
     // Return only those assets which are in (or not in) Office and only the first selectedCount
-    return assets
+    var finalAssets = assets
         .where((element) =>
             (selector.outwards && element.location == "Office") ||
-            (!selector.outwards && element.location != "Office"))
+            (!selector.outwards && element.location == selector.comingFrom))
         .take(selectedCount)
         .toList();
+
+    if (finalAssets.length < selectedCount) {
+      context.showErrorSnackBar(
+          message: "The buyer doesn't have enough of this asset.");
+      return null;
+    }
+
+    return finalAssets;
   }
 }

@@ -11,10 +11,12 @@ import '../../models/challan.dart';
 import '../../utils/widgets.dart';
 
 class ProductPage extends StatefulWidget {
-  const ProductPage({super.key, this.product, this.outwards = true});
+  const ProductPage({super.key, this.product, this.outwards = true, this.comingFrom});
 
   final Product? product;
   final bool outwards;
+  final String? comingFrom;
+
   @override
   State<ProductPage> createState() => _ProductPageState();
 }
@@ -293,6 +295,7 @@ class _ProductPageState extends State<ProductPage> {
           },
           multiple: true,
           outwards: widget.outwards,
+          comingFrom: widget.comingFrom,
         ),
       ),
     );

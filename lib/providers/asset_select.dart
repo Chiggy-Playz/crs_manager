@@ -10,9 +10,14 @@ class AssetSelectionProvider extends ChangeNotifier {
   final VoidACallback onAssetSelected;
   final bool multiple;
   final bool outwards;
+  final String? comingFrom;
 
-  AssetSelectionProvider(
-      {required this.onAssetSelected, this.multiple = false, this.outwards = true});
+  AssetSelectionProvider({
+    required this.onAssetSelected,
+    this.multiple = false,
+    this.outwards = true,
+    this.comingFrom,
+  });
 
   void addAsset(List<Asset> assets) {
     var key = MapKey(assets.first.rawCustomFields);
