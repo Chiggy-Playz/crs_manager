@@ -3,32 +3,34 @@ import 'dart:convert';
 import 'buyer.dart';
 import 'challan.dart';
 
-class InwardChallan {
-  int id;
-  int number;
-  String session;
-  DateTime createdAt;
-  Buyer buyer;
-  List<Product> products;
-  int productsValue;
-  String notes;
+
+class InwardChallan extends ChallanBase {
   String receivedBy;
-  String vehicleNumber;
-  bool cancelled;
 
   InwardChallan({
-    required this.id,
-    required this.number,
-    required this.session,
-    required this.createdAt,
-    required this.buyer,
-    required this.products,
-    required this.productsValue,
-    this.notes = "",
+    required int id,
+    required int number,
+    required String session,
+    required DateTime createdAt,
+    required Buyer buyer,
+    required List<Product> products,
+    required int productsValue,
+    notes = "",
     required this.receivedBy,
-    required this.vehicleNumber,
-    required this.cancelled,
-  });
+    required String vehicleNumber,
+    required bool cancelled,
+  }) : super(
+          id: id,
+          number: number,
+          session: session,
+          createdAt: createdAt,
+          buyer: buyer,
+          products: products,
+          productsValue: productsValue,
+          notes: notes,
+          vehicleNumber: vehicleNumber,
+          cancelled: cancelled,
+        );
 
   factory InwardChallan.fromJson(String str) =>
       InwardChallan.fromMap(json.decode(str));

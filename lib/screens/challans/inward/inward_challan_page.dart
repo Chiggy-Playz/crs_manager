@@ -212,7 +212,7 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
                     }
                     return _buyer != null;
                   },
-                  comingFrom: _buyer?.name ?? "",                  
+                  comingFrom: _buyer?.name ?? "",
                 ),
                 SizedBox(height: 2.h),
                 TextFormField(
@@ -441,10 +441,10 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
 
     Navigator.of(context).push(opaquePage(const LoadingPage()));
     String action = "";
-
+    var id = widget.inwardChallan?.id;
     if (widget.inwardChallan == null) {
       action = "created";
-      await Provider.of<DatabaseModel>(context, listen: false)
+      var res = await Provider.of<DatabaseModel>(context, listen: false)
           .createInwardChallan(
         number: _number,
         session: _session,
@@ -456,6 +456,7 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
         vehicleNumber: _vehicleNumber,
         notes: _notes,
       );
+      id = res.id;
     } else {
       action = "updated";
       await Provider.of<DatabaseModel>(context, listen: false)
@@ -484,7 +485,12 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
     var assetsToBeUpdated =
         assets.where((e) => e.location != "Office").toList();
     if (assetsToBeUpdated.isNotEmpty) {
-      await db.updateAsset(assets: assetsToBeUpdated, location: "Office");
+      await db.updateAsset(
+        assets: assetsToBeUpdated,
+        location: "Office",
+        challanId: id,
+        challanType: ChallanType.inward.index,
+      );
     }
 
     // Now for deleted products, set location to buyer name
@@ -506,12 +512,15 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
           }
         }
         await db.updateAsset(
-            assets: deletedAssets
-                .map((uuid) => db.assets[uuid])
-                .where((element) => element != null)
-                .cast<Asset>()
-                .toList(),
-            location: _buyer!.name);
+          assets: deletedAssets
+              .map((uuid) => db.assets[uuid])
+              .where((element) => element != null)
+              .cast<Asset>()
+              .toList(),
+          location: _buyer!.name,
+          challanId: id,
+          challanType: ChallanType.inward.index,
+        );
       }
     }
     if (!mounted) return;

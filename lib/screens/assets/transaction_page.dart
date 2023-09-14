@@ -1,6 +1,10 @@
 import 'dart:io';
 
+import 'package:crs_manager/models/challan.dart';
+import 'package:crs_manager/models/inward_challan.dart';
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/screens/challans/challan_pageview.dart';
+import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:crs_manager/utils/constants.dart';
 import 'package:crs_manager/utils/template_string.dart';
 import 'package:crs_manager/utils/widgets.dart';
@@ -15,8 +19,7 @@ import '../../models/asset.dart';
 
 class TransactionRow {
   DateTime when;
-  int? challanNumber;
-  String? challanSession;
+  ChallanBase? challan;
   String name;
   int inflow = 0;
   int outflow = 0;
@@ -24,8 +27,7 @@ class TransactionRow {
 
   TransactionRow({
     required this.when,
-    this.challanNumber,
-    this.challanSession,
+    this.challan,
     required this.name,
     required this.inflow,
     required this.outflow,
@@ -113,7 +115,6 @@ class _TransactionPageState extends State<TransactionPage> {
 
   List<TableRow> _getRows() {
     List<TableRow> rows = [];
-
     // Header Row
     rows.add(TableRow(
         children: columns
@@ -129,14 +130,30 @@ class _TransactionPageState extends State<TransactionPage> {
     int previousBalance = 0;
     for (var transactionRow in transactionRows) {
       previousBalance += transactionRow.balance;
+
+      var challan = transactionRow.challan;
+      var session = challan?.session
+          .toString()
+          .split("-")
+          .map((e) => e.substring(2))
+          .join("-");
+
       rows.add(TableRow(
         children: [
           Center(
             child: Text(formatterDate.format(transactionRow.when)),
           ),
           Center(
-            child: Text(
-                "${transactionRow.challanNumber ?? ""} ${transactionRow.challanSession?.split("-").map((e) => e.substring(2)).join("-") ?? ""} "),
+            child: GestureDetector(
+              onTap: () => onChallanTap(transactionRow.challan),
+              child: Text(
+                transactionRow.challan == null
+                    ? ""
+                    : "${transactionRow.challan is InwardChallan ? 'In' : 'Out'} "
+                        "${transactionRow.challan!.number} / "
+                        "$session",
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -170,13 +187,39 @@ class _TransactionPageState extends State<TransactionPage> {
         ],
       ));
     }
-
     return rows;
+  }
+
+  // challan can be either Challan or InwardChallan or null
+  void onChallanTap(var challan) async {
+    if (challan == null) return;
+    _resetOrientation();
+    if (challan is Challan) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ChallanPageView(
+            challans: [challan],
+            initialIndex: 0,
+          ),
+        ),
+      );
+    } else {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => InwardChallanPage(
+            inwardChallan: challan,
+          ),
+        ),
+      );
+    }
+
+    _landscapeOrientation();
   }
 
   void _prepareData() {
     final db = Provider.of<DatabaseModel>(context, listen: false);
     var assets = {for (var e in widget.assets) e.uuid: e};
+
     List<AssetHistory> allAssetHistory = [];
     // First, fetch ALL history for each asset
     for (var asset in assets.values) {
@@ -232,6 +275,16 @@ class _TransactionPageState extends State<TransactionPage> {
           // Outwards
           transactionRow.outflow += 1;
           transactionRow.name = location["after"];
+        }
+
+        if (assetHistory.challanId != null) {
+          if (assetHistory.challanType == ChallanType.outward) {
+            transactionRow.challan = db.challans
+                .firstWhere((element) => element.id == assetHistory.challanId);
+          } else {
+            transactionRow.challan = db.inwardChallans
+                .firstWhere((element) => element.id == assetHistory.challanId);
+          }
         }
       }
       previousChanges = newChanges;

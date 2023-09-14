@@ -1,25 +1,9 @@
 import 'asset.dart';
 import 'buyer.dart';
 
-class Challan {
-  Challan({
-    required this.id,
-    required this.number,
-    required this.session,
-    required this.createdAt,
-    required this.buyer,
-    required this.products,
-    required this.productsValue,
-    required this.billNumber,
-    required this.deliveredBy,
-    required this.vehicleNumber,
-    required this.notes,
-    required this.received,
-    required this.cancelled,
-    required this.digitallySigned,
-    required this.photoId,
-  });
+enum ChallanType { inward, outward }
 
+class ChallanBase {
   int id;
   int number;
   String session;
@@ -27,12 +11,57 @@ class Challan {
   Buyer buyer;
   List<Product> products;
   int productsValue;
+  String notes;
+  String vehicleNumber;
+  bool cancelled;
+
+  ChallanBase({
+    required this.id,
+    required this.number,
+    required this.session,
+    required this.createdAt,
+    required this.buyer,
+    required this.products,
+    required this.productsValue,
+    this.notes = "",
+    required this.vehicleNumber,
+    required this.cancelled,
+  });
+}
+
+class Challan extends ChallanBase {
+  Challan({
+    required int id,
+    required int number,
+    required String session,
+    required DateTime createdAt,
+    required Buyer buyer,
+    required List<Product> products,
+    required int productsValue,
+    required this.billNumber,
+    required this.deliveredBy,
+    required String vehicleNumber,
+    required String notes,
+    required this.received,
+    required bool cancelled,
+    required this.digitallySigned,
+    required this.photoId,
+  }) : super(
+          id: id,
+          number: number,
+          session: session,
+          createdAt: createdAt,
+          buyer: buyer,
+          products: products,
+          productsValue: productsValue,
+          vehicleNumber: vehicleNumber,
+          notes: notes,
+          cancelled: cancelled,
+        );
+
   int? billNumber;
   String deliveredBy;
-  String vehicleNumber;
-  String notes;
   bool received;
-  bool cancelled;
   bool digitallySigned;
   String photoId;
 

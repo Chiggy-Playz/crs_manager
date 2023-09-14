@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:crs_manager/models/template.dart';
 
+import 'challan.dart';
+
 class FieldValue {
   FieldValue({
     required this.field,
@@ -123,12 +125,16 @@ class AssetHistory {
   String assetUuid;
   DateTime when;
   Map<String, dynamic> changes;
+  int? challanId;
+  ChallanType? challanType;
 
   AssetHistory({
     required this.id,
     required this.assetUuid,
     required this.when,
     required this.changes,
+    this.challanId,
+    this.challanType,
   });
 
   factory AssetHistory.fromJson(String str) =>
@@ -141,6 +147,8 @@ class AssetHistory {
         assetUuid: json["asset_uuid"],
         when: DateTime.parse(json["when"]).toLocal(),
         changes: json["changes"],
+        challanId: json["challan_id"],
+        challanType: json["challan_type"] == null ? null : ChallanType.values[json["challan_type"]],
       );
 
   Map<String, dynamic> toMap() => {
@@ -148,5 +156,7 @@ class AssetHistory {
         "asset_uuid": assetUuid,
         "when": when.toIso8601String(),
         "changes": changes,
+        "challan_id": challanId,
+        "challan_type": challanType!.index,
       };
 }

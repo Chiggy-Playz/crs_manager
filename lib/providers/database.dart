@@ -796,6 +796,8 @@ class DatabaseModel extends ChangeNotifier {
     Map<String, FieldValue>? customFields,
     String? notes,
     int? recoveredCost,
+    int? challanId,
+    int? challanType,
   }) async {
     if (location == null &&
         purchaseCost == null &&
@@ -837,6 +839,8 @@ class DatabaseModel extends ChangeNotifier {
 
     await _insertHistory(
       assets: assets,
+      challanId: challanId,
+      challanType: challanType,
       location: location,
       purchaseCost: purchaseCost,
       purchaseDate: purchaseDate,
@@ -866,6 +870,8 @@ class DatabaseModel extends ChangeNotifier {
 
   Future<void> _insertHistory({
     required List<Asset> assets,
+    int? challanId,
+    int? challanType,
     bool created = false,
     String? location,
     int? purchaseCost,
@@ -1005,6 +1011,8 @@ class DatabaseModel extends ChangeNotifier {
             .map((e) => {
                   "asset_uuid": e.uuid,
                   "changes": changes,
+                  "challan_id": challanId,
+                  "challan_type": challanType,
                 })
             .toList())
         .select();

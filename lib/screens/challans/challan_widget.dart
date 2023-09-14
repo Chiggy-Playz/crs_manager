@@ -14,6 +14,7 @@ import 'package:collection/collection.dart';
 
 import '../../models/asset.dart';
 import '../../models/buyer.dart';
+import '../../models/inward_challan.dart';
 import '../../providers/database.dart';
 import '../../models/challan.dart';
 import '../../providers/drive.dart';
@@ -511,9 +512,10 @@ class ChallanWidgetState extends State<ChallanWidget> {
 
     Navigator.of(context).push(opaquePage(const LoadingPage()));
     String action = "";
+    var id = widget.challan?.id;
     if (widget.challan == null) {
       action = "created";
-      await Provider.of<DatabaseModel>(context, listen: false).createChallan(
+      var res = await Provider.of<DatabaseModel>(context, listen: false).createChallan(
           number: nextChallanInfo!["number"],
           session: nextChallanInfo!["session"],
           buyer: _buyer!,
@@ -524,6 +526,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
           notes: _notes,
           received: _received,
           digitallySigned: _digitallySigned);
+      id = res.id;
     } else {
       action = "updated";
       await Provider.of<DatabaseModel>(context, listen: false).updateChallan(
@@ -551,7 +554,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
     var assetsToBeUpdated =
         assets.where((e) => e.location == "Office").toList();
     if (assetsToBeUpdated.isNotEmpty) {
-      await db.updateAsset(assets: assetsToBeUpdated, location: _buyer!.name);
+      await db.updateAsset(assets: assetsToBeUpdated, location: _buyer!.name, challanId: id, challanType: ChallanType.outward.index);
     }
     // Now for deleted products, set location to office
 
@@ -578,7 +581,10 @@ class ChallanWidgetState extends State<ChallanWidget> {
                 .where((element) => element != null)
                 .cast<Asset>()
                 .toList(),
-            location: "Office");
+            location: "Office",
+            challanId: id,
+            challanType: ChallanType.outward.index
+            );
       }
     }
 

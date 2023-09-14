@@ -149,7 +149,9 @@ CREATE TABLE IF NOT EXISTS "assets_history"(
     id SERIAL PRIMARY KEY,
     "asset_uuid" TEXT NOT NULL,
     "when" TIMESTAMP with TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    "changes" JSON NOT NULL
+    "changes" JSON NOT NULL,
+    "challan_id" INTEGER,
+    "challan_type" INTEGER
 )
 
 ----------------------------------------------------------------------------------------------
