@@ -1141,4 +1141,32 @@ class DatabaseModel extends ChangeNotifier {
       return e;
     }).toList();
   }
+
+  Future<void> deleteHistory(
+    List<Asset> assets,
+    int challanId,
+    int challanType,
+  ) async {
+    var response = await _client
+        .from("assets_history")
+        .delete()
+        .eq("challan_id", challanId)
+        .eq("challan_type", challanType)
+        .in_(
+            "asset_uuid",
+            assets
+                .map(
+                  (e) => e.uuid,
+                )
+                .toList())
+        .select();
+
+    if (response == null) {
+      throw DatabaseError();
+    }
+
+    for (var deletedHistory in response) {
+      assetHistory.removeWhere((element) => element.id == deletedHistory["id"]);
+    }
+  }
 }

@@ -513,19 +513,22 @@ class ChallanWidgetState extends State<ChallanWidget> {
     Navigator.of(context).push(opaquePage(const LoadingPage()));
     String action = "";
     var id = widget.challan?.id;
+    var db = Provider.of<DatabaseModel>(context, listen: false);
+
     if (widget.challan == null) {
       action = "created";
-      var res = await Provider.of<DatabaseModel>(context, listen: false).createChallan(
-          number: nextChallanInfo!["number"],
-          session: nextChallanInfo!["session"],
-          buyer: _buyer!,
-          products: _products,
-          productsValue: _productsValue,
-          deliveredBy: _deliveredBy,
-          vehicleNumber: _vehicleNumber,
-          notes: _notes,
-          received: _received,
-          digitallySigned: _digitallySigned);
+      var res = await Provider.of<DatabaseModel>(context, listen: false)
+          .createChallan(
+              number: nextChallanInfo!["number"],
+              session: nextChallanInfo!["session"],
+              buyer: _buyer!,
+              products: _products,
+              productsValue: _productsValue,
+              deliveredBy: _deliveredBy,
+              vehicleNumber: _vehicleNumber,
+              notes: _notes,
+              received: _received,
+              digitallySigned: _digitallySigned);
       id = res.id;
     } else {
       action = "updated";
@@ -542,51 +545,34 @@ class ChallanWidgetState extends State<ChallanWidget> {
         digitallySigned: _digitallySigned,
         photoId: _photoId,
       );
+
+      // Firstly, update location of all old assets to office
+      var oldAssets = widget.challan!.products
+          .map((p) => p.assets)
+          .expand((element) => element)
+          .toList();
+      if (oldAssets.isNotEmpty) {
+        await db.updateAsset(
+          assets: oldAssets,
+          location: "Office",
+          challanId: id,
+          challanType: ChallanType.outward.index,
+        );
+        await db.deleteHistory(oldAssets, id!, ChallanType.outward.index);
+      }
     }
     if (!mounted) return;
 
     // Update location of assets
+
     var assets =
         _products.map((p) => p.assets).expand((element) => element).toList();
-    var db = Provider.of<DatabaseModel>(context, listen: false);
-
-    // Update asset locations only if they are not already set
-    var assetsToBeUpdated =
-        assets.where((e) => e.location == "Office").toList();
-    if (assetsToBeUpdated.isNotEmpty) {
-      await db.updateAsset(assets: assetsToBeUpdated, location: _buyer!.name, challanId: id, challanType: ChallanType.outward.index);
-    }
-    // Now for deleted products, set location to office
-
-    if (widget.challan != null) {
-      var deletedAssets = widget.challan!.products
-          .map((p) => p.assets)
-          .expand((element) => element)
-          .map((e) => e.uuid)
-          .toList();
-      deletedAssets.removeWhere((element) => _products
-          .map((p) => p.assets)
-          .expand((e) => e)
-          .map((e) => e.uuid)
-          .contains(element));
-      if (deletedAssets.isNotEmpty) {
-        for (String uuid in deletedAssets) {
-          if (!db.assets.containsKey(uuid)) {
-            continue;
-          }
-        }
-        await db.updateAsset(
-            assets: deletedAssets
-                .map((uuid) => db.assets[uuid])
-                .where((element) => element != null)
-                .cast<Asset>()
-                .toList(),
-            location: "Office",
-            challanId: id,
-            challanType: ChallanType.outward.index
-            );
-      }
-    }
+    await db.updateAsset(
+      assets: assets,
+      location: _buyer!.name,
+      challanId: id,
+      challanType: ChallanType.outward.index,
+    );
 
     if (!mounted) return;
 

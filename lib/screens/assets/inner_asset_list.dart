@@ -217,7 +217,8 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
             SizedBox(height: 2.h),
             TextFormField(
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              decoration: const InputDecoration(labelText: "Number of Assets"),
+              decoration: const InputDecoration(
+                  labelText: "Number of Assets", errorMaxLines: 2),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.isEmpty) {
