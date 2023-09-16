@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/challans/photo_page.dart';
+import 'package:crs_manager/screens/challans/product_widget.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -12,9 +13,7 @@ import 'package:flutter/foundation.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 
-import '../../models/asset.dart';
 import '../../models/buyer.dart';
-import '../../models/inward_challan.dart';
 import '../../providers/database.dart';
 import '../../models/challan.dart';
 import '../../providers/drive.dart';
@@ -25,7 +24,6 @@ import '../buyers/choose_buyer.dart';
 import '../loading.dart';
 
 import 'get_pdf.dart';
-import 'product_page.dart';
 
 final formatter = DateFormat("dd-MMMM-y");
 
@@ -206,39 +204,53 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   height: 2.h,
                 ),
                 // Products Card
-                SizedBox(
-                  height: 45.h,
-                  width: double.infinity,
-                  child: Card(
-                    elevation: 4,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 2.h),
-                      child: Column(
-                        children: [
-                          Text(
-                            "Products",
-                            style: bodyTextTheme,
-                          ),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: _products.length,
-                              itemBuilder: (context, index) {
-                                return productCard(index);
-                              },
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          FloatingActionButton.extended(
-                            heroTag: "${widget.challan?.id}-addProduct",
-                            onPressed: _cancelled ? null : onAddProduct,
-                            label: const Text("Add Product"),
-                            icon: const Icon(Icons.add),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
+                ProductWidget(
+                  products: _products,
+                  viewOnly: _cancelled,
+                  onUpdate: () => setState(() {}),
+                  // outwards: true,
+                  // canUpdate: () {
+                  //   if (_buyer == null) {
+                  //     context.showErrorSnackBar(
+                  //         message: "Please choose a buyer first");
+                  //   }
+                  //   return _buyer != null;
+                  // },
+                  // comingFrom: _buyer?.name ?? "",
                 ),
+                // SizedBox(
+                //   height: 45.h,
+                //   width: double.infinity,
+                //   child: Card(
+                //     elevation: 4,
+                //     child: Padding(
+                //       padding: EdgeInsets.symmetric(vertical: 2.h),
+                //       child: Column(
+                //         children: [
+                //           Text(
+                //             "Products",
+                //             style: bodyTextTheme,
+                //           ),
+                //           Expanded(
+                //             child: ListView.builder(
+                //               itemCount: _products.length,
+                //               itemBuilder: (context, index) {
+                //                 return productCard(index);
+                //               },
+                //             ),
+                //           ),
+                //           SizedBox(height: 2.h),
+                //           FloatingActionButton.extended(
+                //             heroTag: "${widget.challan?.id}-addProduct",
+                //             onPressed: _cancelled ? null : onAddProduct,
+                //             label: const Text("Add Product"),
+                //             icon: const Icon(Icons.add),
+                //           )
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 SizedBox(height: 2.h),
                 TextFormField(
                   enabled: !_cancelled,
@@ -581,32 +593,32 @@ class ChallanWidgetState extends State<ChallanWidget> {
     Navigator.of(context).pop();
   }
 
-  Card productCard(int index) {
-    String subtitle =
-        "${_products[index].additionalDescription}\n${_products[index].quantity} ${_products[index].quantityUnit}"
-            .trim();
-    return Card(
-      elevation: 12,
-      child: ListTile(
-        title: Text(_products[index].description),
-        subtitle: Text(
-          subtitle,
-        ),
-        isThreeLine: subtitle.contains("\n"),
-        trailing: IconButton(
-          icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
-          onPressed: _cancelled
-              ? null
-              : () {
-                  setState(() {
-                    _products.removeAt(index);
-                  });
-                },
-        ),
-        onTap: _cancelled ? null : () => onEditProduct(index),
-      ),
-    );
-  }
+  // Card productCard(int index) {
+  //   String subtitle =
+  //       "${_products[index].additionalDescription}\n${_products[index].quantity} ${_products[index].quantityUnit}"
+  //           .trim();
+  //   return Card(
+  //     elevation: 12,
+  //     child: ListTile(
+  //       title: Text(_products[index].description),
+  //       subtitle: Text(
+  //         subtitle,
+  //       ),
+  //       isThreeLine: subtitle.contains("\n"),
+  //       trailing: IconButton(
+  //         icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
+  //         onPressed: _cancelled
+  //             ? null
+  //             : () {
+  //                 setState(() {
+  //                   _products.removeAt(index);
+  //                 });
+  //               },
+  //       ),
+  //       onTap: _cancelled ? null : () => onEditProduct(index),
+  //     ),
+  //   );
+  // }
 
   void onBuyerSelected(Buyer buyer) {
     setState(() {
@@ -615,31 +627,31 @@ class ChallanWidgetState extends State<ChallanWidget> {
     Navigator.of(context).pop();
   }
 
-  void onAddProduct() async {
-    // null represents backed out
-    Product? result = await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => const ProductPage(),
-    ));
+  // void onAddProduct() async {
+  //   // null represents backed out
+  //   Product? result = await Navigator.of(context).push(MaterialPageRoute(
+  //     builder: (context) => const ProductPage(),
+  //   ));
 
-    if (result != null) {
-      setState(() {
-        _products.add(result);
-      });
-    }
-  }
+  //   if (result != null) {
+  //     setState(() {
+  //       _products.add(result);
+  //     });
+  //   }
+  // }
 
-  void onEditProduct(int index) async {
-    // null represents backed out
-    Product? result = await Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ProductPage(product: _products[index]),
-    ));
+  // void onEditProduct(int index) async {
+  //   // null represents backed out
+  //   Product? result = await Navigator.of(context).push(MaterialPageRoute(
+  //     builder: (context) => ProductPage(product: _products[index]),
+  //   ));
 
-    if (result != null) {
-      setState(() {
-        _products[index] = result;
-      });
-    }
-  }
+  //   if (result != null) {
+  //     setState(() {
+  //       _products[index] = result;
+  //     });
+  //   }
+  // }
 
   void viewPhoto() async {
     var driveHandler = Provider.of<DriveHandler>(context, listen: false);
