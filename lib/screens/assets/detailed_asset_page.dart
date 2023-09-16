@@ -55,6 +55,8 @@ class TransactionPage extends StatefulWidget {
 class _TransactionPageState extends State<TransactionPage> {
   List<TransactionRow> transactionRows = [];
   String assetDescription = "";
+  List<String> buyerFilter = [];
+  Map<String, int> buyerBalance = {};
 
   @override
   void initState() {
@@ -64,6 +66,9 @@ class _TransactionPageState extends State<TransactionPage> {
     assetDescription =
         TemplateString(asset.template.metadata).format(asset.rawCustomFields);
     _prepareData();
+    for (var asset in widget.assets) {
+      buyerBalance[asset.location] = (buyerBalance[asset.location] ?? 0) + 1;
+    }
   }
 
   @override
@@ -80,7 +85,15 @@ class _TransactionPageState extends State<TransactionPage> {
       );
     }
     return Scaffold(
-      appBar: TransparentAppBar(title: Text(assetDescription)),
+      appBar: TransparentAppBar(
+        title: Text(assetDescription),
+        actions: [
+          IconButton(
+            onPressed: filterPressed,
+            icon: const Icon(Icons.filter_alt),
+          )
+        ],
+      ),
       body: Scrollbar(
         thickness: 10,
         interactive: true,
@@ -157,6 +170,11 @@ class _TransactionPageState extends State<TransactionPage> {
     // Add rows for transactions
     int previousBalance = 0;
     for (var transactionRow in transactionRows) {
+      if (buyerFilter.isNotEmpty &&
+          !buyerFilter.contains(transactionRow.name)) {
+        continue;
+      }
+
       previousBalance += transactionRow.balance;
 
       var challan = transactionRow.challan;
@@ -241,12 +259,6 @@ class _TransactionPageState extends State<TransactionPage> {
       ),
     );
 
-    Map<String, int> buyerBalance = {};
-
-    for (var asset in widget.assets) {
-      buyerBalance[asset.location] = (buyerBalance[asset.location] ?? 0) + 1;
-    }
-
     rows.add(TableRow(
       children: [
         const Center(
@@ -324,6 +336,71 @@ class _TransactionPageState extends State<TransactionPage> {
     }
 
     _landscapeOrientation();
+  }
+
+  void filterPressed() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            titlePadding: const EdgeInsets.only(top: 24.0, bottom: 0),
+            contentPadding: EdgeInsets.zero,
+            actionsPadding: EdgeInsets.zero,
+            title: const Column(
+              children: [
+                Text("Filter by buyer"),
+                Divider(),
+              ],
+            ),
+            content: SingleChildScrollView(
+                child: Column(
+              children: buyerBalance.keys
+                  .sorted((a, b) => a.compareTo(b))
+                  .map((e) => CheckboxListTile(
+                        title: Text(e),
+                        value: buyerFilter.contains(e),
+                        onChanged: (value) {
+                          if (value == true) {
+                            buyerFilter.add(e);
+                          } else {
+                            buyerFilter.remove(e);
+                          }
+                          setState(() {});
+                        },
+                      ))
+                  .toList(),
+            )),
+            actions: [
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        buyerFilter.clear();
+                        setState(() {});
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("Clear"),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("Done"),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    setState(() {});
   }
 
   void _prepareData() {
