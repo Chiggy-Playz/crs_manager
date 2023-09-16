@@ -147,7 +147,7 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
                     leading: const Icon(Icons.calendar_today),
                     title: const Text("Date"),
                     subtitle: Text(formatterDate.format(_createdAt)),
-                    onTap: (_cancelled || _isEditing)
+                    onTap: (_cancelled)
                         ? null
                         : () async {
                             final date = await showDatePicker(
@@ -185,7 +185,7 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
                     subtitle: Text(_buyer == null
                         ? "Click to choose a buyer"
                         : _buyer!.address),
-                    onTap: _cancelled
+                    onTap: (_cancelled || _isEditing)
                         ? null
                         : () {
                             Navigator.of(context).push(MaterialPageRoute(
