@@ -65,9 +65,10 @@ class _OuterAssetListWidgetState extends State<OuterAssetListWidget> {
                           onAssetSelected: widget.onAssetSelected,
                           multiple: widget.multiple,
                           outwards: widget.outwards,
-                          comingFrom: widget.comingFrom
-                          ),
-                      child: InnerAssetListPage(assets: assets),
+                          comingFrom: widget.comingFrom),
+                      child: InnerAssetListPage(
+                        template: template,
+                      ),
                     ),
                   )),
                 ),
