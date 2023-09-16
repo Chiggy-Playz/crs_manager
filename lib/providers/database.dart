@@ -359,6 +359,17 @@ class DatabaseModel extends ChangeNotifier {
       return;
     }
 
+    if (name != null && name != buyer.name) {
+      // Check if the name is already used by a challan
+      final challans = this
+          .challans
+          .where((challan) => challan.buyer.name == buyer.name)
+          .toList();
+      if (challans.isNotEmpty) {
+        throw BuyerInUseError();
+      }
+    }
+
     await _client.from("buyers").update({
       "name": name?.toUpperCase() ?? buyer.name,
       "address": address?.toUpperCase() ?? buyer.address,
