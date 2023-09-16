@@ -268,7 +268,7 @@ class _TransactionPageState extends State<TransactionPage> {
         ),
         Center(
           child: Text(
-            (buyerBalance.remove("Office") ?? 0).toString(),
+            (buyerBalance["Office"] ?? 0).toString(),
           ),
         ),
       ],
@@ -277,6 +277,7 @@ class _TransactionPageState extends State<TransactionPage> {
     for (var buyer in buyerBalance.keys.sorted(
       (a, b) => a.compareTo(b),
     )) {
+      if (buyer == "Office") continue;
       rows.add(
         TableRow(
           children: [
