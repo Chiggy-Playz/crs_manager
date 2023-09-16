@@ -88,25 +88,53 @@ class _TransactionPageState extends State<TransactionPage> {
           scrollDirection: Axis.vertical,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SizedBox(
-                height: 100 * 100.w,
-                width: 1.2 * 100.w,
-                child: Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(0.3), // Date
-                    1: FlexColumnWidth(0.3), // Challan No.
-                    2: FlexColumnWidth(1.0), // Name
-                    3: FlexColumnWidth(0.2), // Inflow
-                    4: FlexColumnWidth(0.2), // Outflow
-                    5: FlexColumnWidth(0.2), // Balance
-                  },
-                  border: TableBorder.all(
-                    color: Theme.of(context).colorScheme.onBackground,
-                    width: 1,
-                    style: BorderStyle.solid,
-                  ),
-                  children: _getRows(),
-                )),
+            child: Column(
+              children: [
+                Column(
+                  children: [
+                    SizedBox(
+                        // height: 40 * 100.h,
+                        width: 1.2 * 100.w,
+                        child: Table(
+                          columnWidths: const {
+                            2: FlexColumnWidth(1.0), // Name
+                            5: FlexColumnWidth(0.5), // Balance
+                          },
+                          border: TableBorder.all(
+                            color: Theme.of(context).colorScheme.onBackground,
+                            width: 1,
+                            style: BorderStyle.solid,
+                          ),
+                          children: _getBuyerRows(),
+                        )),
+                    Padding(
+                      padding: EdgeInsets.all(2.h),
+                      child: Text("Transaction History",
+                          style: Theme.of(context).textTheme.displayMedium),
+                    ),
+                    SizedBox(
+                        // height: 40 * 100.h,
+                        width: 1.2 * 100.w,
+                        child: Table(
+                          columnWidths: const {
+                            0: FlexColumnWidth(0.3), // Date
+                            1: FlexColumnWidth(0.3), // Challan No.
+                            2: FlexColumnWidth(1.0), // Name
+                            3: FlexColumnWidth(0.2), // Inflow
+                            4: FlexColumnWidth(0.2), // Outflow
+                            5: FlexColumnWidth(0.2), // Balance
+                          },
+                          border: TableBorder.all(
+                            color: Theme.of(context).colorScheme.onBackground,
+                            width: 1,
+                            style: BorderStyle.solid,
+                          ),
+                          children: _getRows(),
+                        )),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -190,6 +218,57 @@ class _TransactionPageState extends State<TransactionPage> {
     return rows;
   }
 
+  List<TableRow> _getBuyerRows() {
+    List<TableRow> rows = [];
+
+    // Header Row
+    rows.add(
+      const TableRow(
+        children: [
+          Center(
+            child: Text(
+              "Buyer",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Center(
+            child: Text(
+              "Balance",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Map<String, int> buyerBalance = {};
+
+    for (var asset in widget.assets) {
+      buyerBalance[asset.location] = (buyerBalance[asset.location] ?? 0) + 1;
+    }
+
+    for (var buyer in buyerBalance.keys) {
+      rows.add(
+        TableRow(
+          children: [
+            Center(
+              child: Text(
+                buyer,
+              ),
+            ),
+            Center(
+              child: Text(
+                buyerBalance[buyer]!.toString(),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return rows;
+  }
+
   // challan can be either Challan or InwardChallan or null
   void onChallanTap(var challan) async {
     if (challan == null) return;
@@ -254,8 +333,8 @@ class _TransactionPageState extends State<TransactionPage> {
       if (!deepCollectionEquality.equals(previousChanges, newChanges) ||
           ((assetHistory.challanId != null) &&
               ((previousChallanId != assetHistory.challanId) &&
-              (previousChallanType == assetHistory.challanType!.index)))) {
-        if (transactionRow.inflow != 0 || transactionRow.outflow != 0) { 
+                  (previousChallanType == assetHistory.challanType!.index)))) {
+        if (transactionRow.inflow != 0 || transactionRow.outflow != 0) {
           transactionRows.add(transactionRow);
         }
         transactionRow = TransactionRow(
