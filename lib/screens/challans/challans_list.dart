@@ -86,21 +86,29 @@ class _ChallansListState extends State<ChallansList> {
             ],
           );
 
-    return GestureDetector(
-      onTapDown: (TapDownDetails details) {
-        _tapDownPosition = details.globalPosition;
-      },
-      onSecondaryTapDown: (details) {
-        _tapDownPosition = details.globalPosition;
-      },
-      onSecondaryTapCancel: () => showContextMenu(challan: challan),
-      onLongPress: () => showContextMenu(challan: challan),
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
-        elevation: 12,
-        color: challan.cancelled
-            ? Theme.of(context).colorScheme.errorContainer
-            : Theme.of(context).cardColor,
+    return Card(
+      // margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
+      elevation: 12,
+      color: challan.cancelled
+          ? Theme.of(context).colorScheme.errorContainer
+          : Theme.of(context).cardColor,
+      child: InkWell(
+        onTapDown: (TapDownDetails details) {
+          _tapDownPosition = details.globalPosition;
+        },
+        onTapUp: (_) => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ChallanPageView(
+              challans: challans,
+              initialIndex: index,
+            ),
+          ),
+        ),
+        onSecondaryTapDown: (details) {
+          _tapDownPosition = details.globalPosition;
+        },
+        onSecondaryTapUp: (_) => showContextMenu(challan: challan),
+        onLongPress: () => showContextMenu(challan: challan),
         child: ListTile(
           title: Text(challan.buyer.name),
           subtitle: Text(cardFormatter.format(challan.createdAt)),
@@ -138,14 +146,6 @@ class _ChallansListState extends State<ChallansList> {
                 ),
               ],
             ],
-          ),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ChallanPageView(
-                challans: challans,
-                initialIndex: index,
-              ),
-            ),
           ),
         ),
       ),

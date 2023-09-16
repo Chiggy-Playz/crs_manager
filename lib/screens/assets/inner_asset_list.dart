@@ -118,21 +118,21 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
                         controlAffinity: ListTileControlAffinity.leading,
                         secondary: secondary,
                       )
-                    : GestureDetector(
+                    : InkWell(
                         onTapDown: (TapDownDetails details) {
                           _tapDownPosition = details.globalPosition;
                         },
+                        onTapUp: (_) async => await onTap(assets, selector),
                         onSecondaryTapDown: (details) {
                           _tapDownPosition = details.globalPosition;
                         },
-                        onSecondaryTapUp: (a) =>
+                        onSecondaryTapUp: (_) =>
                             showContextMenu(assets: assets),
                         onLongPress: () => showContextMenu(assets: assets),
                         child: ListTile(
                           title: Text(title),
                           subtitle: subtitle.isEmpty ? null : Text(subtitle),
                           trailing: secondary,
-                          onTap: () async => await onTap(assets, selector),
                         ),
                       ),
               );
