@@ -21,6 +21,7 @@ class InnerAssetListPage extends StatefulWidget {
 
 class _InnerAssetListPageState extends State<InnerAssetListPage> {
   Map<MapKey, List<Asset>> groupedAssets = {};
+  late Offset _tapDownPosition;
 
   @override
   void initState() {
@@ -117,11 +118,22 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
                         controlAffinity: ListTileControlAffinity.leading,
                         secondary: secondary,
                       )
-                    : ListTile(
-                        title: Text(title),
-                        subtitle: subtitle.isEmpty ? null : Text(subtitle),
-                        trailing: secondary,
-                        onTap: () async => await onTap(assets, selector),
+                    : GestureDetector(
+                        onTapDown: (TapDownDetails details) {
+                          _tapDownPosition = details.globalPosition;
+                        },
+                        onSecondaryTapDown: (details) {
+                          _tapDownPosition = details.globalPosition;
+                        },
+                        onSecondaryTapUp: (a) =>
+                            showContextMenu(assets: assets),
+                        onLongPress: () => showContextMenu(assets: assets),
+                        child: ListTile(
+                          title: Text(title),
+                          subtitle: subtitle.isEmpty ? null : Text(subtitle),
+                          trailing: secondary,
+                          onTap: () async => await onTap(assets, selector),
+                        ),
                       ),
               );
             },
@@ -279,5 +291,60 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
     }
 
     return finalAssets;
+  }
+
+  void showContextMenu({
+    TapUpDetails? details,
+    required List<Asset> assets,
+  }) async {
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    if (details != null) {
+      _tapDownPosition = details.globalPosition;
+    }
+
+    var value = await showMenu<int>(
+      context: context,
+      items: [
+        const PopupMenuItem(value: 0, child: Text("Edit Assets")),
+        const PopupMenuItem(value: 1, child: Text("Copy Assets")),
+      ],
+      position: RelativeRect.fromLTRB(
+        _tapDownPosition.dx,
+        _tapDownPosition.dy,
+        overlay.size.width - _tapDownPosition.dx,
+        overlay.size.height - _tapDownPosition.dy,
+      ),
+    );
+
+    if (value == null) {
+      return;
+    }
+    if (!mounted) return;
+    if (value == 0) {
+      // Edit asset
+
+      if (assets.length > 1) {
+        context.showErrorSnackBar(message: "Not implemented yet lol 💀");
+        return;
+      }
+
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => AssetPage(
+                asset: assets.first,
+              )));
+    } else if (value == 1) {
+      // Copy asset
+
+      if (assets.length > 1) {
+        context.showErrorSnackBar(message: "Not implemented yet lol 💀");
+        return;
+      }
+
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => AssetPage(
+                copyFromAsset: assets.first,
+              )));
+    }
   }
 }
