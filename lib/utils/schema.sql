@@ -91,7 +91,9 @@ END $$;
 
     assets.additional_costs is like
     {
-        "Reason": "Money Spent"
+        "Reason": "Reason"
+        "Amount": "Amount"
+        "When": "Date",
     }
 
     history.changes is like 

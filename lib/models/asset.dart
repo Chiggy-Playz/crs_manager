@@ -28,6 +28,35 @@ class FieldValue {
   }
 }
 
+class AdditionalCost {
+  AdditionalCost({
+    required this.amount,
+    required this.reason,
+    required this.when,
+  });
+
+  int amount;
+  String reason;
+  DateTime when;
+
+  factory AdditionalCost.fromJson(String str) =>
+      AdditionalCost.fromMap(json.decode(str));
+
+  String toJson() => json.encode(toMap());
+
+  factory AdditionalCost.fromMap(Map<String, dynamic> json) => AdditionalCost(
+        amount: json["amount"],
+        reason: json["reason"],
+        when: DateTime.parse(json["when"]).toLocal(),
+      );
+
+  Map<String, dynamic> toMap() => {
+        "amount": amount,
+        "reason": reason,
+        "when": when.toIso8601String(),
+      };
+}
+
 class Asset {
   Asset({
     required this.id,
@@ -50,8 +79,7 @@ class Asset {
   String location;
   int purchaseCost;
   DateTime purchaseDate;
-  // Reason -> how much was spent on the asset
-  Map<String, int> additionalCost;
+  List<AdditionalCost> additionalCost;
   String purchasedFrom;
   Template template;
   Map<String, FieldValue> customFields;
@@ -80,7 +108,7 @@ class Asset {
       location: json["location"],
       purchaseCost: json["purchase_cost"],
       purchaseDate: DateTime.parse(json["purchase_date"]).toLocal(),
-      additionalCost: Map<String, int>.from(json["additional_cost"]),
+      additionalCost: List.from(json["additional_cost"]).map((e) => AdditionalCost.fromMap(e)).toList(),
       purchasedFrom: json["purchased_from"],
       template: template,
       customFields: Map.from(json["custom_fields"]).map(
@@ -106,7 +134,7 @@ class Asset {
         "location": location,
         "purchase_cost": purchaseCost,
         "purchase_date": purchaseDate.toIso8601String(),
-        "additional_cost": Map.from(additionalCost),
+        "additional_cost": additionalCost.map((e) => e.toMap()).toList(),
         "purchased_from": purchasedFrom,
         "template": template.id,
         "custom_fields": Map.from(customFields).map(
@@ -148,7 +176,9 @@ class AssetHistory {
         when: DateTime.parse(json["when"]).toLocal(),
         changes: json["changes"],
         challanId: json["challan_id"],
-        challanType: json["challan_type"] == null ? null : ChallanType.values[json["challan_type"]],
+        challanType: json["challan_type"] == null
+            ? null
+            : ChallanType.values[json["challan_type"]],
       );
 
   Map<String, dynamic> toMap() => {

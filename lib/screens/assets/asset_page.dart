@@ -32,7 +32,7 @@ class _AssetPageState extends State<AssetPage> {
   String location = "";
   int purchaseCost = 0;
   DateTime? purchaseDate;
-  Map<String, int> additionalCost = {};
+  List<AdditionalCost> additionalCost = [];
   String purchasedFrom = "";
   String notes = "";
   int recoveredCost = 0;
@@ -52,7 +52,7 @@ class _AssetPageState extends State<AssetPage> {
       location = widget.asset!.location;
       purchaseCost = widget.asset!.purchaseCost;
       purchaseDate = widget.asset!.purchaseDate;
-      additionalCost = Map.from(widget.asset!.additionalCost);
+      additionalCost = List<AdditionalCost>.from(widget.asset!.additionalCost);
       purchasedFrom = widget.asset!.purchasedFrom;
       notes = widget.asset!.notes;
       recoveredCost = widget.asset!.recoveredCost;
@@ -571,8 +571,17 @@ class _AssetPageState extends State<AssetPage> {
       return true;
     }
 
-    for (var field in additionalCost.keys) {
-      if (widget.asset!.additionalCost[field] != additionalCost[field]) {
+    for (var cost in additionalCost) {
+      // Check if amount or reason was changed by finding cost in widget.asset!.additionalCost
+
+      var oldCost = widget.asset!.additionalCost
+          .where(
+            (element) =>
+                element.reason == cost.reason && element.amount == cost.amount,
+          )
+          .toList();
+
+      if (oldCost.isEmpty) {
         return true;
       }
     }
@@ -631,9 +640,7 @@ class _AssetPageState extends State<AssetPage> {
               purchaseCost == widget.asset!.purchaseCost ? null : purchaseCost,
           purchaseDate:
               purchaseDate == widget.asset!.purchaseDate ? null : purchaseDate,
-          additionalCost: additionalCost == widget.asset!.additionalCost
-              ? null
-              : additionalCost,
+          additionalCost: additionalCost,
           purchasedFrom: purchasedFrom == widget.asset!.purchasedFrom
               ? null
               : purchasedFrom,
@@ -697,7 +704,7 @@ class AdditionalCostsWidget extends StatefulWidget {
   const AdditionalCostsWidget(
       {super.key, required this.intialValue, required this.onChange});
 
-  final Map<String, int> intialValue;
+  final List<AdditionalCost> intialValue;
   final Function onChange;
 
   @override
@@ -705,7 +712,7 @@ class AdditionalCostsWidget extends StatefulWidget {
 }
 
 class _AdditionalCostsWidgetState extends State<AdditionalCostsWidget> {
-  late Map<String, int> additionalCost;
+  late List<AdditionalCost> additionalCost;
 
   @override
   void initState() {
@@ -765,6 +772,7 @@ class _AdditionalCostsWidgetState extends State<AdditionalCostsWidget> {
       context: context,
       builder: (context) =>
           AdditionalCostModalWidget(additionalCost: additionalCost),
+      isScrollControlled: true,
     );
 
     widget.onChange();
@@ -773,12 +781,12 @@ class _AdditionalCostsWidgetState extends State<AdditionalCostsWidget> {
 
   Future<void> onEdit(int index) async {
     await showModalBottomSheet(
-      context: context,
-      builder: (context) => AdditionalCostModalWidget(
-        additionalCost: additionalCost,
-        index: index,
-      ),
-    );
+        context: context,
+        builder: (context) => AdditionalCostModalWidget(
+              additionalCost: additionalCost,
+              index: index,
+            ),
+        isScrollControlled: true);
 
     widget.onChange();
     setState(() {});
@@ -786,12 +794,14 @@ class _AdditionalCostsWidgetState extends State<AdditionalCostsWidget> {
 
   Widget costCard(int index) {
     if (index < additionalCost.length) {
+      AdditionalCost cost = additionalCost.elementAt(index);
       return Card(
         elevation: 12,
         child: ListTile(
-          title: Text(additionalCost.keys.elementAt(index)),
+          title: Text(cost.reason),
+          subtitle: Text(formatterDate.format(cost.when)),
           trailing: Text(
-            numberFormatter.format(additionalCost.values.elementAt(index)),
+            numberFormatter.format(cost.amount),
             style: Theme.of(context).textTheme.titleLarge,
           ),
           onTap: () => onEdit(index),
@@ -808,8 +818,11 @@ class _AdditionalCostsWidgetState extends State<AdditionalCostsWidget> {
         child: ListTile(
           title: const Text("Total"),
           trailing: Text(
-            numberFormatter
-                .format(additionalCost.values.reduce((a, b) => a + b)),
+            numberFormatter.format(additionalCost
+                .map(
+                  (e) => e.amount,
+                )
+                .reduce((a, b) => a + b)),
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
@@ -822,7 +835,7 @@ class AdditionalCostModalWidget extends StatefulWidget {
   const AdditionalCostModalWidget(
       {super.key, required this.additionalCost, this.index});
 
-  final Map<String, int> additionalCost;
+  final List<AdditionalCost> additionalCost;
   final int? index;
 
   @override
@@ -832,7 +845,7 @@ class AdditionalCostModalWidget extends StatefulWidget {
 
 class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
   String reason = "";
-  int cost = 0;
+  int amount = 0;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -840,8 +853,9 @@ class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
   void initState() {
     super.initState();
     if (widget.index != null) {
-      reason = widget.additionalCost.keys.elementAt(widget.index!);
-      cost = widget.additionalCost.values.elementAt(widget.index!);
+      var cost = widget.additionalCost.elementAt(widget.index!);
+      reason = cost.reason;
+      amount = cost.amount;
     }
   }
 
@@ -856,11 +870,17 @@ class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
           topRight: Radius.circular(20),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        top: 2.h,
+        left: 4.w,
+        right: 4.w,
+      ),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
@@ -877,13 +897,8 @@ class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
                   if (!newCost)
                     IconButton(
                         onPressed: () {
-                          if (newCost) {
-                            Navigator.of(context).pop();
-                            return;
-                          }
-                          widget.additionalCost.remove(widget
-                              .additionalCost.keys
-                              .elementAt(widget.index!));
+                          widget.additionalCost.remove(
+                              widget.additionalCost.elementAt(widget.index!));
                           Navigator.of(context).pop();
                         },
                         icon: Icon(
@@ -915,7 +930,7 @@ class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
               TextFormField(
                 decoration: const InputDecoration(
                     hintText: "Cost", label: Text("Cost")),
-                initialValue: cost.toString(),
+                initialValue: amount.toString(),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value!.isEmpty) {
@@ -926,8 +941,9 @@ class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
                   }
                   return null;
                 },
-                onSaved: (value) => cost = int.parse(value!),
+                onSaved: (value) => amount = int.parse(value!),
               ),
+              SizedBox(height: 2.h)
             ],
           ),
         ),
@@ -944,11 +960,11 @@ class _AdditionalCostModalWidgetState extends State<AdditionalCostModalWidget> {
 
     // Mutate the additionalCosts map in the parent widget
     if (widget.index == null) {
-      widget.additionalCost[reason] = cost;
+      widget.additionalCost.add(
+          AdditionalCost(amount: amount, reason: reason, when: DateTime.now()));
     } else {
-      widget.additionalCost
-          .remove(widget.additionalCost.keys.elementAt(widget.index!));
-      widget.additionalCost[reason] = cost;
+      widget.additionalCost[widget.index!] =
+          AdditionalCost(amount: amount, reason: reason, when: DateTime.now());
     }
 
     Navigator.of(context).pop();

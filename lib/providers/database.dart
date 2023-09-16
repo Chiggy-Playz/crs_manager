@@ -741,7 +741,7 @@ class DatabaseModel extends ChangeNotifier {
     required String location,
     required int purchaseCost,
     required DateTime purchaseDate,
-    required Map<String, int> additionalCost,
+    required List<AdditionalCost> additionalCost,
     required String purchasedFrom,
     required Template template,
     required Map<String, FieldValue> customFields,
@@ -755,7 +755,7 @@ class DatabaseModel extends ChangeNotifier {
           "location": location,
           "purchase_cost": purchaseCost,
           "purchase_date": purchaseDate.toUtc().toIso8601String(),
-          "additional_cost": additionalCost,
+          "additional_cost": additionalCost.map((e) => e.toMap()).toList(),
           "purchased_from": purchasedFrom,
           "template": template.id,
           "custom_fields":
@@ -791,7 +791,7 @@ class DatabaseModel extends ChangeNotifier {
     String? location,
     int? purchaseCost,
     DateTime? purchaseDate,
-    Map<String, int>? additionalCost,
+    List<AdditionalCost>? additionalCost,
     String? purchasedFrom,
     Map<String, FieldValue>? customFields,
     String? notes,
@@ -819,7 +819,7 @@ class DatabaseModel extends ChangeNotifier {
                   "purchase_date": (purchaseDate ?? asset.purchaseDate)
                       .toUtc()
                       .toIso8601String(),
-                  "additional_cost": additionalCost ?? asset.additionalCost,
+                  "additional_cost": (additionalCost ?? asset.additionalCost).map((e) => e.toMap()).toList(),
                   "purchased_from": purchasedFrom ?? asset.purchasedFrom,
                   "custom_fields":
                       (customFields ?? asset.customFields).map((key, value) {
@@ -844,7 +844,7 @@ class DatabaseModel extends ChangeNotifier {
       location: location,
       purchaseCost: purchaseCost,
       purchaseDate: purchaseDate,
-      additionalCost: Map.from(additionalCost ?? assets.first.additionalCost),
+      additionalCost: List<AdditionalCost>.from(additionalCost ?? assets.first.additionalCost),
       purchasedFrom: purchasedFrom,
       customFields: Map.from(customFields ?? assets.first.customFields),
       notes: notes,
@@ -876,7 +876,7 @@ class DatabaseModel extends ChangeNotifier {
     String? location,
     int? purchaseCost,
     DateTime? purchaseDate,
-    Map<String, int>? additionalCost,
+    List<AdditionalCost>? additionalCost,
     String? purchasedFrom,
     Map<String, FieldValue>? customFields,
     String? notes,
@@ -939,36 +939,37 @@ class DatabaseModel extends ChangeNotifier {
       // If key is in both, then it is a changed field
       // Either name or value could be changed
 
-      var newKeys = additionalCost.keys.toSet();
-      var oldKeys = asset.additionalCost.keys.toSet();
-      var addedKeys = newKeys.difference(oldKeys);
-      var removedKeys = oldKeys.difference(newKeys);
-      var commonKeys = newKeys.intersection(oldKeys);
-
-      for (var key in addedKeys) {
+      var newReasons = additionalCost.map((e) => e.reason).toSet();
+      var oldReasons = asset.additionalCost.map((e) => e.reason).toSet();
+      var addedReasons = newReasons.difference(oldReasons);
+      var removedReasons = oldReasons.difference(newReasons);
+      var commonReasons = newReasons.intersection(oldReasons);
+      
+      for (var reason in addedReasons) {
         changes["additional_cost"].add({
-          "fieldName": key,
+          "fieldName": reason,
           "before": null,
-          "after": additionalCost[key],
+          "after": additionalCost.firstWhere((e) => e.reason == reason).amount,
         });
       }
 
-      for (var key in removedKeys) {
+      for (var reason in removedReasons) {
         changes["additional_cost"].add({
-          "fieldName": key,
-          "before": asset.additionalCost[key],
+          "fieldName": reason,
+          "before": asset.additionalCost.firstWhere((e) => e.reason == reason).amount,
           "after": null,
         });
       }
 
-      for (var key in commonKeys) {
-        if (asset.additionalCost[key] == additionalCost[key]) {
+      // Ugly but, i dont see n growing past 10 lmao
+      for (var reason in commonReasons) {
+        if (asset.additionalCost.firstWhere((e) => e.reason == reason).amount == additionalCost.firstWhere((e) => e.reason == reason).amount) {
           continue;
         }
         changes["additional_cost"].add({
-          "fieldName": key,
-          "before": asset.additionalCost[key],
-          "after": additionalCost[key],
+          "fieldName": reason,
+          "before": asset.additionalCost.firstWhere((e) => e.reason == reason).amount,
+          "after": additionalCost.firstWhere((e) => e.reason == reason).amount,
         });
       }
     }
