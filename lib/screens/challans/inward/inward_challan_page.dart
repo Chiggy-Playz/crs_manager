@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
-import '../../../models/asset.dart';
 import '../../../models/buyer.dart';
 import '../../../models/challan.dart';
 import '../../../providers/buyer_select.dart';
@@ -47,6 +46,8 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
   String _vehicleNumber = "None";
   bool _cancelled = false;
 
+  bool get _isEditing => widget.inwardChallan != null;
+
   @override
   void initState() {
     super.initState();
@@ -55,7 +56,7 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
       _session = widget.inwardChallan!.session;
       _createdAt = widget.inwardChallan!.createdAt;
       _buyer = widget.inwardChallan!.buyer;
-      _products = widget.inwardChallan!.products;
+      _products = List<Product>.from(widget.inwardChallan!.products);
       _productsValue = widget.inwardChallan!.productsValue;
       _notes = widget.inwardChallan!.notes;
       _receivedBy = widget.inwardChallan!.receivedBy;
@@ -146,7 +147,7 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
                     leading: const Icon(Icons.calendar_today),
                     title: const Text("Date"),
                     subtitle: Text(formatterDate.format(_createdAt)),
-                    onTap: _cancelled
+                    onTap: (_cancelled || _isEditing)
                         ? null
                         : () async {
                             final date = await showDatePicker(
@@ -442,6 +443,8 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
     Navigator.of(context).push(opaquePage(const LoadingPage()));
     String action = "";
     var id = widget.inwardChallan?.id;
+    var db = Provider.of<DatabaseModel>(context, listen: false);
+
     if (widget.inwardChallan == null) {
       action = "created";
       var res = await Provider.of<DatabaseModel>(context, listen: false)
@@ -472,6 +475,22 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
         vehicleNumber: _vehicleNumber,
         notes: _notes,
       );
+
+      // Firstly, update location of all old assets to buyer's location
+      var oldAssets = widget.inwardChallan!.products
+          .map((p) => p.assets)
+          .expand((element) => element)
+          .toList();
+
+      if (oldAssets.isNotEmpty) {
+        await db.updateAsset(
+          assets: oldAssets,
+          location: widget.inwardChallan!.buyer.name,
+          challanId: id,
+          challanType: ChallanType.inward.index,
+        );
+        await db.deleteHistory(oldAssets, id!, ChallanType.inward.index);
+      }
     }
 
     if (!mounted) return;
@@ -479,50 +498,16 @@ class _InwardChallanPageState extends State<InwardChallanPage> {
     // Update location of assets
     var assets =
         _products.map((p) => p.assets).expand((element) => element).toList();
-    var db = Provider.of<DatabaseModel>(context, listen: false);
 
-    // Update asset locations only if they are not already set
-    var assetsToBeUpdated =
-        assets.where((e) => e.location != "Office").toList();
-    if (assetsToBeUpdated.isNotEmpty) {
+    if (assets.isNotEmpty) {
       await db.updateAsset(
-        assets: assetsToBeUpdated,
+        assets: assets,
         location: "Office",
         challanId: id,
         challanType: ChallanType.inward.index,
       );
     }
 
-    // Now for deleted products, set location to buyer name
-    if (widget.inwardChallan != null) {
-      var deletedAssets = widget.inwardChallan!.products
-          .map((p) => p.assets)
-          .expand((element) => element)
-          .map((e) => e.uuid)
-          .toList();
-      deletedAssets.removeWhere((element) => _products
-          .map((p) => p.assets)
-          .expand((e) => e)
-          .map((e) => e.uuid)
-          .contains(element));
-      if (deletedAssets.isNotEmpty) {
-        for (String uuid in deletedAssets) {
-          if (!db.assets.containsKey(uuid)) {
-            continue;
-          }
-        }
-        await db.updateAsset(
-          assets: deletedAssets
-              .map((uuid) => db.assets[uuid])
-              .where((element) => element != null)
-              .cast<Asset>()
-              .toList(),
-          location: _buyer!.name,
-          challanId: id,
-          challanType: ChallanType.inward.index,
-        );
-      }
-    }
     if (!mounted) return;
 
     Navigator.of(context).pop();

@@ -11,7 +11,8 @@ import '../../models/challan.dart';
 import '../../utils/widgets.dart';
 
 class ProductPage extends StatefulWidget {
-  const ProductPage({super.key, this.product, this.outwards = true, this.comingFrom});
+  const ProductPage(
+      {super.key, this.product, this.outwards = true, this.comingFrom});
 
   final Product? product;
   final bool outwards;
@@ -376,10 +377,9 @@ class _ProductPageState extends State<ProductPage> {
         }
       });
     }
-    if (_quantity == 0) {
-      _quantity = assets!.length;
-      _quantityController.text = _quantity.toString();
-    }
+
+    _quantity = assets!.length;
+    _quantityController.text = _quantity.toString();
   }
 
   void setFieldValue(String productField, String value) {
