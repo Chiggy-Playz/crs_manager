@@ -819,7 +819,9 @@ class DatabaseModel extends ChangeNotifier {
                   "purchase_date": (purchaseDate ?? asset.purchaseDate)
                       .toUtc()
                       .toIso8601String(),
-                  "additional_cost": (additionalCost ?? asset.additionalCost).map((e) => e.toMap()).toList(),
+                  "additional_cost": (additionalCost ?? asset.additionalCost)
+                      .map((e) => e.toMap())
+                      .toList(),
                   "purchased_from": purchasedFrom ?? asset.purchasedFrom,
                   "custom_fields":
                       (customFields ?? asset.customFields).map((key, value) {
@@ -844,7 +846,8 @@ class DatabaseModel extends ChangeNotifier {
       location: location,
       purchaseCost: purchaseCost,
       purchaseDate: purchaseDate,
-      additionalCost: List<AdditionalCost>.from(additionalCost ?? assets.first.additionalCost),
+      additionalCost: List<AdditionalCost>.from(
+          additionalCost ?? assets.first.additionalCost),
       purchasedFrom: purchasedFrom,
       customFields: Map.from(customFields ?? assets.first.customFields),
       notes: notes,
@@ -944,7 +947,7 @@ class DatabaseModel extends ChangeNotifier {
       var addedReasons = newReasons.difference(oldReasons);
       var removedReasons = oldReasons.difference(newReasons);
       var commonReasons = newReasons.intersection(oldReasons);
-      
+
       for (var reason in addedReasons) {
         changes["additional_cost"].add({
           "fieldName": reason,
@@ -956,19 +959,22 @@ class DatabaseModel extends ChangeNotifier {
       for (var reason in removedReasons) {
         changes["additional_cost"].add({
           "fieldName": reason,
-          "before": asset.additionalCost.firstWhere((e) => e.reason == reason).amount,
+          "before":
+              asset.additionalCost.firstWhere((e) => e.reason == reason).amount,
           "after": null,
         });
       }
 
       // Ugly but, i dont see n growing past 10 lmao
       for (var reason in commonReasons) {
-        if (asset.additionalCost.firstWhere((e) => e.reason == reason).amount == additionalCost.firstWhere((e) => e.reason == reason).amount) {
+        if (asset.additionalCost.firstWhere((e) => e.reason == reason).amount ==
+            additionalCost.firstWhere((e) => e.reason == reason).amount) {
           continue;
         }
         changes["additional_cost"].add({
           "fieldName": reason,
-          "before": asset.additionalCost.firstWhere((e) => e.reason == reason).amount,
+          "before":
+              asset.additionalCost.firstWhere((e) => e.reason == reason).amount,
           "after": additionalCost.firstWhere((e) => e.reason == reason).amount,
         });
       }
@@ -1029,9 +1035,16 @@ class DatabaseModel extends ChangeNotifier {
   Future<void> deleteAsset({
     required Asset asset,
   }) async {
-    // TODO check if asset is used in any challan
+    for (var assetHistory in assetHistory) {
+      if (assetHistory.assetUuid == asset.uuid &&
+          assetHistory.challanId != null) {
+        throw AssetInUseError();
+      }
+    }
     await _client.from("assets").delete().eq("id", asset.id);
+    await _client.from("assets_history").delete().eq("asset_uuid", asset.uuid);
     assets.remove(asset.uuid);
+    assetHistory.removeWhere((element) => element.assetUuid == asset.uuid);
     notifyListeners();
   }
 

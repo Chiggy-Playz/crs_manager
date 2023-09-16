@@ -22,7 +22,6 @@ class InnerAssetListPage extends StatefulWidget {
 }
 
 class _InnerAssetListPageState extends State<InnerAssetListPage> {
-  Map<MapKey, List<Asset>> groupedAssets = {};
   late Offset _tapDownPosition;
 
   @override
@@ -35,6 +34,8 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
     return Consumer2<DatabaseModel, AssetSelectionProvider>(
       builder: (context, db, selector, child) {
         List<Asset> assets = [];
+        Map<MapKey, List<Asset>> groupedAssets = {};
+
         assets = db.assets.values
             .where((element) => element.template.id == widget.template.id)
             .toList();

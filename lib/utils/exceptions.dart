@@ -13,3 +13,5 @@ class UnknownDriveError extends Error {}
 class UnfilledFieldsError extends Error {}
 
 class TemplateInUseError extends Error {}
+
+class AssetInUseError extends Error {}

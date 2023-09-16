@@ -109,10 +109,11 @@ class _AssetPageState extends State<AssetPage> {
                   try {
                     await Provider.of<DatabaseModel>(context, listen: false)
                         .deleteAsset(asset: widget.asset!);
-                  } catch (e) {
-                    debugPrint(e.toString());
+                  } on AssetInUseError {
                     Navigator.of(context).pop();
-                    context.showErrorSnackBar(message: e.toString());
+                    context.showErrorSnackBar(
+                        message:
+                            "Asset has already been used in a challan before");
                     return;
                   }
 
