@@ -247,7 +247,24 @@ class _TransactionPageState extends State<TransactionPage> {
       buyerBalance[asset.location] = (buyerBalance[asset.location] ?? 0) + 1;
     }
 
-    for (var buyer in buyerBalance.keys) {
+    rows.add(TableRow(
+      children: [
+        const Center(
+          child: Text(
+            "Office",
+          ),
+        ),
+        Center(
+          child: Text(
+            (buyerBalance.remove("Office") ?? 0).toString(),
+          ),
+        ),
+      ],
+    ));
+
+    for (var buyer in buyerBalance.keys.sorted(
+      (a, b) => a.compareTo(b),
+    )) {
       rows.add(
         TableRow(
           children: [
@@ -265,6 +282,20 @@ class _TransactionPageState extends State<TransactionPage> {
         ),
       );
     }
+
+    // Total row
+    rows.add(TableRow(children: [
+      const Center(
+        child: Text(
+          "Total",
+        ),
+      ),
+      Center(
+        child: Text(
+          widget.assets.length.toString(),
+        ),
+      ),
+    ]));
 
     return rows;
   }
