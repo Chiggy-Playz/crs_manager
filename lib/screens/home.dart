@@ -5,7 +5,7 @@ import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/assets/outer_asset_list.dart';
-import 'package:crs_manager/screens/assets/transaction_page.dart';
+import 'package:crs_manager/screens/assets/detailed_asset_page.dart';
 import 'package:crs_manager/screens/challans/inward/inward_challan_list.dart';
 import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
