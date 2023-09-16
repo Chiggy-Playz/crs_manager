@@ -235,6 +235,8 @@ class _TransactionPageState extends State<TransactionPage> {
     allAssetHistory.sort((a, b) => a.when.compareTo(b.when));
 
     Map<String, dynamic> previousChanges = {};
+    int previousChallanId = -1;
+    int previousChallanType = -1;
     const DeepCollectionEquality deepCollectionEquality =
         DeepCollectionEquality();
     TransactionRow transactionRow = TransactionRow(
@@ -249,8 +251,11 @@ class _TransactionPageState extends State<TransactionPage> {
       transactionRow.when = assetHistory.when;
 
       // Means that the changes are not the same as the previous changes
-      if (!deepCollectionEquality.equals(previousChanges, newChanges)) {
-        if (transactionRow.inflow != 0 || transactionRow.outflow != 0) {
+      if (!deepCollectionEquality.equals(previousChanges, newChanges) ||
+          ((assetHistory.challanId != null) &&
+              ((previousChallanId != assetHistory.challanId) &&
+              (previousChallanType == assetHistory.challanType!.index)))) {
+        if (transactionRow.inflow != 0 || transactionRow.outflow != 0) { 
           transactionRows.add(transactionRow);
         }
         transactionRow = TransactionRow(
@@ -288,6 +293,10 @@ class _TransactionPageState extends State<TransactionPage> {
         }
       }
       previousChanges = newChanges;
+      if (assetHistory.challanId != null) {
+        previousChallanId = assetHistory.challanId!;
+        previousChallanType = assetHistory.challanType!.index;
+      }
     }
     if (transactionRow.inflow != 0 || transactionRow.outflow != 0) {
       transactionRows.add(transactionRow);
