@@ -10,6 +10,9 @@ import '../../models/asset.dart';
 import '../../models/challan.dart';
 import '../../utils/widgets.dart';
 
+// Overwrite is default, linkOnly doesnt overwrite, replace is for replacing current assets
+enum AssetImportType { overwrite, linkOnly, replace }
+
 class ProductPage extends StatefulWidget {
   const ProductPage(
       {super.key, this.product, this.outwards = true, this.comingFrom});
@@ -47,6 +50,10 @@ class _ProductPageState extends State<ProductPage> {
       _quantityUnit = widget.product!.quantityUnit;
       _serial = widget.product!.serial;
       _additionalDescription = widget.product!.additionalDescription;
+
+      if (widget.product!.assets.isNotEmpty) {
+        assets = List<Asset>.from(widget.product!.assets);
+      }
 
       _descriptionController.text = _description;
       _quantityController.text = _quantity != 0 ? _quantity.toString() : "";
@@ -102,9 +109,24 @@ class _ProductPageState extends State<ProductPage> {
         appBar: TransparentAppBar(
           title: Text(widget.product == null ? "New Product" : "Edit Product"),
           actions: [
-            IconButton(
+            PopupMenuButton(
               icon: const Icon(Icons.download),
-              onPressed: importAssetPressed,
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: AssetImportType.overwrite,
+                  child: Text("Overwrite (default)"),
+                ),
+                const PopupMenuItem(
+                  value: AssetImportType.linkOnly,
+                  child: Text("Don't overwrite, only link"),
+                ),
+                // if (assets != null && assets!.isNotEmpty)
+                //   const PopupMenuItem(
+                //     value: AssetImportType.replace,
+                //     child: Text("Replace Assets"),
+                //   ),
+              ],
+              onSelected: importAssetPressed,
             )
           ],
         ),
@@ -230,7 +252,7 @@ class _ProductPageState extends State<ProductPage> {
                   label: const Text("Save", style: TextStyle(fontSize: 32)),
                   icon: const Icon(Icons.save),
                 ),
-              ))
+              )),
             ],
           ),
         ),
@@ -263,6 +285,18 @@ class _ProductPageState extends State<ProductPage> {
       return true;
     }
 
+    if (assets != null && assets!.isNotEmpty) {
+      if (assets!.length != widget.product!.assets.length) {
+        return true;
+      }
+
+      for (var i = 0; i < assets!.length; i++) {
+        if (assets![i].uuid != widget.product!.assets[i].uuid) {
+          return true;
+        }
+      }
+    }
+
     return false;
   }
 
@@ -285,7 +319,7 @@ class _ProductPageState extends State<ProductPage> {
     );
   }
 
-  Future<void> importAssetPressed() async {
+  Future<void> importAssetPressed(AssetImportType type) async {
     assets = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ChooseAsset(
@@ -345,7 +379,9 @@ class _ProductPageState extends State<ProductPage> {
 
           var templateString = TemplateString(rawAssetField);
           var value = templateString.format(asset.toMap()["custom_fields"]);
-          setFieldValue(productField, value);
+          if (type != AssetImportType.linkOnly) {
+            setFieldValue(productField, value);
+          }
         }
       });
     } else {
@@ -369,17 +405,21 @@ class _ProductPageState extends State<ProductPage> {
               .map((e) => templateString.format(e.toMap()["custom_fields"]))
               .toList();
 
-          if (values.toSet().length == 1) {
-            setFieldValue(productField, values.first);
-          } else {
-            setFieldValue(productField, values.join(" "));
+          if (type != AssetImportType.linkOnly) {
+            if (values.toSet().length == 1) {
+              setFieldValue(productField, values.first);
+            } else {
+              setFieldValue(productField, values.join(" "));
+            }
           }
         }
       });
     }
 
-    _quantity = assets!.length;
-    _quantityController.text = _quantity.toString();
+    if (type != AssetImportType.linkOnly) {
+      _quantity = assets!.length;
+      _quantityController.text = _quantity.toString();
+    }
   }
 
   void setFieldValue(String productField, String value) {
