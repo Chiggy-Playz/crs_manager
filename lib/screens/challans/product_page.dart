@@ -8,6 +8,7 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 
 import '../../models/asset.dart';
 import '../../models/challan.dart';
+import '../../utils/classes.dart';
 import '../../utils/widgets.dart';
 
 // Overwrite is default, linkOnly doesnt overwrite, replace is for replacing current assets
@@ -253,11 +254,79 @@ class _ProductPageState extends State<ProductPage> {
                   icon: const Icon(Icons.save),
                 ),
               )),
+              if (assets != null && assets!.isNotEmpty)
+                ...getLinkedAssetsWidget()
             ],
           ),
         ),
       ),
     );
+  }
+
+  List<Widget> getLinkedAssetsWidget() {
+    List<Widget> widgets = [];
+
+    Map<MapKey, List<Asset>> groupedAssets = {};
+    for (var asset in assets!) {
+      var key = MapKey(asset.rawCustomFields);
+      if (groupedAssets[key] == null) {
+        groupedAssets[key] = [];
+      }
+      groupedAssets[key]!.add(asset);
+    }
+
+    widgets.addAll([
+      SizedBox(height: 5.h),
+      Center(
+        child: Text(
+          "Linked Assets",
+          style: Theme.of(context).textTheme.displayMedium,
+        ),
+      ),
+      SizedBox(height: 2.h),
+    ]);
+
+    widgets.add(
+      ListView.builder(
+        shrinkWrap: true,
+        itemCount: groupedAssets.length,
+        itemBuilder: (context, index) {
+          var key = groupedAssets.keys.toList()[index];
+          var assets = groupedAssets[key]!;
+
+          var asset = assets.first;
+          var metadata = asset.template.metadata;
+          String title = asset.uuid;
+          String? subtitle = "";
+          if (metadata.isNotEmpty) {
+            title = TemplateString(metadata.split("\n").first)
+                .format(asset.rawCustomFields);
+
+            if (metadata.contains("\n")) {
+              subtitle = TemplateString(metadata.split("\n").last)
+                  .format(asset.rawCustomFields);
+            }
+          } else {
+            title += " - ${assets.last.uuid}";
+            subtitle = TemplateString(metadata).format(asset.customFields);
+          }
+
+
+          return Card(
+            elevation: 4,
+            //  Only show checkbox list tile if its a single asset
+            //  Since there shouldn't be merging of different types of assets in a single product
+            child: ListTile(
+              title: Text(title),
+              subtitle: subtitle.isEmpty ? null : Text(subtitle),
+              trailing: Text("${assets.length}"),
+            ),
+          );
+        },
+      ),
+    );
+
+    return widgets;
   }
 
   bool changesMade() {
