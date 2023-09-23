@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS "assets_history"(
     "changes" JSON NOT NULL,
     "challan_id" INTEGER,
     "challan_type" INTEGER
-)
+);
 
 ----------------------------------------------------------------------------------------------
 
@@ -176,4 +176,3 @@ CREATE TABLE IF NOT EXISTS "inward_challans" (
     PRIMARY KEY (id)
 );
 
-)
