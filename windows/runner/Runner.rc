@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "crs_manager" "\0"
+            VALUE "FileDescription", "CRS Manager Rough" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "crs_manager" "\0"
+            VALUE "InternalName", "CRS Manager Rough" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "crs_manager.exe" "\0"
-            VALUE "ProductName", "crs_manager" "\0"
+            VALUE "ProductName", "CRS Manager Rough" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
