@@ -24,7 +24,7 @@ Future<String> makePdf(Challan challan, int pages) async {
 
   if (Platform.isWindows) {
     challansDirectory =
-        Directory("${documentsDirectory.path}/CrsManager/Challans");
+        Directory("${documentsDirectory.path}/CrsManagerRough/Challans");
   } else {
     // Android
     // Check perms first

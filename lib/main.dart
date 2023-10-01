@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:crs_manager/providers/drive.dart';
 import 'package:crs_manager/providers/settings.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
@@ -15,8 +17,13 @@ final GlobalKey<NavigatorState> navigatorState = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  var dir = await getApplicationDocumentsDirectory();
-  Hive.init(dir.path);
+  String path = (await getApplicationDocumentsDirectory()).path;
+  
+  if (!Platform.isAndroid) {
+    // Append rough folder path to path
+    path += "/CRSManagerRough";
+  }
+  Hive.init(path);
   await Hive.openBox("settings");
 
   runApp(const MyApp());
