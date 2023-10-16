@@ -1,4 +1,4 @@
-import 'package:crs_manager/screens/challans/challan_pageview.dart';
+import 'package:crs_manager/screens/challans/challan_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/buyer.dart';
@@ -94,9 +94,9 @@ class _TreeViewWidgetState extends State<TreeViewWidget> {
                     },
                   ),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => ChallanPageView(
-                        challans: buyerOrderedChallans,
-                        initialIndex: challanIndexInList),
+                    builder: (context) => ChallanWidget(
+                      challan: challan,
+                    ),
                   )),
                 );
               },

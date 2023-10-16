@@ -6,6 +6,7 @@ import 'package:crs_manager/screens/assets/asset_list.dart';
 import 'package:crs_manager/screens/assets/asset_page.dart';
 import 'package:crs_manager/screens/assets/outer_asset_list.dart';
 import 'package:crs_manager/screens/assets/detailed_asset_page.dart';
+import 'package:crs_manager/screens/challans/challan_widget.dart';
 import 'package:crs_manager/screens/challans/inward/inward_challan_list.dart';
 import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:crs_manager/screens/challans/search/search_page.dart';
@@ -178,7 +179,7 @@ class _HomePageState extends State<HomePage> {
       case 0: // Challan
         if (challanCreateMode == 0) {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => const NewChallanPage(),
+            builder: (context) => const ChallanWidget(),
           ));
         } else {
           Navigator.of(context).push(MaterialPageRoute(

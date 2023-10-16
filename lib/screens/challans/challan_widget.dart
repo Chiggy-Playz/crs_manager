@@ -41,6 +41,7 @@ class ChallanWidgetState extends State<ChallanWidget> {
   final _formKey = GlobalKey<FormState>();
 
   Map<String, dynamic>? nextChallanInfo;
+  bool _isOptionsExpanded = false;
 
   Buyer? _buyer;
   List<Product> _products = [];
@@ -53,6 +54,8 @@ class ChallanWidgetState extends State<ChallanWidget> {
   bool _cancelled = false;
   bool _digitallySigned = false;
   String _photoId = "";
+
+  bool get _isEditing => widget.challan != null;
 
   @override
   void initState() {
@@ -82,34 +85,72 @@ class ChallanWidgetState extends State<ChallanWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DatabaseModel>(
-      builder: (context, value, child) {
-        return widget.challan == null
-            ? FutureBuilder(
-                future: value.getNextChallanInfo(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    nextChallanInfo = snapshot.data as Map<String, dynamic>;
-                    return actualPage();
-                  }
-                  return const Center(child: CircularProgressIndicator());
-                },
-              )
-            : actualPage();
-      },
+    return Scaffold(
+      appBar: TransparentAppBar(
+        title: Text(_isEditing ? "Edit Challan" : "New Challan"),
+        actions: [
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.picture_as_pdf),
+            itemBuilder: (context) => List.generate(
+              3,
+              (index) => PopupMenuItem(
+                value: index + 1,
+                child: Text("${index + 1} Page"),
+              ),
+            )..addAll(
+                [
+                  const PopupMenuItem<int>(
+                    value: 0,
+                    child: Text("Unticked"),
+                  )
+                ],
+              ),
+            onSelected: (value) => viewPdf(value),
+          ),
+          if (_isEditing)
+            InkWell(
+              onLongPress: _cancelled ? () {} : onCancelPressed,
+              onTap: _cancelled
+                  ? null
+                  : () =>
+                      context.showSnackBar(message: "Hold to cancel challan"),
+              child: cup.Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(
+                  Icons.delete,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ),
+        ],
+      ),
+      body: Consumer<DatabaseModel>(
+        builder: (context, value, child) {
+          return widget.challan == null
+              ? FutureBuilder(
+                  future: value.getNextChallanInfo(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      nextChallanInfo = snapshot.data as Map<String, dynamic>;
+                      return actualPage();
+                    }
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                )
+              : actualPage();
+        },
+      ),
+      floatingActionButton: !_cancelled && changesMade()
+          ? FloatingActionButton(
+              onPressed: saveChanges,
+              child: const Icon(Icons.save),
+            )
+          : null,
     );
   }
 
   Future<bool> _onWillPop() async {
-    if (changesMade() &&
-        (widget.challan == null && _buyer != null ||
-            _products.isNotEmpty ||
-            _productsValue != 0 ||
-            _deliveredBy.isNotEmpty ||
-            _vehicleNumber.isNotEmpty ||
-            _notes.isNotEmpty ||
-            _received ||
-            _digitallySigned)) {
+    if (changesMade()) {
       return await showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -208,71 +249,6 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   products: _products,
                   viewOnly: _cancelled,
                   onUpdate: () => setState(() {}),
-                  // outwards: true,
-                  // canUpdate: () {
-                  //   if (_buyer == null) {
-                  //     context.showErrorSnackBar(
-                  //         message: "Please choose a buyer first");
-                  //   }
-                  //   return _buyer != null;
-                  // },
-                  // comingFrom: _buyer?.name ?? "",
-                ),
-                // SizedBox(
-                //   height: 45.h,
-                //   width: double.infinity,
-                //   child: Card(
-                //     elevation: 4,
-                //     child: Padding(
-                //       padding: EdgeInsets.symmetric(vertical: 2.h),
-                //       child: Column(
-                //         children: [
-                //           Text(
-                //             "Products",
-                //             style: bodyTextTheme,
-                //           ),
-                //           Expanded(
-                //             child: ListView.builder(
-                //               itemCount: _products.length,
-                //               itemBuilder: (context, index) {
-                //                 return productCard(index);
-                //               },
-                //             ),
-                //           ),
-                //           SizedBox(height: 2.h),
-                //           FloatingActionButton.extended(
-                //             heroTag: "${widget.challan?.id}-addProduct",
-                //             onPressed: _cancelled ? null : onAddProduct,
-                //             label: const Text("Add Product"),
-                //             icon: const Icon(Icons.add),
-                //           )
-                //         ],
-                //       ),
-                //     ),
-                //   ),
-                // ),
-                SizedBox(height: 2.h),
-                TextFormField(
-                  enabled: !_cancelled,
-                  decoration:
-                      const InputDecoration(labelText: "Products Value"),
-                  initialValue: _productsValue.toString(),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return "Field cannot be empty";
-                    }
-                    if (int.tryParse(value) == null) {
-                      return "Invalid value";
-                    }
-                    return null;
-                  },
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    setState(() {
-                      _productsValue = int.tryParse(value) ?? _productsValue;
-                    });
-                  },
-                  onSaved: (newValue) => _productsValue = int.parse(newValue!),
                 ),
                 SizedBox(height: 2.h),
                 TextFormField(
@@ -308,94 +284,146 @@ class ChallanWidgetState extends State<ChallanWidget> {
                   onSaved: (newValue) => _vehicleNumber = newValue!,
                 ),
                 SizedBox(height: 2.h),
-                TextFormField(
-                  enabled: !_cancelled,
-                  decoration: const InputDecoration(labelText: "Notes"),
-                  initialValue: widget.challan?.notes ?? "",
-                  validator: (value) {
-                    if (value == null) {
-                      return "Field cannot be empty";
-                    }
-                    return null;
-                  },
-                  maxLines: null,
-                  onChanged: (value) => setState(() {
-                    _notes = value;
-                  }),
-                  onSaved: (newValue) => _notes = newValue!,
-                ),
-                SizedBox(height: 2.h),
-                TextFormField(
-                  enabled: !_cancelled,
-                  decoration: const InputDecoration(labelText: "Bill Number"),
-                  initialValue: widget.challan?.billNumber?.toString() ?? "",
-                  validator: (value) {
-                    if (value == null) {
-                      return "Field cannot be empty";
-                    }
-                    if (value.isEmpty) {
-                      return null;
-                    }
 
-                    if (int.tryParse(value) == null) {
-                      return "Invalid value";
-                    }
-                    return null;
-                  },
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) {
+                ExpansionPanelList(
+                  expansionCallback: (panelIndex, isExpanded) {
                     setState(() {
-                      _billNumber = int.tryParse(value) ?? _billNumber;
+                      _isOptionsExpanded = !_isOptionsExpanded;
                     });
                   },
-                  onSaved: (newValue) => _billNumber =
-                      newValue!.isEmpty ? null : int.parse(newValue),
-                ),
-                SizedBox(height: 2.h),
-                SwitchListTile(
-                  value: _received,
-                  onChanged: _cancelled
-                      ? null
-                      : (value) => setState(() {
-                            _received = value;
-                          }),
-                  title: const Text("Received"),
-                  secondary: const Icon(Icons.arrow_downward),
-                ),
-                SizedBox(height: 2.h),
-                SwitchListTile(
-                  value: _digitallySigned,
-                  onChanged: _cancelled
-                      ? null
-                      : (value) => setState(() {
-                            _digitallySigned = value;
-                          }),
-                  title: const Text("Digitally Signed"),
-                  secondary: const Icon(cup.CupertinoIcons.signature),
-                ),
-                if (widget.challan != null) ...[
-                  SizedBox(height: 2.h),
-                  ListTile(
-                    leading: const Icon(Icons.photo),
-                    title: Text(_photoId.isEmpty ? "Add photo" : "View photo"),
-                    onTap: viewPhoto,
-                  ),
-                  SizedBox(height: 2.h),
-                ],
+                  elevation: 0,
+                  children: [
+                    ExpansionPanel(
+                        canTapOnHeader: true,
+                        backgroundColor:
+                            Theme.of(context).scaffoldBackgroundColor,
+                        isExpanded: _isOptionsExpanded,
+                        headerBuilder: (context, isExpanded) => Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 2.h, horizontal: 2.w),
+                              child: Text(
+                                "Other Options",
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                        body: ListView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          children: [
+                            SizedBox(height: 2.h),
+                            TextFormField(
+                              enabled: !_cancelled,
+                              decoration: const InputDecoration(
+                                  labelText: "Products Value"),
+                              initialValue: _productsValue.toString(),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return "Field cannot be empty";
+                                }
+                                if (int.tryParse(value) == null) {
+                                  return "Invalid value";
+                                }
+                                return null;
+                              },
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                setState(() {
+                                  _productsValue =
+                                      int.tryParse(value) ?? _productsValue;
+                                });
+                              },
+                              onSaved: (newValue) =>
+                                  _productsValue = int.parse(newValue!),
+                            ),
+                            SizedBox(height: 2.h),
+                            TextFormField(
+                              enabled: !_cancelled,
+                              decoration:
+                                  const InputDecoration(labelText: "Notes"),
+                              initialValue: widget.challan?.notes ?? "",
+                              validator: (value) {
+                                if (value == null) {
+                                  return "Field cannot be empty";
+                                }
+                                return null;
+                              },
+                              maxLines: null,
+                              onChanged: (value) => setState(() {
+                                _notes = value;
+                              }),
+                              onSaved: (newValue) => _notes = newValue!,
+                            ),
+                            SizedBox(height: 2.h),
+                            TextFormField(
+                              enabled: !_cancelled,
+                              decoration: const InputDecoration(
+                                  labelText: "Bill Number"),
+                              initialValue:
+                                  widget.challan?.billNumber?.toString() ?? "",
+                              validator: (value) {
+                                if (value == null) {
+                                  return "Field cannot be empty";
+                                }
+                                if (value.isEmpty) {
+                                  return null;
+                                }
 
-                SizedBox(
-                  height: 8.h,
-                  width: 46.w,
-                  child: ElevatedButton.icon(
-                    onPressed: _cancelled ? null : () => saveChanges(),
-                    icon: const Icon(Icons.save),
-                    label: Text(
-                      widget.challan == null ? "Create" : "Update",
-                      style: const TextStyle(fontSize: 30),
-                    ),
-                  ),
+                                if (int.tryParse(value) == null) {
+                                  return "Invalid value";
+                                }
+                                return null;
+                              },
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) {
+                                setState(() {
+                                  _billNumber =
+                                      int.tryParse(value) ?? _billNumber;
+                                });
+                              },
+                              onSaved: (newValue) => _billNumber =
+                                  newValue!.isEmpty
+                                      ? null
+                                      : int.parse(newValue),
+                            ),
+                            SizedBox(height: 2.h),
+                            SwitchListTile(
+                              value: _received,
+                              onChanged: _cancelled
+                                  ? null
+                                  : (value) => setState(() {
+                                        _received = value;
+                                      }),
+                              title: const Text("Received"),
+                              secondary: const Icon(Icons.arrow_downward),
+                            ),
+                            SizedBox(height: 2.h),
+                            SwitchListTile(
+                              value: _digitallySigned,
+                              onChanged: _cancelled
+                                  ? null
+                                  : (value) => setState(() {
+                                        _digitallySigned = value;
+                                      }),
+                              title: const Text("Digitally Signed"),
+                              secondary:
+                                  const Icon(cup.CupertinoIcons.signature),
+                            ),
+                            if (widget.challan != null) ...[
+                              SizedBox(height: 2.h),
+                              ListTile(
+                                leading: const Icon(Icons.photo),
+                                title: Text(_photoId.isEmpty
+                                    ? "Add photo"
+                                    : "View photo"),
+                                onTap: viewPhoto,
+                              ),
+                              SizedBox(height: 2.h),
+                            ],
+                          ],
+                        ))
+                  ],
                 ),
-                SizedBox(height: 25.h)
+                SizedBox(height: 2.h),
               ],
             ),
           ),
@@ -405,8 +433,36 @@ class ChallanWidgetState extends State<ChallanWidget> {
   }
 
   bool changesMade() {
+    // If new challan
     if (widget.challan == null) {
-      return true;
+      if (_buyer != null) {
+        return true;
+      }
+      if (_products.isNotEmpty) {
+        return true;
+      }
+      if (_productsValue != 0) {
+        return true;
+      }
+      if (_billNumber != null) {
+        return true;
+      }
+      if (_deliveredBy.isNotEmpty) {
+        return true;
+      }
+      if (_vehicleNumber != "None") {
+        return true;
+      }
+      if (_notes.isNotEmpty) {
+        return true;
+      }
+      if (_received) {
+        return true;
+      }
+      if (_digitallySigned) {
+        return true;
+      }
+      return false;
     }
 
     if (!mapEquals(_buyer!.toMap(), widget.challan!.buyer.toMap())) {
@@ -595,65 +651,12 @@ class ChallanWidgetState extends State<ChallanWidget> {
     Navigator.of(context).pop();
   }
 
-  // Card productCard(int index) {
-  //   String subtitle =
-  //       "${_products[index].additionalDescription}\n${_products[index].quantity} ${_products[index].quantityUnit}"
-  //           .trim();
-  //   return Card(
-  //     elevation: 12,
-  //     child: ListTile(
-  //       title: Text(_products[index].description),
-  //       subtitle: Text(
-  //         subtitle,
-  //       ),
-  //       isThreeLine: subtitle.contains("\n"),
-  //       trailing: IconButton(
-  //         icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
-  //         onPressed: _cancelled
-  //             ? null
-  //             : () {
-  //                 setState(() {
-  //                   _products.removeAt(index);
-  //                 });
-  //               },
-  //       ),
-  //       onTap: _cancelled ? null : () => onEditProduct(index),
-  //     ),
-  //   );
-  // }
-
   void onBuyerSelected(Buyer buyer) {
     setState(() {
       _buyer = buyer;
     });
     Navigator.of(context).pop();
   }
-
-  // void onAddProduct() async {
-  //   // null represents backed out
-  //   Product? result = await Navigator.of(context).push(MaterialPageRoute(
-  //     builder: (context) => const ProductPage(),
-  //   ));
-
-  //   if (result != null) {
-  //     setState(() {
-  //       _products.add(result);
-  //     });
-  //   }
-  // }
-
-  // void onEditProduct(int index) async {
-  //   // null represents backed out
-  //   Product? result = await Navigator.of(context).push(MaterialPageRoute(
-  //     builder: (context) => ProductPage(product: _products[index]),
-  //   ));
-
-  //   if (result != null) {
-  //     setState(() {
-  //       _products[index] = result;
-  //     });
-  //   }
-  // }
 
   void viewPhoto() async {
     var driveHandler = Provider.of<DriveHandler>(context, listen: false);
@@ -677,5 +680,56 @@ class ChallanWidgetState extends State<ChallanWidget> {
     setState(() {
       _photoId = result;
     });
+  }
+
+  void onCancelPressed() async {
+    var result = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Cancel Challan?"),
+        content: const Text("Are you sure you want to cancel this challan?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || result == false) return;
+    if (!mounted) return;
+
+    // Confirm again, just to be REALLY sure
+    var secondResult = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Cancel Challan?"),
+        content:
+            const Text("Are you REALLY sure you want to cancel this challan?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+    if (secondResult == true) {
+      await Provider.of<DatabaseModel>(context, listen: false)
+          .updateChallan(challan: widget.challan!, cancelled: true);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    }
   }
 }

@@ -27,7 +27,6 @@ class _InwardChallanListState extends State<InwardChallanList> {
     return ListView.builder(
       itemCount: widget.inwardChallans.length,
       itemBuilder: (context, index) {
-        var inwardChallan = widget.inwardChallans[index];
         return inwardChallanToCard(index);
       },
     );

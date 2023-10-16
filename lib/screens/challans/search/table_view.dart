@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/screens/challans/challan_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_file_plus/open_file_plus.dart';
@@ -12,7 +13,6 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 import '../../../models/buyer.dart';
 import '../../../models/challan.dart';
 import '../../../utils/constants.dart';
-import '../challan_pageview.dart';
 
 final columns = [
   "Date",
@@ -217,8 +217,9 @@ class _TableViewPageState extends State<TableViewPage> {
                       _resetOrientation();
                       await Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => ChallanPageView(
-                              initialIndex: 0, challans: [challan]),
+                          builder: (context) => ChallanWidget(
+                            challan: challan,
+                          ),
                         ),
                       );
                       _landscapeOrientation();

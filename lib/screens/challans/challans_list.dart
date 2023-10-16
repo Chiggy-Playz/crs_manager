@@ -1,3 +1,4 @@
+import 'package:crs_manager/screens/challans/challan_widget.dart';
 import 'package:crs_manager/screens/challans/new_challan.dart';
 import 'package:crs_manager/utils/extensions.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
@@ -7,7 +8,6 @@ import 'package:provider/provider.dart';
 
 import '../../models/challan.dart';
 import '../../providers/database.dart';
-import 'challan_pageview.dart';
 
 final DateFormat cardFormatter = DateFormat('HH:mm:ss  dd-MM-yyyy');
 
@@ -98,9 +98,8 @@ class _ChallansListState extends State<ChallansList> {
         },
         onTapUp: (_) => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => ChallanPageView(
-              challans: challans,
-              initialIndex: index,
+            builder: (context) => ChallanWidget(
+              challan: challans[index],
             ),
           ),
         ),

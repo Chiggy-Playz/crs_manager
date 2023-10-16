@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:crs_manager/models/challan.dart';
 import 'package:crs_manager/models/inward_challan.dart';
 import 'package:crs_manager/providers/database.dart';
-import 'package:crs_manager/screens/challans/challan_pageview.dart';
+import 'package:crs_manager/screens/challans/challan_widget.dart';
 import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:crs_manager/utils/constants.dart';
 import 'package:crs_manager/utils/template_string.dart';
@@ -320,9 +320,8 @@ class _TransactionPageState extends State<TransactionPage> {
     if (challan is Challan) {
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => ChallanPageView(
-            challans: [challan],
-            initialIndex: 0,
+          builder: (context) => ChallanWidget(
+            challan: challan,
           ),
         ),
       );
