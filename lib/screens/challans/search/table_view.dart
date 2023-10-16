@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:crs_manager/providers/database.dart';
-import 'package:crs_manager/screens/challans/challan_widget.dart';
+import 'package:crs_manager/screens/challans/challan_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_file_plus/open_file_plus.dart';
@@ -217,7 +217,7 @@ class _TableViewPageState extends State<TableViewPage> {
                       _resetOrientation();
                       await Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => ChallanWidget(
+                          builder: (context) => ChallanPage(
                             challan: challan,
                           ),
                         ),

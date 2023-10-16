@@ -1,4 +1,4 @@
-import 'package:crs_manager/screens/challans/challan_widget.dart';
+import 'package:crs_manager/screens/challans/challan_page.dart';
 import 'package:crs_manager/screens/challans/new_challan.dart';
 import 'package:crs_manager/utils/extensions.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
@@ -98,7 +98,7 @@ class _ChallansListState extends State<ChallansList> {
         },
         onTapUp: (_) => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => ChallanWidget(
+            builder: (context) => ChallanPage(
               challan: challans[index],
             ),
           ),

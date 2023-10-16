@@ -1,5 +1,5 @@
 import '../../models/challan.dart';
-import 'challan_widget.dart';
+import 'challan_page.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/widgets.dart';
@@ -14,7 +14,7 @@ class NewChallanPage extends StatefulWidget {
 }
 
 class _NewChallanPageState extends State<NewChallanPage> {
-  final _key = GlobalKey<ChallanWidgetState>();
+  final _key = GlobalKey<ChallanPageState>();
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +42,7 @@ class _NewChallanPageState extends State<NewChallanPage> {
             ),
           ],
         ),
-        body: ChallanWidget(
+        body: ChallanPage(
           key: _key,
           copyFromChallan: widget.copyFromChallan,
         ));

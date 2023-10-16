@@ -27,17 +27,17 @@ import 'get_pdf.dart';
 
 final formatter = DateFormat("dd-MMMM-y");
 
-class ChallanWidget extends StatefulWidget {
-  const ChallanWidget({super.key, this.challan, this.copyFromChallan});
+class ChallanPage extends StatefulWidget {
+  const ChallanPage({super.key, this.challan, this.copyFromChallan});
 
   final Challan? challan;
   final Challan? copyFromChallan;
 
   @override
-  State<ChallanWidget> createState() => ChallanWidgetState();
+  State<ChallanPage> createState() => ChallanPageState();
 }
 
-class ChallanWidgetState extends State<ChallanWidget> {
+class ChallanPageState extends State<ChallanPage> {
   final _formKey = GlobalKey<FormState>();
 
   Map<String, dynamic>? nextChallanInfo;
