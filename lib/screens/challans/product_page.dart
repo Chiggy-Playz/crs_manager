@@ -478,7 +478,7 @@ class _ProductPageState extends State<ProductPage> {
             if (values.toSet().length == 1) {
               setFieldValue(productField, values.first);
             } else {
-              setFieldValue(productField, values.join(" "));
+              setFieldValue(productField, values.join(" / "));
             }
           }
         }
