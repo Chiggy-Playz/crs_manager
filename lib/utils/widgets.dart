@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TransparentAppBar extends AppBar {
   TransparentAppBar({Key? key, required Widget title, List<Widget>? actions, PreferredSizeWidget? bottom})
@@ -52,4 +53,14 @@ class TappableAppBar extends StatelessWidget implements PreferredSizeWidget {
   // TODO: implement preferredSize
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
+  }
 }

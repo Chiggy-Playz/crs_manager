@@ -289,6 +289,9 @@ class _AssetPageState extends State<AssetPage> {
         return OpticalTextFormField(
             labelText: field.name,
             initialValue: value ?? "",
+            inputFormatters: [
+              UpperCaseTextFormatter(),
+            ],
             validator: field.required
                 ? (value) {
                     if (value == null || value.isEmpty) {

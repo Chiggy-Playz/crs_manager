@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:crs_manager/screens/assets/text_recognizer_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -15,7 +16,8 @@ class OpticalTextFormField extends StatefulWidget {
       this.keyboardType,
       this.validator,
       this.onSaved,
-      this.onChanged
+      this.onChanged,
+      this.inputFormatters
       });
 
   final String labelText;
@@ -24,6 +26,7 @@ class OpticalTextFormField extends StatefulWidget {
   final String? Function(String?)? validator;
   final Future<void> Function(String?)? onSaved;
   final Future<void> Function(String?)? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<OpticalTextFormField> createState() => _OpticalTextFormFieldState();
@@ -51,6 +54,7 @@ class _OpticalTextFormFieldState extends State<OpticalTextFormField> {
       decoration: InputDecoration(
         labelText: widget.labelText,
       ),
+      inputFormatters: widget.inputFormatters,
       validator: widget.validator,
       onSaved: widget.onSaved,
       onChanged: widget.onChanged,
