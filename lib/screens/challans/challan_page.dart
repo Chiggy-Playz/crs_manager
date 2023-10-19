@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:crs_manager/providers/buyer_select.dart';
 import 'package:crs_manager/screens/challans/photo_page.dart';
 import 'package:crs_manager/screens/challans/product_widget.dart';
+import 'package:crs_manager/utils/constants.dart';
 import 'package:flutter/cupertino.dart' as cup;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -55,6 +56,8 @@ class ChallanPageState extends State<ChallanPage> {
   bool _digitallySigned = false;
   String _photoId = "";
 
+  DateTime _createdAt = DateTime.now();
+
   bool get _isEditing => widget.challan != null;
 
   @override
@@ -75,9 +78,11 @@ class ChallanPageState extends State<ChallanPage> {
       _digitallySigned = challan.digitallySigned;
 
       if (widget.challan != null) {
+        // Only if editing challan, not if copying
         _billNumber = widget.challan!.billNumber;
         _cancelled = widget.challan!.cancelled;
         _photoId = widget.challan!.photoId;
+        _createdAt = widget.challan!.createdAt;
       }
     }
     super.initState();
@@ -202,16 +207,37 @@ class ChallanPageState extends State<ChallanPage> {
                       style: bodyTextTheme),
                 ),
                 SizedBox(height: 2.h),
-                SpacedRow(
-                  widget1: Text(
-                    "Date",
-                    style: bodyTextTheme,
-                  ),
-                  widget2: Text(
-                    formatter.format(widget.challan == null
-                        ? DateTime.now()
-                        : widget.challan!.createdAt),
-                    style: bodyTextTheme,
+                Card(
+                  elevation: 12,
+                  child: ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: const Text("Date"),
+                    subtitle: Text(formatterDate.format(_createdAt)),
+                    onTap: (_cancelled)
+                        ? null
+                        : () async {
+                            var now = DateTime.now();
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _createdAt,
+                              firstDate: DateTime(2020, 1, 1),
+                              lastDate: now.add(
+                                const Duration(days: 31),
+                              ),
+                            );
+
+                            if (date == null || !mounted) return;
+                            setState(() {
+                              _createdAt = date.copyWith(
+                                hour: now.hour,
+                                minute: now.minute,
+                                second: now.second,
+                                millisecond: now.millisecond,
+                                microsecond: now.microsecond,
+                              );
+                            });
+                          },
+                    minLeadingWidth: 0,
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -462,45 +488,71 @@ class ChallanPageState extends State<ChallanPage> {
       if (_digitallySigned) {
         return true;
       }
+
+      if (DateTime(_createdAt.year, _createdAt.month, _createdAt.day) !=
+          DateTime.now().copyWith(
+            hour: 0,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+            microsecond: 0,
+          )) {
+        return true;
+      }
+
       return false;
     }
 
-    if (!mapEquals(_buyer!.toMap(), widget.challan!.buyer.toMap())) {
+    var compareWith = widget.copyFromChallan ?? widget.challan!;
+
+    if (!mapEquals(_buyer!.toMap(), compareWith.buyer.toMap())) {
       return true;
     }
     if (!const DeepCollectionEquality().equals(
       _products.map((e) => e.toMap()),
-      widget.challan!.products.map((e) => e.toMap()),
+      compareWith.products.map((e) => e.toMap()),
     )) {
       return true;
     }
 
-    if (_productsValue != widget.challan!.productsValue) {
+    if (_productsValue != compareWith.productsValue) {
       return true;
     }
 
-    if (_billNumber != widget.challan!.billNumber) {
+    if (_billNumber != compareWith.billNumber) {
       return true;
     }
 
-    if (_deliveredBy != widget.challan!.deliveredBy) {
+    if (_deliveredBy != compareWith.deliveredBy) {
       return true;
     }
-    if (_vehicleNumber != widget.challan!.vehicleNumber) {
+    if (_vehicleNumber != compareWith.vehicleNumber) {
       return true;
     }
-    if (_notes != widget.challan!.notes) {
+    if (_notes != compareWith.notes) {
       return true;
     }
-    if (_received != widget.challan!.received) {
+    if (_received != compareWith.received) {
       return true;
     }
-    if (_digitallySigned != widget.challan!.digitallySigned) {
+    if (_digitallySigned != compareWith.digitallySigned) {
       return true;
     }
-    if (_cancelled != widget.challan!.cancelled) {
+    if (_cancelled != compareWith.cancelled) {
       return true;
     }
+
+    if (DateTime(_createdAt.year, _createdAt.month, _createdAt.day) !=
+        compareWith.createdAt.copyWith(
+          hour: 0,
+          minute: 0,
+          second: 0,
+          millisecond: 0,
+          microsecond: 0,
+        )) {
+      return true;
+    }
+
     return false;
   }
 
@@ -587,16 +639,18 @@ class ChallanPageState extends State<ChallanPage> {
       action = "created";
       var res = await Provider.of<DatabaseModel>(context, listen: false)
           .createChallan(
-              number: nextChallanInfo!["number"],
-              session: nextChallanInfo!["session"],
-              buyer: _buyer!,
-              products: _products,
-              productsValue: _productsValue,
-              deliveredBy: _deliveredBy,
-              vehicleNumber: _vehicleNumber,
-              notes: _notes,
-              received: _received,
-              digitallySigned: _digitallySigned);
+        number: nextChallanInfo!["number"],
+        session: nextChallanInfo!["session"],
+        buyer: _buyer!,
+        products: _products,
+        productsValue: _productsValue,
+        deliveredBy: _deliveredBy,
+        vehicleNumber: _vehicleNumber,
+        notes: _notes,
+        received: _received,
+        digitallySigned: _digitallySigned,
+        createdAt: _createdAt,
+      );
       id = res.id;
     } else {
       action = "updated";
@@ -612,6 +666,7 @@ class ChallanPageState extends State<ChallanPage> {
         received: _received,
         digitallySigned: _digitallySigned,
         photoId: _photoId,
+        createdAt: _createdAt,
       );
 
       // Firstly, update location of all old assets to office

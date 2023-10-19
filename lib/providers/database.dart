@@ -473,10 +473,13 @@ class DatabaseModel extends ChangeNotifier {
       required String vehicleNumber,
       required String notes,
       required bool received,
-      required bool digitallySigned}) async {
+      required bool digitallySigned,
+      required DateTime createdAt
+      }) async {
     final response = await _client.from("challans").insert({
       "session": session,
       "number": number,
+      "created_at": createdAt.toIso8601String(),
       "buyer": buyer.toMap(),
       "products": products.map((e) => e.toMap()).toList(),
       "products_value": productsValue,
@@ -520,6 +523,7 @@ class DatabaseModel extends ChangeNotifier {
     bool? digitallySigned,
     bool? cancelled,
     String? photoId,
+    DateTime? createdAt,
   }) async {
     if (buyer == null &&
         products == null &&
@@ -531,7 +535,8 @@ class DatabaseModel extends ChangeNotifier {
         digitallySigned == null &&
         cancelled == null &&
         billNumber == null &&
-        photoId == null) {
+        photoId == null &&
+        createdAt == null) {
       return;
     }
 
@@ -554,6 +559,7 @@ class DatabaseModel extends ChangeNotifier {
           "digitally_signed": digitallySigned ?? challan.digitallySigned,
           "cancelled": cancelled ?? challan.cancelled,
           "photo_id": photoId ?? challan.photoId,
+          "created_at": createdAt?.toIso8601String() ?? challan.createdAt.toIso8601String(),
         })
         .eq("session", challan.session)
         .eq("number", challan.number)
@@ -565,7 +571,7 @@ class DatabaseModel extends ChangeNotifier {
           id: e.id,
           session: e.session,
           number: e.number,
-          createdAt: e.createdAt,
+          createdAt: createdAt ?? e.createdAt,
           buyer: buyer ?? e.buyer,
           products: products ?? e.products,
           productsValue: productsValue ?? e.productsValue,
