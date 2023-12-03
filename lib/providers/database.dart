@@ -31,6 +31,7 @@ class DatabaseModel extends ChangeNotifier {
       await Supabase.initialize(
         url: host,
         anonKey: key,
+        localStorage: const EmptyLocalStorage(),
       );
 
       // Check if the connection is valid by fetching a single row from the challans table
