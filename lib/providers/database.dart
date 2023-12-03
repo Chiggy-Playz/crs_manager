@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:collection/collection.dart';
 
@@ -279,9 +280,14 @@ class DatabaseModel extends ChangeNotifier {
           break;
         case ConditionType.date:
           // Condition value will be DateTimeRange
+          var val = DateTimeRange(
+              start: condition.value.start,
+              end: (condition.value.end as DateTime)
+                  .copyWith(hour: 23, minute: 59, second: 59));
+
           filteredChallans = filteredChallans.where((challan) {
-            return condition.value.start.isBefore(challan.createdAt) &&
-                condition.value.end.isAfter(challan.createdAt);
+            return val.start.isBefore(challan.createdAt) &&
+                val.end.isAfter(challan.createdAt);
           }).toList();
           break;
         case ConditionType.product:
