@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
       length: 2,
       child: Scaffold(
         appBar: TransparentAppBar(
-          title: const Text("CRS Manager"),
+          title: const Text("CRS Manager Rough"),
           actions: getActions(),
           bottom: _activePage == 0
               ? TabBar(

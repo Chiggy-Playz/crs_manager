@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'providers/database.dart';
 import 'screens/startup.dart';
@@ -18,10 +19,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   String path = (await getApplicationDocumentsDirectory()).path;
-  
+
+  // On windows
   if (!Platform.isAndroid) {
     // Append rough folder path to path
     path += "/CRSManagerRough";
+    await windowManager.ensureInitialized();
+
+    windowManager.setTitle("CRS Manager Rough");
   }
   Hive.init(path);
   await Hive.openBox("settings");
