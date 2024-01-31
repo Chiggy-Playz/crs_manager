@@ -32,11 +32,19 @@ Future<String> makePdf(Challan challan, int pages) async {
     if (status.isDenied) {
       await Permission.storage.request();
     }
-    status = await Permission.storage.status;
-    // If still denied, return failure
-    if (status.isDenied) {
-      return throw PermissionDenied();
-    }
+    // Android
+    // // Check perms first 
+    // No need to check perms, as we are using getApplicationDocumentsDirectory
+    
+    // var status = await Permission.storage.status;
+    // if (status.isDenied) {
+    //   await Permission.storage.request();
+    // }
+    // status = await Permission.storage.status;
+    // // If still denied, return failure
+    // if (status.isDenied) {
+    //   return throw PermissionDenied();
+    // }
 
     challansDirectory = await getApplicationDocumentsDirectory();
   }
