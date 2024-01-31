@@ -76,6 +76,7 @@ class _StartupPageState extends State<StartupPage> {
   }
 
   Future<void> _checkForUpdates() async {
+    return;
     // Get current version
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
