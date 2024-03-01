@@ -477,6 +477,11 @@ class DatabaseModel extends ChangeNotifier {
       required bool digitallySigned,
       required DateTime createdAt
       }) async {
+
+    if (!createdAt.isUtc) {
+      createdAt = createdAt.toUtc();
+    }
+
     final response = await _client.from("challans").insert({
       "session": session,
       "number": number,
@@ -494,6 +499,11 @@ class DatabaseModel extends ChangeNotifier {
     if (response == null) {
       throw DatabaseError();
     }
+
+    if (createdAt.isUtc) {
+      createdAt = createdAt.toLocal();
+    }
+
 
     var rawChallan = response[0];
     for (var i = 0; i < (rawChallan["products"] as List).length; i++) {
@@ -541,6 +551,10 @@ class DatabaseModel extends ChangeNotifier {
       return;
     }
 
+    if (createdAt != null && !createdAt.isUtc) {
+      createdAt = createdAt.toUtc();
+    }
+
     await _client
         .from("challans")
         .update({
@@ -565,6 +579,10 @@ class DatabaseModel extends ChangeNotifier {
         .eq("session", challan.session)
         .eq("number", challan.number)
         .eq("id", challan.id);
+
+    if (createdAt != null && createdAt.isUtc) {
+      createdAt = createdAt.toLocal();
+    }
 
     challans = challans.map((e) {
       if (e.id == challan.id) {
