@@ -475,9 +475,7 @@ class DatabaseModel extends ChangeNotifier {
       required String notes,
       required bool received,
       required bool digitallySigned,
-      required DateTime createdAt
-      }) async {
-
+      required DateTime createdAt}) async {
     if (!createdAt.isUtc) {
       createdAt = createdAt.toUtc();
     }
@@ -503,7 +501,6 @@ class DatabaseModel extends ChangeNotifier {
     if (createdAt.isUtc) {
       createdAt = createdAt.toLocal();
     }
-
 
     var rawChallan = response[0];
     for (var i = 0; i < (rawChallan["products"] as List).length; i++) {
@@ -574,7 +571,8 @@ class DatabaseModel extends ChangeNotifier {
           "digitally_signed": digitallySigned ?? challan.digitallySigned,
           "cancelled": cancelled ?? challan.cancelled,
           "photo_id": photoId ?? challan.photoId,
-          "created_at": createdAt?.toIso8601String() ?? challan.createdAt.toIso8601String(),
+          "created_at": createdAt?.toIso8601String() ??
+              challan.createdAt.toIso8601String(),
         })
         .eq("session", challan.session)
         .eq("number", challan.number)
@@ -794,8 +792,7 @@ class DatabaseModel extends ChangeNotifier {
           "additional_cost": additionalCost.map((e) => e.toMap()).toList(),
           "purchased_from": purchasedFrom,
           "template": template.id,
-          "custom_fields":
-              customFields.map((key, value) => MapEntry(key, value.getValue())),
+          "custom_fields": customFields.map((key, value) => MapEntry(key, value.getValue())),
           "notes": notes,
           "recovered_cost": recoveredCost,
         }))

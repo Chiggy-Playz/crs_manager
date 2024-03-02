@@ -21,7 +21,7 @@ class FieldValue {
   Field field;
   dynamic value;
 
-  String getValue() {
+  dynamic getValue() {
     return value is DateTime
         ? (value as DateTime).toUtc().toIso8601String()
         : value;
@@ -90,7 +90,7 @@ class Asset {
       Map<String, FieldValue>.from(customFields).map(
         (k, v) => MapEntry<String, String>(
           k,
-          v.getValue(),
+          v.getValue().toString(),
         ),
       );
 
@@ -108,7 +108,9 @@ class Asset {
       location: json["location"],
       purchaseCost: json["purchase_cost"],
       purchaseDate: DateTime.parse(json["purchase_date"]).toLocal(),
-      additionalCost: List.from(json["additional_cost"]).map((e) => AdditionalCost.fromMap(e)).toList(),
+      additionalCost: List.from(json["additional_cost"])
+          .map((e) => AdditionalCost.fromMap(e))
+          .toList(),
       purchasedFrom: json["purchased_from"],
       template: template,
       customFields: Map.from(json["custom_fields"]).map(
