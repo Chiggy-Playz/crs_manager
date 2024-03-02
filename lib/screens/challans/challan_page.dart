@@ -213,30 +213,31 @@ class ChallanPageState extends State<ChallanPage> {
                     leading: const Icon(Icons.calendar_today),
                     title: const Text("Date"),
                     subtitle: Text(formatterDate.format(_createdAt)),
-                    onTap: (_cancelled)
-                        ? null
-                        : () async {
-                            var now = DateTime.now();
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _createdAt,
-                              firstDate: DateTime(2020, 1, 1),
-                              lastDate: now.add(
-                                const Duration(days: 31),
-                              ),
-                            );
+                    onTap: null,
+                    // (_cancelled)
+                    //     ? null
+                    //     : () async {
+                    //         var now = DateTime.now();
+                    //         final date = await showDatePicker(
+                    //           context: context,
+                    //           initialDate: _createdAt,
+                    //           firstDate: DateTime(2020, 1, 1),
+                    //           lastDate: now.add(
+                    //             const Duration(days: 31),
+                    //           ),
+                    //         );
 
-                            if (date == null || !mounted) return;
-                            setState(() {
-                              _createdAt = date.copyWith(
-                                hour: now.hour,
-                                minute: now.minute,
-                                second: now.second,
-                                millisecond: now.millisecond,
-                                microsecond: now.microsecond,
-                              );
-                            });
-                          },
+                    //         if (date == null || !mounted) return;
+                    //         setState(() {
+                    //           _createdAt = date.copyWith(
+                    //             hour: now.hour,
+                    //             minute: now.minute,
+                    //             second: now.second,
+                    //             millisecond: now.millisecond,
+                    //             microsecond: now.microsecond,
+                    //           );
+                    //         });
+                    //       },
                     minLeadingWidth: 0,
                   ),
                 ),
