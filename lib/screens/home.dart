@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   final _pageViewController = PageController();
 
   int _activePage = 0;
-  Timer? _timer;
+  // Timer? _timer;
   // 0 - Outwards
   // 1 - Inwards
   int challanCreateMode = 0;
@@ -61,16 +61,13 @@ class _HomePageState extends State<HomePage> {
       BottomNavigationBarItem(
         label: "Assets",
         icon: GestureDetector(
-          onPanDown: (_) {
-            _timer = Timer(
-                const Duration(seconds: 3),
-                () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const TemplatesList(),
-                      ),
-                    ));
+          onLongPress: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const TemplatesList(),
+              ),
+            );
           },
-          onPanCancel: () => _timer?.cancel(),
           child: const Icon(
             Icons.cases_outlined,
           ),

@@ -46,18 +46,21 @@ class _TemplatePageState extends State<TemplatePage> {
         name: "Description",
         type: FieldType.text,
         required: true,
+        templates: {},
       ));
       fields.add(
         Field(
           name: "Model",
           type: FieldType.text,
           required: true,
+          templates: {},
         ),
       );
       fields.add(Field(
         name: "Serial",
         type: FieldType.text,
         required: false,
+        templates: {},
       ));
     }
   }
@@ -511,9 +514,9 @@ class _TemplatePageState extends State<TemplatePage> {
   List<Widget> getMetadataWidget() {
     List<Widget> widgets = [];
 
-    if (widget.template == null) {
-      return widgets;
-    }
+    // if (widget.template == null) {
+    //   return widgets;
+    // }
 
     widgets.add(
       Text(
@@ -586,6 +589,8 @@ class _FieldWidgetState extends State<FieldWidget> {
   FieldType type = FieldType.text;
   // Default required is true for new fields
   bool required = true;
+  Map<String, String> templates = {};
+
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -595,12 +600,54 @@ class _FieldWidgetState extends State<FieldWidget> {
       name = widget.field!.name;
       type = widget.field!.type;
       required = widget.field!.required;
+      templates = widget.field!.templates;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     bool newField = widget.field == null;
+    List<Widget> templateWidgets = [];
+
+    if (type == FieldType.checkbox) {
+      templateWidgets.add(
+        TextFormField(
+          decoration: const InputDecoration(
+            hintText: "Checked",
+            labelText: "Checked",
+          ),
+          initialValue: templates["true"],
+          onSaved: (value) => templates["true"] = value!,
+        ),
+      );
+      templateWidgets.add(SizedBox(
+        height: 1.h,
+      ));
+      templateWidgets.add(
+        TextFormField(
+          decoration: const InputDecoration(
+            hintText: "Unchecked",
+            labelText: "Unchecked",
+          ),
+          initialValue: templates["false"],
+          onSaved: (value) => templates["false"] = value!,
+        ),
+      );
+    }
+
+    if (type == FieldType.text) {
+      templateWidgets.add(
+        TextFormField(
+          decoration: const InputDecoration(
+            hintText: "If empty",
+            labelText: "If empty",
+          ),
+          initialValue: templates["empty"],
+          onSaved: (value) => templates["empty"] = value!,
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -688,6 +735,19 @@ class _FieldWidgetState extends State<FieldWidget> {
                 },
                 title: const Text("Required?"),
               ),
+              SizedBox(
+                height: 2.h,
+              ),
+              if (templateWidgets.isNotEmpty) ...[
+                Text(
+                  "Templates",
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
+                SizedBox(
+                  height: 1.h,
+                ),
+                ...templateWidgets,
+              ]
             ],
           ),
         ),
@@ -708,6 +768,7 @@ class _FieldWidgetState extends State<FieldWidget> {
         name: name,
         type: type,
         required: required,
+        templates: templates,
       ),
     );
   }

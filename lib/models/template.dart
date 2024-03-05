@@ -9,11 +9,13 @@ class Field {
     required this.name,
     required this.type,
     required this.required,
+    required this.templates,
   });
 
   String name;
   FieldType type;
   bool required;
+  Map<String, String> templates;
 
   factory Field.fromJson(String str) => Field.fromMap(json.decode(str));
 
@@ -24,12 +26,14 @@ class Field {
         type: FieldType.values
             .firstWhere((element) => element.name == json["type"]),
         required: json["required"],
+        templates: Map<String, String>.from(json["templates"]),
       );
 
   Map<String, dynamic> toMap() => {
         "name": name,
         "type": type.name,
         "required": required,
+        "templates": templates,
       };
 }
 
@@ -74,4 +78,5 @@ class Template extends Equatable {
         "product_link": productLink,
         "metadata": metadata,
       };
+  
 }

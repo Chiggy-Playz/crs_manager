@@ -107,7 +107,7 @@ class _TransactionPageState extends State<TransactionPage> {
                   children: [
                     SizedBox(
                         // height: 40 * 100.h,
-                        width: 1.2 * 100.w,
+                        width: 100.w,
                         child: Table(
                           columnWidths: const {
                             2: FlexColumnWidth(1.0), // Name
@@ -127,7 +127,7 @@ class _TransactionPageState extends State<TransactionPage> {
                     ),
                     SizedBox(
                         // height: 40 * 100.h,
-                        width: 1.2 * 100.w,
+                        width: 100.w,
                         child: Table(
                           columnWidths: const {
                             0: FlexColumnWidth(0.3), // Date

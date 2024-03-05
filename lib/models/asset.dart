@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crs_manager/models/template.dart';
+import 'package:crs_manager/utils/template_string.dart';
 
 import 'challan.dart';
 
@@ -148,6 +149,51 @@ class Asset {
         "notes": notes,
         "recovered_cost": recoveredCost,
       };
+
+  Map<String, String> convertTemplateStrings() {
+    Map<String, String> things = {};
+    Map<String, String> fieldsToProcess = Map.from(template.productLink);
+    fieldsToProcess["metadata"] = template.metadata;
+
+    fieldsToProcess.forEach((name, value) {
+      // If product link is empty, skip. No need to process it.
+      if (value.isEmpty) {
+        things[name] = '';
+        return;
+      }
+
+      // For each field in the template, check if the product link contains the field name.
+      // If it does, replace it with the default value of the field.
+      for (var field in template.fields) {
+        if (!value.contains("{${field.name}}")) {
+          continue;
+        }
+
+        String toReplace = "{${field.name}}";
+        String toReplaceWith = "{${field.name}}";
+
+        // If boolean, we check what the value of the field is and replace it with the appropriate value.
+        if (field.type == FieldType.checkbox) {
+          String key = customFields[field.name]!.value.toString();
+          if (field.templates.containsKey(key)) {
+            toReplaceWith = field.templates[key]!;
+          }
+        }
+
+        if (field.type == FieldType.text) {
+          if (field.templates.containsKey("empty") &&
+              customFields[field.name]!.value.isEmpty) {
+            toReplaceWith = field.templates["empty"]!;
+          }
+        }
+
+        value = value.replaceAll(toReplace, toReplaceWith);
+      }
+      things[name] = value;
+    });
+    return things.map<String, String>((key, value) =>
+        MapEntry(key, TemplateString(value).format(rawCustomFields)));
+  }
 }
 
 class AssetHistory {

@@ -60,7 +60,7 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
                 var assets = groupedAssets[key]!;
 
                 var asset = assets.first;
-                var metadata = asset.template.metadata;
+                // var metadata = asset.template.metadata;
                 String title = asset.uuid;
                 String? subtitle = "";
 
@@ -71,13 +71,13 @@ class _InnerAssetListPageState extends State<InnerAssetListPage> {
                 bool assetsInStock =
                     assets.any((element) => element.location == "Office");
 
+                var metadata = asset.convertTemplateStrings()["metadata"]!;
+
                 if (metadata.isNotEmpty) {
-                  title = TemplateString(metadata.split("\n").first)
-                      .format(asset.rawCustomFields);
+                  title = metadata.split("\n").first;
 
                   if (metadata.contains("\n")) {
-                    subtitle = TemplateString(metadata.split("\n").last)
-                        .format(asset.rawCustomFields);
+                    subtitle = metadata.split("\n").last;
                   }
                 } else {
                   title += " - ${assets.last.uuid}";

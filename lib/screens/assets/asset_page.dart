@@ -154,10 +154,28 @@ class _AssetPageState extends State<AssetPage> {
                             if (template == null) return;
                             customFields = Map.fromEntries(
                               template!.fields.map(
-                                (e) => MapEntry(
-                                  e.name,
-                                  FieldValue(field: e, value: null),
-                                ),
+                                (e) {
+                                  dynamic value;
+                                  switch (e.type) {
+                                    case FieldType.text:
+                                      value = "";
+                                      break;
+                                    case FieldType.number:
+                                      value = 0;
+                                      break;
+                                    case FieldType.datetime:
+                                      value = DateTime.now();
+                                      break;
+                                    case FieldType.checkbox:
+                                      value = false;
+                                      break;
+                                  }
+
+                                  return MapEntry(
+                                    e.name,
+                                    FieldValue(field: e, value: value),
+                                  );
+                                },
                               ),
                             );
                           });

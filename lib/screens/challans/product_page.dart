@@ -311,7 +311,6 @@ class _ProductPageState extends State<ProductPage> {
             subtitle = TemplateString(metadata).format(asset.customFields);
           }
 
-
           return Card(
             elevation: 4,
             //  Only show checkbox list tile if its a single asset
@@ -433,7 +432,7 @@ class _ProductPageState extends State<ProductPage> {
     if (assets!.length == 1) {
       var asset = assets!.first;
       setState(() {
-        var productLink = asset.template.productLink;
+        var convertedValues = asset.convertTemplateStrings();
         for (var productField in [
           "Description",
           "Quantity",
@@ -441,22 +440,22 @@ class _ProductPageState extends State<ProductPage> {
           "Serial",
           "Additional Description",
         ]) {
-          var rawAssetField = productLink[productField];
-          if (rawAssetField == null || rawAssetField.isEmpty) {
+          var convertedValue = convertedValues[productField];
+          if (convertedValue == null || convertedValue.isEmpty) {
             continue;
           }
 
-          var templateString = TemplateString(rawAssetField);
-          var value = templateString.format(asset.toMap()["custom_fields"]);
+          // var templateString = TemplateString(rawAssetField);
+          // var value = templateString.format(asset.toMap()["custom_fields"]);
           if (type != AssetImportType.linkOnly) {
-            setFieldValue(productField, value);
+            setFieldValue(productField, convertedValue);
           }
         }
       });
     } else {
       setState(() {
         // Loop over all assets, if field is same, set it, otherwise join it by space
-        var productLink = assets!.first.template.productLink;
+        // TODO Above logic but for multiple
         for (var productField in [
           "Description",
           "Quantity",
@@ -464,15 +463,15 @@ class _ProductPageState extends State<ProductPage> {
           "Serial",
           "Additional Description",
         ]) {
-          var rawAssetField = productLink[productField];
-          if (rawAssetField == null || rawAssetField.isEmpty) {
-            continue;
-          }
 
-          var templateString = TemplateString(rawAssetField);
           var values = assets!
-              .map((e) => templateString.format(e.toMap()["custom_fields"]))
+              .map((e) => e.convertTemplateStrings()[productField]!)
               .toList();
+
+          // var templateString = TemplateString(rawAssetField);
+          // var values = assets!
+          //     .map((e) => templateString.format(e.toMap()["custom_fields"]))
+          //     .toList();
 
           if (type != AssetImportType.linkOnly) {
             if (values.toSet().length == 1) {
