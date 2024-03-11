@@ -10,30 +10,48 @@ class Field {
     required this.type,
     required this.required,
     required this.templates,
+    required this.defaultValue,
   });
 
   String name;
   FieldType type;
   bool required;
   Map<String, String> templates;
+  dynamic defaultValue;
 
   factory Field.fromJson(String str) => Field.fromMap(json.decode(str));
 
   String toJson() => json.encode(toMap());
 
-  factory Field.fromMap(Map<String, dynamic> json) => Field(
-        name: json["name"],
-        type: FieldType.values
-            .firstWhere((element) => element.name == json["type"]),
-        required: json["required"],
-        templates: Map<String, String>.from(json["templates"]),
-      );
+  factory Field.fromMap(Map<String, dynamic> json) {
+    FieldType type =
+        FieldType.values.firstWhere((element) => element.name == json["type"]);
+
+    return Field(
+      name: json["name"],
+      type: type,
+      required: json["required"],
+      templates: Map<String, String>.from(json["templates"]),
+      defaultValue: json.containsKey("default_value")
+          ? (
+              type == FieldType.datetime
+                  ? DateTime.parse(json["default_value"])
+                  : json["default_value"],
+            )
+          : null,
+    );
+  }
 
   Map<String, dynamic> toMap() => {
         "name": name,
         "type": type.name,
         "required": required,
         "templates": templates,
+        "default_value": defaultValue == null
+            ? null
+            : (type == FieldType.datetime
+                ? (defaultValue as DateTime).toIso8601String()
+                : defaultValue),
       };
 }
 
@@ -78,5 +96,4 @@ class Template extends Equatable {
         "product_link": productLink,
         "metadata": metadata,
       };
-  
 }

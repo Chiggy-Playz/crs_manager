@@ -1,4 +1,5 @@
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/utils/constants.dart';
 import 'package:crs_manager/utils/exceptions.dart';
 import 'package:crs_manager/utils/extensions.dart';
 import 'package:crs_manager/utils/widgets.dart';
@@ -47,6 +48,7 @@ class _TemplatePageState extends State<TemplatePage> {
         type: FieldType.text,
         required: true,
         templates: {},
+        defaultValue: "",
       ));
       fields.add(
         Field(
@@ -54,6 +56,7 @@ class _TemplatePageState extends State<TemplatePage> {
           type: FieldType.text,
           required: true,
           templates: {},
+          defaultValue: "",
         ),
       );
       fields.add(Field(
@@ -61,6 +64,7 @@ class _TemplatePageState extends State<TemplatePage> {
         type: FieldType.text,
         required: false,
         templates: {},
+        defaultValue: "",
       ));
     }
   }
@@ -590,6 +594,7 @@ class _FieldWidgetState extends State<FieldWidget> {
   // Default required is true for new fields
   bool required = true;
   Map<String, String> templates = {};
+  dynamic defaultValue;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -601,6 +606,7 @@ class _FieldWidgetState extends State<FieldWidget> {
       type = widget.field!.type;
       required = widget.field!.required;
       templates = widget.field!.templates;
+      defaultValue = widget.field!.defaultValue;
     }
   }
 
@@ -721,6 +727,7 @@ class _FieldWidgetState extends State<FieldWidget> {
                 onChanged: (value) {
                   setState(() {
                     type = value!;
+                    defaultValue = null;
                   });
                 },
                 value: type,
@@ -735,6 +742,10 @@ class _FieldWidgetState extends State<FieldWidget> {
                 },
                 title: const Text("Required?"),
               ),
+              SizedBox(
+                height: 2.h,
+              ),
+              defaultWidget(),
               SizedBox(
                 height: 2.h,
               ),
@@ -755,6 +766,88 @@ class _FieldWidgetState extends State<FieldWidget> {
     );
   }
 
+  Widget defaultWidget() {
+    switch (type) {
+      case FieldType.text:
+        return TextFormField(
+          decoration: const InputDecoration(
+            hintText: "Default Value",
+            labelText: "Default Value",
+          ),
+          initialValue: defaultValue ?? "",
+          onSaved: (value) => defaultValue = value!,
+        );
+
+      case FieldType.number:
+        return TextFormField(
+          decoration: const InputDecoration(
+            hintText: "Default Value",
+            labelText: "Default Value",
+          ),
+          initialValue: defaultValue?.toString() ?? "",
+          onSaved: (value) => defaultValue = int.parse(value!),
+          keyboardType: TextInputType.number,
+        );
+
+      case FieldType.datetime:
+        return Card(
+          elevation: 2,
+          child: ListTile(
+            title: const Text("Default"),
+            subtitle: Text(defaultValue != null
+                ? formatterDateTime.format(defaultValue)
+                : "Choose a date"),
+            trailing: defaultValue == null
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.delete),
+                    color: Theme.of(context).colorScheme.error,
+                    onPressed: () {
+                      setState(() {
+                        defaultValue = null;
+                      });
+                    },
+                  ),
+            onTap: () async {
+              var date = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(1900),
+                lastDate: DateTime(2100),
+              );
+              if (date == null || !mounted) return;
+              var time = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.now(),
+              );
+
+              if (time == null || !mounted) return;
+
+              setState(() {
+                defaultValue = DateTime(
+                  date.year,
+                  date.month,
+                  date.day,
+                  time.hour,
+                  time.minute,
+                );
+              });
+            },
+          ),
+        );
+      case FieldType.checkbox:
+        return SwitchListTile(
+          value: defaultValue ?? false,
+          onChanged: (value) {
+            setState(() {
+              defaultValue = value;
+            });
+          },
+          title: const Text("Default Value"),
+        );
+    }
+  }
+
   Future<void> savePressed() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -765,11 +858,11 @@ class _FieldWidgetState extends State<FieldWidget> {
     Navigator.pop(
       context,
       Field(
-        name: name,
-        type: type,
-        required: required,
-        templates: templates,
-      ),
+          name: name,
+          type: type,
+          required: required,
+          templates: templates,
+          defaultValue: defaultValue),
     );
   }
 }

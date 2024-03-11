@@ -155,19 +155,19 @@ class _AssetPageState extends State<AssetPage> {
                             customFields = Map.fromEntries(
                               template!.fields.map(
                                 (e) {
-                                  dynamic value;
+                                  dynamic value = e.defaultValue;
                                   switch (e.type) {
                                     case FieldType.text:
-                                      value = "";
+                                      value ??= "";
                                       break;
                                     case FieldType.number:
-                                      value = 0;
+                                      value ??= 0;
                                       break;
                                     case FieldType.datetime:
-                                      value = DateTime.now();
+                                      value ??= DateTime.now();
                                       break;
                                     case FieldType.checkbox:
-                                      value = false;
+                                      value ??= false;
                                       break;
                                   }
 
@@ -301,7 +301,7 @@ class _AssetPageState extends State<AssetPage> {
   }
 
   Widget getCustomFieldWidget(Field field) {
-    dynamic value = customFields[field.name]?.value;
+    dynamic value = customFields[field.name]?.value ?? field.defaultValue;
     switch (field.type) {
       case FieldType.text:
         return OpticalTextFormField(
