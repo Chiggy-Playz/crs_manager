@@ -780,12 +780,92 @@ class ChallanPageState extends State<ChallanPage> {
       ),
     );
 
+    if (!mounted || !secondResult) return;
+
+    // Ask if they want to create an inward challan
+    var createInwardChallan = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+          title: const Text("Create Inward Challan?"),
+          content: const Text(
+              "Do you want to create an inward challan for the assets in this challan?"),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(null);
+                },
+                child: const Text("Don't do anything")),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text("No")),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: const Text("Yes")),
+          ]),
+    );
+
     if (!mounted) return;
-    if (secondResult == true) {
-      await Provider.of<DatabaseModel>(context, listen: false)
-          .updateChallan(challan: widget.challan!, cancelled: true);
-      if (!mounted) return;
-      Navigator.of(context).pop();
+
+    var db = context.read<DatabaseModel>();
+
+    var assets =
+        _products.map((p) => p.assets).expand((element) => element).toList();
+
+    if (createInwardChallan == true) {
+      var newInwardChallanInfo = await db.getNextInwardChallanInfo();
+
+      // Create inward challan
+      var inwardChallan = await db.createInwardChallan(
+        number: newInwardChallanInfo["number"],
+        session: newInwardChallanInfo["session"],
+        createdAt: DateTime.now(),
+        buyer: _buyer!,
+        products: _products,
+        productsValue: _productsValue,
+        receivedBy: "",
+        vehicleNumber: "",
+        notes: "",
+      );
+
+      // Return assets to office
+
+      if (assets.isNotEmpty) {
+        await db.updateAsset(
+          assets: assets,
+          location: "Office",
+          challanId: inwardChallan.id,
+          challanType: ChallanType.inward.index,
+        );
+      }
+    } else if (createInwardChallan == false) {
+      // Not creating inward challan, just unlink assets
+
+      // Return assets to office and delete history
+      if (assets.isNotEmpty) {
+        await db.updateAsset(
+          assets: assets,
+          location: "Office",
+          challanId: null,
+          challanType: null,
+          reflectInHistory: false,
+        );
+        await db.deleteHistory(
+            assets, widget.challan!.id, ChallanType.outward.index);
+      }
+    } else {
+      // Don't do anything
     }
+
+    if (!mounted) return;
+
+    await Provider.of<DatabaseModel>(context, listen: false)
+        .updateChallan(challan: widget.challan!, cancelled: true);
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 }

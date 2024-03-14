@@ -792,7 +792,8 @@ class DatabaseModel extends ChangeNotifier {
           "additional_cost": additionalCost.map((e) => e.toMap()).toList(),
           "purchased_from": purchasedFrom,
           "template": template.id,
-          "custom_fields": customFields.map((key, value) => MapEntry(key, value.getValue())),
+          "custom_fields":
+              customFields.map((key, value) => MapEntry(key, value.getValue())),
           "notes": notes,
           "recovered_cost": recoveredCost,
         }))
@@ -831,6 +832,7 @@ class DatabaseModel extends ChangeNotifier {
     int? recoveredCost,
     int? challanId,
     int? challanType,
+    bool reflectInHistory = true,
   }) async {
     if (location == null &&
         purchaseCost == null &&
@@ -872,20 +874,22 @@ class DatabaseModel extends ChangeNotifier {
       throw DatabaseError();
     }
 
-    await _insertHistory(
-      assets: assets,
-      challanId: challanId,
-      challanType: challanType,
-      location: location,
-      purchaseCost: purchaseCost,
-      purchaseDate: purchaseDate,
-      additionalCost: List<AdditionalCost>.from(
-          additionalCost ?? assets.first.additionalCost),
-      purchasedFrom: purchasedFrom,
-      customFields: Map.from(customFields ?? assets.first.customFields),
-      notes: notes,
-      recoveredCost: recoveredCost,
-    );
+    if (reflectInHistory) {
+      await _insertHistory(
+        assets: assets,
+        challanId: challanId,
+        challanType: challanType,
+        location: location,
+        purchaseCost: purchaseCost,
+        purchaseDate: purchaseDate,
+        additionalCost: List<AdditionalCost>.from(
+            additionalCost ?? assets.first.additionalCost),
+        purchasedFrom: purchasedFrom,
+        customFields: Map.from(customFields ?? assets.first.customFields),
+        notes: notes,
+        recoveredCost: recoveredCost,
+      );
+    }
 
     for (var element in response) {
       element["template"] = assets.first.template.toMap();
