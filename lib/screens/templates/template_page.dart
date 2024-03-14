@@ -832,7 +832,13 @@ class _FieldWidgetState extends State<FieldWidget> {
             labelText: "Default Value",
           ),
           initialValue: defaultValue?.toString() ?? "",
-          onSaved: (value) => defaultValue = int.parse(value!),
+          onSaved: (value) {
+            if (value == null || value.isEmpty) {
+              defaultValue = null;
+              return;
+            }
+            defaultValue = int.tryParse(value);
+          },
           keyboardType: TextInputType.number,
         );
 
