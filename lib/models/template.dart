@@ -2,7 +2,13 @@ import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 
-enum FieldType { text, number, datetime, checkbox, select, }
+enum FieldType {
+  text,
+  number,
+  datetime,
+  checkbox,
+  select,
+}
 
 class Field {
   Field({
@@ -22,8 +28,7 @@ class Field {
 
   // Select only properties
   List<String>? selectOptions;
-  bool get isSelect => type == FieldType.select; 
-
+  bool get isSelect => type == FieldType.select;
 
   factory Field.fromJson(String str) => Field.fromMap(json.decode(str));
 
@@ -39,13 +44,19 @@ class Field {
       defaultValue = DateTime.parse(json["default_value"]);
     }
 
+    var selectOptions = json["select_options"];
+
+    if (selectOptions != null) {
+      selectOptions = List<String>.from(selectOptions);
+    }
+
     return Field(
       name: json["name"],
       type: type,
       required: json["required"],
       templates: Map<String, String>.from(json["templates"]),
       defaultValue: defaultValue,
-      selectOptions: json["select_options"],
+      selectOptions: selectOptions,
     );
   }
 
