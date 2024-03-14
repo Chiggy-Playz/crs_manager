@@ -169,7 +169,7 @@ class _TemplatePageState extends State<TemplatePage> {
                   style: Theme.of(context).textTheme.displaySmall,
                 ),
                 SizedBox(height: 1.h),
-                ...getFieldsListWidget(),
+                getFieldsListWidget(),
                 SizedBox(height: 1.h),
                 ...getProductsLinkWidget(),
                 SizedBox(height: 1.h),
@@ -199,16 +199,14 @@ class _TemplatePageState extends State<TemplatePage> {
     );
   }
 
-  List<Widget> getFieldsListWidget() {
+  Widget getFieldsListWidget() {
     var widgets = <Widget>[];
 
     if (fields.isEmpty) {
-      return [
-        Text(
-          "No fields added",
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      ];
+      return Text(
+        "No fields added",
+        style: Theme.of(context).textTheme.titleMedium,
+      );
     }
 
     for (var field in fields) {
@@ -230,6 +228,7 @@ class _TemplatePageState extends State<TemplatePage> {
       }
 
       widgets.add(ListTile(
+        key: ValueKey(field),
         leading: icon,
         title: Text(field.name),
         subtitle: Text(
@@ -250,7 +249,19 @@ class _TemplatePageState extends State<TemplatePage> {
       ));
     }
 
-    return widgets;
+    return ReorderableListView(
+      shrinkWrap: true,
+      children: widgets,
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (oldIndex < newIndex) {
+            newIndex -= 1;
+          }
+          final item = fields.removeAt(oldIndex);
+          fields.insert(newIndex, item);
+        });
+      },
+    );
   }
 
   Future<void> addField() async {
