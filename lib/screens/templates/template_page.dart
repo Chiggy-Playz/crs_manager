@@ -225,6 +225,9 @@ class _TemplatePageState extends State<TemplatePage> {
         case FieldType.checkbox:
           icon = const Icon(Icons.check_box);
           break;
+        case FieldType.select:
+          icon = const Icon(Icons.list);
+          break;
       }
 
       widgets.add(ListTile(
@@ -607,6 +610,8 @@ class _FieldWidgetState extends State<FieldWidget> {
   Map<String, String> templates = {};
   dynamic defaultValue;
 
+  List<String> selectOptions = [];
+
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -734,6 +739,10 @@ class _FieldWidgetState extends State<FieldWidget> {
                     value: FieldType.checkbox,
                     child: Text("Checkbox"),
                   ),
+                  DropdownMenuItem(
+                    value: FieldType.select,
+                    child: Text("Dropdown"),
+                  ),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -757,6 +766,33 @@ class _FieldWidgetState extends State<FieldWidget> {
                 height: 2.h,
               ),
               defaultWidget(),
+              if (type == FieldType.select) ...[
+                SizedBox(
+                  height: 2.h,
+                ),
+                selectOptionsWidgets(),
+                Card(
+                  elevation: 20,
+                  child: ListTile(
+                    leading: const Icon(Icons.add),
+                    title: const Text("Add Option"),
+                    onTap: () async {
+                      String? option = await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return const SelectOptionDialog();
+                        },
+                      );
+
+                      if (option == null || !mounted) return;
+
+                      setState(() {
+                        selectOptions.add(option);
+                      });
+                    },
+                  ),
+                ),
+              ],
               SizedBox(
                 height: 2.h,
               ),
@@ -856,7 +892,85 @@ class _FieldWidgetState extends State<FieldWidget> {
           },
           title: const Text("Default Value"),
         );
+
+      case FieldType.select:
+        return Row(
+          children: [
+            Expanded(
+              child: DropdownMenu(
+                key: ValueKey(defaultValue),
+                dropdownMenuEntries:
+                    selectOptions.map<DropdownMenuEntry<String>>((e) {
+                  return DropdownMenuEntry<String>(
+                    value: e,
+                    label: e,
+                  );
+                }).toList(),
+                label: const Text("Default Value"),
+                expandedInsets: EdgeInsets.symmetric(
+                    horizontal: 1.w), // no clue how this works
+                onSelected: (value) {
+                  if (value == null) return;
+                  setState(() {
+                    defaultValue = value;
+                  });
+                },
+                initialSelection: defaultValue,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              color: Theme.of(context).colorScheme.error,
+              onPressed: () {
+                setState(() {
+                  defaultValue = null;
+                });
+              },
+            ),
+          ],
+        );
     }
+  }
+
+  Widget selectOptionsWidgets() {
+    if (selectOptions.isEmpty) {
+      return const Card(
+          child: ListTile(
+        title: Text("No Options"),
+      ));
+    }
+
+    return ReorderableListView.builder(
+      itemCount: selectOptions.length,
+      itemBuilder: (context, index) {
+        return Card(
+          key: ValueKey(selectOptions[index]),
+          child: ListTile(
+            title: Text(selectOptions[index]),
+            leading: const Icon(Icons.list),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete),
+              color: Theme.of(context).colorScheme.error,
+              onPressed: () {
+                setState(() {
+                  selectOptions.removeAt(index);
+                });
+              },
+            ),
+          ),
+        );
+      },
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (oldIndex < newIndex) {
+            newIndex -= 1;
+          }
+          final item = selectOptions.removeAt(oldIndex);
+          selectOptions.insert(newIndex, item);
+        });
+      },
+      shrinkWrap: true,
+    );
   }
 
   Future<void> savePressed() async {
@@ -866,14 +980,71 @@ class _FieldWidgetState extends State<FieldWidget> {
 
     _formKey.currentState!.save();
 
+    if (type == FieldType.select && selectOptions.isEmpty) {
+      context.showErrorSnackBar(message: "Please add at least one option");
+      return;
+    }
+
     Navigator.pop(
       context,
       Field(
-          name: name,
-          type: type,
-          required: required,
-          templates: templates,
-          defaultValue: defaultValue),
+        name: name,
+        type: type,
+        required: required,
+        templates: templates,
+        defaultValue: defaultValue,
+        selectOptions: type == FieldType.select ? selectOptions : null,
+      ),
+    );
+  }
+}
+
+class SelectOptionDialog extends StatefulWidget {
+  const SelectOptionDialog({super.key, this.option});
+
+  final String? option;
+
+  @override
+  State<SelectOptionDialog> createState() => _SelectOptionDialogState();
+}
+
+class _SelectOptionDialogState extends State<SelectOptionDialog> {
+  String option = "";
+
+  @override
+  void initState() {
+    super.initState();
+    option = widget.option ?? "";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("${widget.option == null ? "Add" : "Edit"} Option"),
+      content: TextFormField(
+        initialValue: widget.option,
+        decoration: const InputDecoration(
+          hintText: "Option",
+          labelText: "Option",
+        ),
+        onChanged: (value) {
+          setState(() {
+            option = value;
+          });
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: option == widget.option
+              ? null
+              : () => Navigator.pop(context, option),
+          child: const Text("Save"),
+        ),
+      ],
     );
   }
 }

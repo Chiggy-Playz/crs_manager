@@ -169,6 +169,9 @@ class _AssetPageState extends State<AssetPage> {
                                     case FieldType.checkbox:
                                       value ??= false;
                                       break;
+                                    case FieldType.select:
+                                      value ??= e.selectOptions!.first;
+                                      break;
                                   }
 
                                   return MapEntry(
@@ -394,6 +397,26 @@ class _AssetPageState extends State<AssetPage> {
                   customFields[field.name] =
                       FieldValue(field: field, value: newValue!);
                 }));
+      case FieldType.select:
+        return DropdownMenu(
+          dropdownMenuEntries:
+              field.selectOptions!.map<DropdownMenuEntry<String>>((e) {
+            return DropdownMenuEntry<String>(
+              value: e,
+              label: e,
+            );
+          }).toList(),
+          label: Text(field.name),
+          expandedInsets:
+              EdgeInsets.symmetric(horizontal: 0.w), // no clue how this works
+          onSelected: (value) {
+            if (value == null) return;
+            setState(() {
+              customFields[field.name] = FieldValue(field: field, value: value);
+            });
+          },
+          initialSelection: value,
+        );
     }
   }
 
