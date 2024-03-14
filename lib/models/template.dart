@@ -27,18 +27,18 @@ class Field {
     FieldType type =
         FieldType.values.firstWhere((element) => element.name == json["type"]);
 
+    dynamic defaultValue = json["default_value"];
+
+    if (type == FieldType.datetime && defaultValue != null) {
+      defaultValue = DateTime.parse(json["default_value"]);
+    }
+
     return Field(
       name: json["name"],
       type: type,
       required: json["required"],
       templates: Map<String, String>.from(json["templates"]),
-      defaultValue: json.containsKey("default_value")
-          ? (
-              type == FieldType.datetime
-                  ? DateTime.parse(json["default_value"])
-                  : json["default_value"],
-            )
-          : null,
+      defaultValue: defaultValue,
     );
   }
 
