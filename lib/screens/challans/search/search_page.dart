@@ -25,7 +25,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   // ignore: prefer_final_fields
   List<Condition> _conditions = [];
-  List<Challan> _challans = [];
+  List<ChallanBase> _challans = [];
   bool _searched = false;
   bool _treeView = false;
 

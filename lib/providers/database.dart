@@ -629,8 +629,9 @@ class DatabaseModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Challan> filterChallan({required List<Condition> conditions}) {
-    var filteredChallans = List<Challan>.from(challans);
+  List<ChallanBase> filterChallan({required List<Condition> conditions}) {
+    var filteredChallans = List<ChallanBase>.from(challans)
+      ..addAll(inwardChallans);
 
     for (var condition in conditions) {
       switch (condition.type) {
@@ -684,7 +685,12 @@ class DatabaseModel extends ChangeNotifier {
       }
     }
 
-    return filteredChallans;
+    return filteredChallans
+      ..sort(
+        (a, b) {
+          return b.createdAt.compareTo(a.createdAt);
+        },
+      );
   }
 
   Future<Template> createTemplate({

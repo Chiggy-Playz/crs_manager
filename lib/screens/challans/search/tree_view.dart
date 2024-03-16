@@ -1,4 +1,6 @@
+import 'package:crs_manager/models/inward_challan.dart';
 import 'package:crs_manager/screens/challans/challan_page.dart';
+import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/buyer.dart';
@@ -8,19 +10,19 @@ import '../../../utils/constants.dart';
 class TreeViewWidget extends StatefulWidget {
   const TreeViewWidget({super.key, required this.challans});
 
-  final List<Challan> challans;
+  final List<ChallanBase> challans;
 
   @override
   State<TreeViewWidget> createState() => _TreeViewWidgetState();
 }
 
 class _TreeViewWidgetState extends State<TreeViewWidget> {
-  Map<Buyer, List<Challan>> challansSortedByBuyer = {};
+  Map<Buyer, List<ChallanBase>> challansSortedByBuyer = {};
   List<Buyer> buyersSortedByName = [];
   // Challans merged, but sorted by buyer
   // Buyers A, B ,c
   // so list will be A, A, B, B, B, C, C....
-  List<Challan> buyerOrderedChallans = [];
+  List<ChallanBase> buyerOrderedChallans = [];
   List<bool> _isOpen = [];
   List<bool> _checked = [];
 
@@ -28,9 +30,9 @@ class _TreeViewWidgetState extends State<TreeViewWidget> {
   void initState() {
     super.initState();
 
-    for (Challan challan in widget.challans) {
+    for (ChallanBase challan in widget.challans) {
       challansSortedByBuyer
-          .putIfAbsent(challan.buyer, () => <Challan>[])
+          .putIfAbsent(challan.buyer, () => <ChallanBase>[])
           .add(challan);
     }
     buyersSortedByName = challansSortedByBuyer.keys.toList()
@@ -85,18 +87,35 @@ class _TreeViewWidgetState extends State<TreeViewWidget> {
                     ),
                   ]),
                   title: Text(formatterDate.format(challan.createdAt)),
-                  trailing: Checkbox(
-                    value: _checked[challanIndexInList],
-                    onChanged: (value) {
-                      setState(() {
-                        _checked[challanIndexInList] = value!;
-                      });
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (challan is InwardChallan)
+                        Icon(Icons.arrow_downward,
+                            color: Theme.of(context).colorScheme.primary),
+                      Checkbox(
+                        value: _checked[challanIndexInList],
+                        onChanged: (value) {
+                          setState(() {
+                            _checked[challanIndexInList] = value!;
+                          });
+                        },
+                      ),
+                    ],
                   ),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => ChallanPage(
-                      challan: challan,
-                    ),
+                    builder: (context) {
+                      if (challan is Challan) {
+                        return ChallanPage(
+                          challan: challan,
+                        );
+                      } else if (challan is InwardChallan) {
+                        return InwardChallanPage(
+                          inwardChallan: challan,
+                        );
+                      }
+                      return const Placeholder();
+                    },
                   )),
                 );
               },
@@ -107,7 +126,7 @@ class _TreeViewWidgetState extends State<TreeViewWidget> {
       ),
       expansionCallback: (panelIndex, isExpanded) {
         setState(() {
-          _isOpen[panelIndex] = !isExpanded;
+          _isOpen[panelIndex] = !_isOpen[panelIndex];
         });
       },
     );

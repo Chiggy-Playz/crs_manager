@@ -1,4 +1,6 @@
+import 'package:crs_manager/models/inward_challan.dart';
 import 'package:crs_manager/screens/challans/challan_page.dart';
+import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:crs_manager/screens/challans/new_challan.dart';
 import 'package:crs_manager/utils/extensions.dart';
 import 'package:draggable_scrollbar/draggable_scrollbar.dart';
@@ -17,7 +19,7 @@ class ChallansList extends StatefulWidget {
     required this.challans,
   });
 
-  final List<Challan> challans;
+  final List<ChallanBase> challans;
 
   @override
   State<ChallansList> createState() => _ChallansListState();
@@ -60,7 +62,7 @@ class _ChallansListState extends State<ChallansList> {
     );
   }
 
-  ListView challansToListView(List<Challan> challans) {
+  ListView challansToListView(List<ChallanBase> challans) {
     return ListView.builder(
       shrinkWrap: true,
       controller: scrollController,
@@ -71,8 +73,8 @@ class _ChallansListState extends State<ChallansList> {
     );
   }
 
-  Widget challanCard(List<Challan> challans, int index) {
-    Challan challan = challans[index];
+  Widget challanCard(List<ChallanBase> challans, int index) {
+    ChallanBase challan = challans[index];
     Widget productCount = Text(challan.products
         .fold(0, (previousValue, element) => previousValue + element.quantity)
         .toString());
@@ -98,16 +100,28 @@ class _ChallansListState extends State<ChallansList> {
         },
         onTapUp: (_) => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => ChallanPage(
-              challan: challans[index],
-            ),
+            builder: (context) {
+              if (challan is Challan) {
+                return ChallanPage(
+                  challan: challan,
+                );
+              } else if (challan is InwardChallan) {
+                return InwardChallanPage(
+                  inwardChallan: challan,
+                );
+              }
+              return const Placeholder();
+            },
           ),
         ),
         onSecondaryTapDown: (details) {
           _tapDownPosition = details.globalPosition;
         },
-        onSecondaryTapUp: (_) => showContextMenu(challan: challan),
-        onLongPress: () => showContextMenu(challan: challan),
+        onSecondaryTapUp: challan is Challan
+            ? (_) => showContextMenu(challan: challan)
+            : null,
+        onLongPress:
+            challan is Challan ? () => showContextMenu(challan: challan) : null,
         child: ListTile(
           title: Text(challan.buyer.name),
           subtitle: Text(cardFormatter.format(challan.createdAt)),
@@ -126,24 +140,32 @@ class _ChallansListState extends State<ChallansList> {
             mainAxisSize: MainAxisSize.min,
             children: [
               trailing,
-              if (challan.received) ...[
-                const SizedBox(
-                  width: 4,
-                ),
+              if (challan is Challan) ...[
+                if (challan.received) ...[
+                  const SizedBox(
+                    width: 4,
+                  ),
+                  Icon(
+                    Icons.check,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+                if (challan.billNumber != null) ...[
+                  const SizedBox(
+                    width: 4,
+                  ),
+                  Icon(
+                    Icons.receipt_long,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ] else ...[
+                const SizedBox(width: 4),
                 Icon(
-                  Icons.check,
+                  Icons.arrow_downward,
                   color: Theme.of(context).colorScheme.primary,
-                ),
-              ],
-              if (challan.billNumber != null) ...[
-                const SizedBox(
-                  width: 4,
-                ),
-                Icon(
-                  Icons.receipt_long,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ],
+                )
+              ]
             ],
           ),
         ),

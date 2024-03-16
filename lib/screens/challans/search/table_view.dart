@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:crs_manager/models/inward_challan.dart';
 import 'package:crs_manager/providers/database.dart';
 import 'package:crs_manager/screens/challans/challan_page.dart';
+import 'package:crs_manager/screens/challans/inward/inward_challan_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_file_plus/open_file_plus.dart';
@@ -28,15 +30,15 @@ final columns = [
 class TableViewPage extends StatefulWidget {
   const TableViewPage({super.key, required this.challans});
 
-  final List<Challan> challans;
+  final List<ChallanBase> challans;
 
   @override
   State<TableViewPage> createState() => _TableViewPageState();
 }
 
 class _TableViewPageState extends State<TableViewPage> {
-  List<Challan> challans = [];
-  Map<Buyer, List<Challan>> challansSortedByBuyer = {};
+  List<ChallanBase> challans = [];
+  Map<Buyer, List<ChallanBase>> challansSortedByBuyer = {};
   List<Buyer> buyersSortedByName = [];
 
   @override
@@ -153,11 +155,18 @@ class _TableViewPageState extends State<TableViewPage> {
 
       // Add  rows for challans products
 
-      for (Challan challan in buyerChallans) {
+      for (ChallanBase challan in buyerChallans) {
         for (Product product in challan.products) {
           var cancelledStyle = challan.cancelled
               ? TextStyle(color: Theme.of(context).colorScheme.onError)
               : null;
+
+          String billNumber = "NA";
+
+          if (challan is Challan && challan.billNumber != null) {
+            billNumber = challan.billNumber.toString();
+          }
+
           rows.add(
             TableRow(
               decoration: challan.cancelled
@@ -173,6 +182,7 @@ class _TableViewPageState extends State<TableViewPage> {
                 )),
                 Center(
                   child: Text(
+                    "${challan is InwardChallan ? 'In' : 'Out'} "
                     "${challan.number} / ${challan.session.split("-").map((e) => e.replaceFirst("20", "")).join("-")}",
                     style: cancelledStyle,
                   ),
@@ -197,7 +207,7 @@ class _TableViewPageState extends State<TableViewPage> {
                 )),
                 Center(
                     child: Text(
-                  challan.billNumber?.toString() ?? "",
+                  billNumber,
                   style: cancelledStyle,
                 )),
                 Center(
@@ -217,9 +227,18 @@ class _TableViewPageState extends State<TableViewPage> {
                       _resetOrientation();
                       await Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => ChallanPage(
-                            challan: challan,
-                          ),
+                          builder: (context) {
+                            if (challan is Challan) {
+                              return ChallanPage(
+                                challan: challan,
+                              );
+                            } else if (challan is InwardChallan) {
+                              return InwardChallanPage(
+                                inwardChallan: challan,
+                              );
+                            }
+                            return const Placeholder();
+                          },
                         ),
                       );
                       _landscapeOrientation();
@@ -265,22 +284,28 @@ class _TableViewPageState extends State<TableViewPage> {
 
       row++;
 
-      for (Challan challan in buyerChallans) {
+      for (ChallanBase challan in buyerChallans) {
         bool cancelled = challan.cancelled;
+
+        String billNumber = "NA";
+
+        if (challan is Challan && challan.billNumber != null) {
+          billNumber = challan.billNumber.toString();
+        }
+
         for (Product product in challan.products) {
           sheet
               .getRangeByIndex(row, 1)
               .setText(formatterDate.format(challan.createdAt));
           sheet.getRangeByIndex(row, 2).setText(
+              "${challan is InwardChallan ? 'In' : 'Out'} "
               "${challan.number} / ${challan.session.split("-").map((e) => e.replaceFirst("20", "")).join("-")}");
           sheet.getRangeByIndex(row, 3).setText(product.description);
           sheet
               .getRangeByIndex(row, 4)
               .setText("${product.quantity} ${product.quantityUnit}");
           sheet.getRangeByIndex(row, 5).setText(product.serial);
-          sheet
-              .getRangeByIndex(row, 6)
-              .setText(challan.billNumber?.toString() ?? "");
+          sheet.getRangeByIndex(row, 6).setText(billNumber);
           sheet.getRangeByIndex(row, 7).setText(product.additionalDescription);
           sheet.getRangeByIndex(row, 8).setText(challan.notes);
 
@@ -335,7 +360,7 @@ class _TableViewPageState extends State<TableViewPage> {
     var dateSortedChallans = List.from(challans)
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-    for (Challan challan in dateSortedChallans) {
+    for (ChallanBase challan in dateSortedChallans) {
       sheet.getRangeByIndex(row, 1).setText((row - 1).toString());
       sheet
           .getRangeByIndex(row, 2)
@@ -371,9 +396,9 @@ class _TableViewPageState extends State<TableViewPage> {
     challans.sort(
       (a, b) => a.buyer.name.compareTo(b.buyer.name),
     );
-    for (Challan challan in challans) {
+    for (ChallanBase challan in challans) {
       challansSortedByBuyer
-          .putIfAbsent(challan.buyer, () => <Challan>[])
+          .putIfAbsent(challan.buyer, () => <ChallanBase>[])
           .add(challan);
     }
   }
