@@ -15,3 +15,5 @@ class UnfilledFieldsError extends Error {}
 class TemplateInUseError extends Error {}
 
 class AssetInUseError extends Error {}
+
+class VendorInUseError extends Error {}

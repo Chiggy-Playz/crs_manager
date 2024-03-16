@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS "assets"(
     "purchase_cost" INTEGER NOT NULL,
     "purchase_date" TIMESTAMP with TIME ZONE NOT NULL,
     "additional_cost" JSON NOT NULL DEFAULT '{}',
-    "purchased_from" TEXT NOT NULL,
+    "purchased_from" INTEGER NOT NULL REFERENCES vendors(id),
     "template" INTEGER NOT NULL REFERENCES templates(id),
     "custom_fields" JSON NOT NULL,
     "notes" TEXT NOT NULL DEFAULT '',
@@ -176,3 +176,17 @@ CREATE TABLE IF NOT EXISTS "inward_challans" (
     PRIMARY KEY (id)
 );
 
+
+---------------------------------------------------------------------------------------------
+
+-- Vendors
+
+CREATE TABLE IF NOT EXISTS "vendors" (
+    "id" SERIAL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
+    "gst" TEXT,
+    "code_number" TEXT NOT NULL,
+    "mobile_number" TEXT NOT NULL,
+    "notes" TEXT NOT NULL DEFAULT ''
+);

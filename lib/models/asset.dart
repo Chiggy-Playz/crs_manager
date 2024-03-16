@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crs_manager/models/template.dart';
+import 'package:crs_manager/models/vendor.dart';
 import 'package:crs_manager/utils/template_string.dart';
 
 import 'challan.dart';
@@ -81,7 +82,7 @@ class Asset {
   int purchaseCost;
   DateTime purchaseDate;
   List<AdditionalCost> additionalCost;
-  String purchasedFrom;
+  Vendor purchasedFrom;
   Template template;
   Map<String, FieldValue> customFields;
   String notes;
@@ -101,6 +102,7 @@ class Asset {
 
   factory Asset.fromMap(Map<String, dynamic> json) {
     Template template = Template.fromMap(json["template"]);
+    Vendor purchasedFrom = Vendor.fromMap(json["purchased_from"]);
 
     return Asset(
       id: json["id"],
@@ -112,7 +114,7 @@ class Asset {
       additionalCost: List.from(json["additional_cost"])
           .map((e) => AdditionalCost.fromMap(e))
           .toList(),
-      purchasedFrom: json["purchased_from"],
+      purchasedFrom: purchasedFrom,
       template: template,
       customFields: Map.from(json["custom_fields"]).map(
         (fieldName, fieldValue) => MapEntry<String, FieldValue>(
@@ -138,7 +140,7 @@ class Asset {
         "purchase_cost": purchaseCost,
         "purchase_date": purchaseDate.toIso8601String(),
         "additional_cost": additionalCost.map((e) => e.toMap()).toList(),
-        "purchased_from": purchasedFrom,
+        "purchased_from": purchasedFrom.id,
         "template": template.id,
         "custom_fields": Map.from(customFields).map(
           (k, v) => MapEntry<String, dynamic>(

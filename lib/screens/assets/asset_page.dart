@@ -1,4 +1,6 @@
+import 'package:crs_manager/models/vendor.dart';
 import 'package:crs_manager/providers/database.dart';
+import 'package:crs_manager/screens/assets/choose_vendor.dart';
 import 'package:crs_manager/screens/assets/optical_textformfield.dart';
 import 'package:crs_manager/screens/loading.dart';
 import 'package:crs_manager/utils/constants.dart';
@@ -33,7 +35,7 @@ class _AssetPageState extends State<AssetPage> {
   int purchaseCost = 0;
   DateTime? purchaseDate;
   List<AdditionalCost> additionalCost = [];
-  String purchasedFrom = "";
+  Vendor? purchasedFrom;
   String notes = "";
   int recoveredCost = 0;
 
@@ -503,17 +505,41 @@ class _AssetPageState extends State<AssetPage> {
         ),
       ),
       SizedBox(height: 2.h),
-      TextFormField(
-        decoration: const InputDecoration(labelText: "Purchased From"),
-        initialValue: purchasedFrom,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter a value';
-          }
-          return null;
-        },
-        onChanged: (value) => setState(() => purchasedFrom = value),
-        onSaved: (value) => setState(() => purchasedFrom = value!),
+      // TextFormField(
+      //   decoration: const InputDecoration(labelText: "Purchased From"),
+      //   initialValue: purchasedFrom,
+      //   validator: (value) {
+      //     if (value == null || value.isEmpty) {
+      //       return 'Please enter a value';
+      //     }
+      //     return null;
+      //   },
+      //   onChanged: (value) => setState(() => purchasedFrom = value),
+      //   onSaved: (value) => setState(() => purchasedFrom = value!),
+      // ),
+      Card(
+        elevation: 12,
+        child: ListTile(
+          leading: const Icon(Icons.person),
+          title: Text(
+              purchasedFrom == null ? "Choose a vendor" : purchasedFrom!.name),
+          subtitle: Text(purchasedFrom == null
+              ? "Choose a vendor"
+              : purchasedFrom!.codeNumber),
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => ChooseVendor(
+                onVendorSelected: (vendor) {
+                  setState(() {
+                    purchasedFrom = vendor;
+                  });
+                  Navigator.of(context).pop();
+                },
+              ),
+            ));
+          },
+          minLeadingWidth: 0,
+        ),
       ),
       SizedBox(height: 2.h),
       TextFormField(
@@ -583,7 +609,7 @@ class _AssetPageState extends State<AssetPage> {
           purchaseDate != null ||
           additionalCost.isNotEmpty ||
           recoveredCost != 0 ||
-          purchasedFrom.isNotEmpty ||
+          purchasedFrom != null ||
           notes.isNotEmpty ||
           template != null) {
         return true;
@@ -595,7 +621,7 @@ class _AssetPageState extends State<AssetPage> {
         purchaseCost != widget.asset!.purchaseCost ||
         purchaseDate != widget.asset!.purchaseDate ||
         recoveredCost != widget.asset!.recoveredCost ||
-        purchasedFrom != widget.asset!.purchasedFrom ||
+        purchasedFrom?.id != widget.asset!.purchasedFrom.id ||
         notes != widget.asset!.notes ||
         template != widget.asset!.template) {
       return true;
@@ -647,6 +673,11 @@ class _AssetPageState extends State<AssetPage> {
       return;
     }
 
+    if (purchasedFrom == null) {
+      context.showErrorSnackBar(message: "Please select a vendor");
+      return;
+    }
+
     try {
       // Check if all custom fields are set properly, respecting the required flag
       customFields.forEach((fieldName, fieldValue) {
@@ -668,7 +699,7 @@ class _AssetPageState extends State<AssetPage> {
           purchaseCost: purchaseCost,
           purchaseDate: purchaseDate!,
           additionalCost: additionalCost,
-          purchasedFrom: purchasedFrom,
+          purchasedFrom: purchasedFrom!,
           template: template!,
           customFields: customFields,
           notes: notes,
@@ -686,7 +717,7 @@ class _AssetPageState extends State<AssetPage> {
           purchaseDate:
               purchaseDate == widget.asset!.purchaseDate ? null : purchaseDate,
           additionalCost: additionalCost,
-          purchasedFrom: purchasedFrom == widget.asset!.purchasedFrom
+          purchasedFrom: purchasedFrom?.id == widget.asset!.purchasedFrom.id
               ? null
               : purchasedFrom,
           notes: notes == widget.asset!.notes ? null : notes,

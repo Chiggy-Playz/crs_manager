@@ -1,5 +1,6 @@
 import 'package:crs_manager/models/asset.dart';
 import 'package:crs_manager/models/inward_challan.dart';
+import 'package:crs_manager/models/vendor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,6 +17,8 @@ class DatabaseModel extends ChangeNotifier {
   List<Challan> challans = [];
   Map<String, Map<String, dynamic>> secrets = {};
   List<Template> templates = [];
+
+  List<Vendor> vendors = [];
   // UUID -> Asset
   Map<String, Asset> assets = {};
   List<AssetHistory> assetHistory = [];
@@ -61,6 +64,9 @@ class DatabaseModel extends ChangeNotifier {
             )
             .toList();
 
+    // load vendors
+    await loadVendors();
+
     // Load initial assets
     assets = {
       for (var element in (await _client
@@ -71,7 +77,13 @@ class DatabaseModel extends ChangeNotifier {
           .map((assetMap) {
         var template = templates
             .firstWhere((template) => assetMap["template"] == template.id);
+
+        var vendor = vendors
+            .firstWhere((vendor) => assetMap["purchased_from"] == vendor.id);
+
         assetMap["template"] = template.toMap();
+        assetMap["purchased_from"] = vendor.toMap();
+
         return Asset.fromMap(assetMap);
       }))
         element.uuid: element
@@ -219,6 +231,15 @@ class DatabaseModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadVendors() async {
+    vendors = (await _client
+            .from("vendors")
+            .select<List<Map<String, dynamic>>>()
+            .order("id", ascending: true))
+        .map((e) => Vendor.fromMap(e))
+        .toList();
+  }
+
   Future<void> loadAssets(int assetPageCount) async {
     Future<int> fetchMoreAssets(int offset, int limit) async {
       final from = offset * limit;
@@ -322,12 +343,13 @@ class DatabaseModel extends ChangeNotifier {
     return buyers;
   }
 
-  Future<Buyer> createBuyer(
-      {required String name,
-      required String address,
-      required String gst,
-      required String state,
-      required String alias}) async {
+  Future<Buyer> createBuyer({
+    required String name,
+    required String address,
+    required String gst,
+    required String state,
+    required String alias,
+  }) async {
     final response = await _client.from("buyers").insert({
       "name": name.toUpperCase(),
       "address": address.toUpperCase(),
@@ -776,7 +798,7 @@ class DatabaseModel extends ChangeNotifier {
     required int purchaseCost,
     required DateTime purchaseDate,
     required List<AdditionalCost> additionalCost,
-    required String purchasedFrom,
+    required Vendor purchasedFrom,
     required Template template,
     required Map<String, FieldValue> customFields,
     required String notes,
@@ -790,7 +812,7 @@ class DatabaseModel extends ChangeNotifier {
           "purchase_cost": purchaseCost,
           "purchase_date": purchaseDate.toUtc().toIso8601String(),
           "additional_cost": additionalCost.map((e) => e.toMap()).toList(),
-          "purchased_from": purchasedFrom,
+          "purchased_from": purchasedFrom.id,
           "template": template.id,
           "custom_fields":
               customFields.map((key, value) => MapEntry(key, value.getValue())),
@@ -804,6 +826,7 @@ class DatabaseModel extends ChangeNotifier {
     }
     for (var element in response) {
       element["template"] = template.toMap();
+      element["purchased_from"] = purchasedFrom.toMap();
     }
 
     var assets =
@@ -826,7 +849,7 @@ class DatabaseModel extends ChangeNotifier {
     int? purchaseCost,
     DateTime? purchaseDate,
     List<AdditionalCost>? additionalCost,
-    String? purchasedFrom,
+    Vendor? purchasedFrom,
     Map<String, FieldValue>? customFields,
     String? notes,
     int? recoveredCost,
@@ -857,7 +880,7 @@ class DatabaseModel extends ChangeNotifier {
                   "additional_cost": (additionalCost ?? asset.additionalCost)
                       .map((e) => e.toMap())
                       .toList(),
-                  "purchased_from": purchasedFrom ?? asset.purchasedFrom,
+                  "purchased_from": purchasedFrom?.id ?? asset.purchasedFrom.id,
                   "custom_fields":
                       (customFields ?? asset.customFields).map((key, value) {
                     return MapEntry(key, value.getValue());
@@ -893,6 +916,7 @@ class DatabaseModel extends ChangeNotifier {
 
     for (var element in response) {
       element["template"] = assets.first.template.toMap();
+      element["purchased_from"] = assets.first.purchasedFrom.toMap();
     }
 
     final updatedAssets = List<Asset>.from(response
@@ -917,7 +941,7 @@ class DatabaseModel extends ChangeNotifier {
     int? purchaseCost,
     DateTime? purchaseDate,
     List<AdditionalCost>? additionalCost,
-    String? purchasedFrom,
+    Vendor? purchasedFrom,
     Map<String, FieldValue>? customFields,
     String? notes,
     int? recoveredCost,
@@ -1019,8 +1043,8 @@ class DatabaseModel extends ChangeNotifier {
 
     if (purchasedFrom != null) {
       changes["purchased_from"] = {
-        "before": asset.purchasedFrom,
-        "after": purchasedFrom,
+        "before": asset.purchasedFrom.id,
+        "after": purchasedFrom.id,
       };
     }
 
@@ -1047,6 +1071,10 @@ class DatabaseModel extends ChangeNotifier {
         "before": asset.recoveredCost,
         "after": recoveredCost,
       };
+    }
+
+    if (changes.isEmpty) {
+      return;
     }
 
     var response = await _client
@@ -1219,5 +1247,93 @@ class DatabaseModel extends ChangeNotifier {
     for (var deletedHistory in response) {
       assetHistory.removeWhere((element) => element.id == deletedHistory["id"]);
     }
+  }
+
+  Future<Vendor> createVendor({
+    required String name,
+    required String address,
+    required String gst,
+    required String codeNumber,
+    required String mobileNumber,
+    required String notes,
+  }) async {
+    final response = await _client.from("vendors").insert({
+      "name": name.toUpperCase(),
+      "address": address.toUpperCase(),
+      "gst": gst.toUpperCase(),
+      "code_number": codeNumber.toUpperCase(),
+      "mobile_number": mobileNumber.toUpperCase(),
+      "notes": notes,
+    }).select();
+
+    if (response == null) {
+      throw DatabaseError();
+    }
+
+    final vendor = Vendor.fromMap(response[0]);
+    vendors.add(vendor);
+    notifyListeners();
+    return vendor;
+  }
+
+  Future<void> updateVendor({
+    required Vendor vendor,
+    String? name,
+    String? address,
+    String? gst,
+    String? codeNumber,
+    String? mobileNumber,
+    String? notes,
+  }) async {
+    if (name == null &&
+        address == null &&
+        gst == null &&
+        codeNumber == null &&
+        mobileNumber == null &&
+        notes == null) {
+      return;
+    }
+
+    await _client.from("vendors").update({
+      "name": name?.toUpperCase() ?? vendor.name,
+      "address": address?.toUpperCase() ?? vendor.address,
+      "gst": gst?.toUpperCase() ?? vendor.gst,
+      "code_number": codeNumber?.toUpperCase() ?? vendor.codeNumber,
+      "mobile_number": mobileNumber?.toUpperCase() ?? vendor.mobileNumber,
+      "notes": notes ?? vendor.notes,
+    }).eq("id", vendor.id);
+
+    vendors = vendors.map((e) {
+      if (e.id == vendor.id) {
+        return Vendor(
+          id: e.id,
+          name: name?.toUpperCase() ?? e.name,
+          address: address?.toUpperCase() ?? e.address,
+          gst: gst?.toUpperCase() ?? e.gst,
+          codeNumber: codeNumber?.toUpperCase() ?? e.codeNumber,
+          mobileNumber: mobileNumber?.toUpperCase() ?? e.mobileNumber,
+          notes: notes ?? e.notes,
+        );
+      }
+      return e;
+    }).toList();
+
+    notifyListeners();
+  }
+
+  Future<void> deleteVendor(Vendor vendor) async {
+    // Check if the vendor is used in any assets
+
+    final assetsCheck = assets.values
+        .where((asset) => asset.purchasedFrom.id == vendor.id)
+        .toList();
+
+    if (assetsCheck.isNotEmpty) {
+      throw VendorInUseError();
+    }
+
+    await _client.from("vendors").delete().eq("id", vendor.id);
+    vendors.remove(vendor);
+    notifyListeners();
   }
 }
